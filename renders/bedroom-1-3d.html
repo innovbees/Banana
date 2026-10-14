@@ -147,12 +147,7 @@ box(2.8,3.08,0.56,0.57,1.5,1.75,brass); cyl(3.0,0.62,1.7,0.05,0.05,0.04,brass).r
 for(let i=0;i<40;i++){ const z0=1.85+i*0.05; const fl=cyl(0.025,CH/2,z0+0.025,0.022,0.022,CH,walnut,12); }
 box(0,0.02,0,CH,1.85,3.85,walnut);
 box(0.045,0.085,0.685,1.515,2.125,3.575,black);              // 65" TV, off
-box(0.05,0.34,0.35,0.65,1.95,3.75,walnut);                   // floating unit
-for(let k=0;k<3;k++){ const z0=1.95+k*0.6; box(0.339,0.341,0.36,0.64,z0+0.003,z0+0.597,mat('#4a2f1d',0.6)); }
-box(0.05,0.35,0.65,0.68,1.95,3.75,travertine);
-const glow=box(0.06,0.3,0.345,0.35,2.0,3.7,mat('#fff2d4',0.5,0,{emissive:'#ffcf8a',emissiveIntensity:0.6}),false,false);
-// objects on unit
-cyl(0.2,0.73,2.3,0.12,0.08,0.06,mat('#e8e1d6',0.5)); pillow(0.2,0.8,3.35,0.1,0.22,0.1,mat('#2f3a40',0.4),0);
+// (no TV unit - TV only, cables concealed in wall)
 
 // ---------- Lounge nook (SW corner) ----------
 const nook=new THREE.Group(); nook.position.set(0.58,0,4.32); nook.rotation.y=Math.PI*0.72; scene.add(nook);
