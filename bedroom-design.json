@@ -137,7 +137,6 @@
         "double-height or very high ceilings",
         "recessed curtain pelmet",
         "ceiling bulkhead",
-        "cove ceiling",
         "curtain rods on the wall",
         "television",
         "TV unit or console",
@@ -145,9 +144,11 @@
         "wardrobes or tall cabinets in the bedroom",
         "chest of drawers",
         "wall panelling or fluted timber on the west wall",
-        "more than one artwork"
+        "more than one artwork",
+        "coffered or tray ceiling",
+        "decorative ornate cornice"
       ],
-      "scale_notes": "ceiling is a standard 2.4m, keep proportions realistic: headboard wall 1.2m, window sill 0.56m and head 2.1m"
+      "scale_notes": "ceiling is a standard 2.4m, keep proportions realistic: headboard wall 1.2m, window sill 0.56m and head 2.1m; simple 90mm cove cornice at the wall-ceiling junction"
     },
     "controls": {
       "lock_subject_geometry": true,
@@ -162,7 +163,7 @@
         "ceiling_height": 2.4
       },
       "bed_wall": "king bed aligned on the centre line of the 0.9m walkway between the robes (about 2.85m from the north wall, 0.4m south of the room centre), headboard on the east side facing west toward the plain west wall",
-      "window_wall": "south wall (4.0m): one window 2.3m wide x 1.54m high, sill about 0.56m above the floor and head at about 2.1m, centred on the wall (0.85m of solid wall each side); dressed with a slim white curtain track surface-fixed directly to the flat ceiling, running about 0.15m past each side of the window, sheer ivory curtains and greige linen drapes pulled open, so the window reads larger; to the bed's left as you lie in it",
+      "window_wall": "south wall (4.0m): one window 2.3m wide x 1.54m high, sill about 0.56m above the floor and head at about 2.1m, centred on the wall (0.85m of solid wall each side); dressed with a slim white curtain track surface-fixed directly to the flat ceiling just in front of the cove cornice, running about 0.15m past each side of the window, sheer ivory curtains and greige linen drapes pulled open, so the window reads larger; to the bed's left as you lie in it",
       "entry_door": "0.9m wide door in the east wall at the north-east corner, coming in from the hallway, hinged at the north end and swinging into the room to rest against the north wall; its swing stays clear of the headboard wall and nightstand",
       "ensuite_opening": "0.9m wide opening in the east wall between the two walk-in robes, leading to the ensuite; hidden behind the freestanding headboard wall",
       "clearances": "east-west across 4.0m: 0.7m walkway + 0.1m headboard wall + about 2.15m king bed + about 1.0m walkway to the west wall; north-south along 4.9m: bed centred at about 2.85m from the north wall, about 1.9m between the north side of the bed and the north wall, about 1.1m between the south side of the bed and the south window",
@@ -170,7 +171,7 @@
       "opposite_wall": "the long west wall facing the foot of the bed: plain warm greige limewash plaster with one large abstract artwork centred on the bed",
       "lounge_nook": "south-west corner, between the west wall and the south window, beside the foot of the bed: sculptural taupe boucle lounge chair angled toward the view, round travertine side table, slim brass floor lamp, small round wool rug; the chair sits partly in front of the west end of the window, below sill height for its seat, catching the daylight",
       "orientation": "room runs north-south; west wall 4.9m long, north and south walls 4.0m and solid apart from the south glazing; east side has the entry door (north end), the robes and the ensuite opening",
-      "ceiling": "flat plasterboard ceiling at 2.4m, painted warm white; no bulkheads, no recessed curtain pelmet or cove",
+      "ceiling": "flat plasterboard ceiling at 2.4m, painted warm white, with a standard 90mm plaster cove cornice running around all walls where they meet the ceiling (about 65mm down the wall and 65mm across the ceiling); no bulkheads, no recessed curtain pelmet",
       "dressing_zone": "open floor in front of the mirror unit, about 1.5m to the bed; north wall left as plain plaster",
       "artwork": "one abstract canvas 1.2m wide x 1.5m high (portrait), centred on the bed, bottom 0.65m and top 2.15m above the floor; soft layered warm neutrals (cream, sand, taupe) with a small terracotta accent and one fine slate-grey line; thin brushed-brass floater frame; slim brass picture light above (off)",
       "mirror_unit": "integrated wall-hung walnut unit on the west wall at its north end (0.5m to 1.5m from the north wall), 1.0m wide: a floating drawer 0.3m deep x 0.18m high with top at 0.75m (travertine top, brass pull, soft LED glow underneath, for combs and small items) and directly above it an inset mirror 0.9m wide x 1.42m high (0.78m to 2.2m) with a thin brass edge on a walnut backing panel; floor below left clear"

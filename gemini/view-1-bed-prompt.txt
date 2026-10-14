@@ -6,7 +6,7 @@ STRICT RULES - DO NOT BREAK:
 - Keep the SAME camera position, angle, lens and framing as the reference image.
 - Keep the SAME room shape, wall positions, door opening, robe walkway opening, window size and position.
 - Keep EVERY object in the SAME place, at the SAME size and proportion. Do not move, add, remove, resize or mirror anything.
-- Ceiling is FLAT, 2.4m high, plain white. No bulkheads, no recesses, no coves, no downlights.
+- Ceiling is FLAT, 2.4m high, plain white, with a simple 90mm plaster cove cornice running around every wall where it meets the ceiling. No bulkheads, no recesses, no ornate cornice, no downlights.
 - Only change surfaces, materials, textures, lighting and realism.
 
 WHAT IS IN THE IMAGE (left to right):
@@ -16,7 +16,7 @@ WHAT IS IN THE IMAGE (left to right):
 - The king bed with ivory boucle upholstered base, crisp white sateen sheets, champagne silk-look duvet folded back over the foot, a taupe chunky-knit throw across the foot, two ivory euro pillows, two white pillows, one taupe velvet lumbar cushion.
 - Left of bed: walnut nightstand with fluted front, travertine top, small brass tray and gold clock.
 - Above each nightstand: a small opal-glass globe pendant on a thin brass rod (lights off).
-- Right: one window (2.3m wide x 1.54m high, sill about 0.56m above floor) with sheer ivory curtains and greige linen drapes hanging from a slim white track fixed directly to the flat ceiling, falling to the floor. Soft green garden outside.
+- Right: one window (2.3m wide x 1.54m high, sill about 0.56m above floor) with sheer ivory curtains and greige linen drapes hanging from a slim white track fixed directly to the flat ceiling just in front of the cornice, falling to the floor. Soft green garden outside.
 - Right corner: sculptural taupe boucle lounge chair, round travertine side table with a coffee cup and book.
 - Floor: wide-plank light oak; cream wool rug under the bed. Walls: warm greige limewash plaster.
 

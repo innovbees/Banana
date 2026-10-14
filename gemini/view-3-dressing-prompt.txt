@@ -6,7 +6,7 @@ STRICT RULES - DO NOT BREAK:
 - Keep the SAME camera position, angle, lens and framing as the reference image.
 - Keep the SAME room shape, wall positions, door opening, robe walkway opening, window size and position.
 - Keep EVERY object in the SAME place, at the SAME size and proportion. Do not move, add, remove, resize or mirror anything.
-- Ceiling is FLAT, 2.4m high, plain white. No bulkheads, no recesses, no coves, no downlights.
+- Ceiling is FLAT, 2.4m high, plain white, with a simple 90mm plaster cove cornice running around every wall where it meets the ceiling. No bulkheads, no recesses, no ornate cornice, no downlights.
 - Only change surfaces, materials, textures, lighting and realism.
 
 WHAT IS IN THE IMAGE (left to right):

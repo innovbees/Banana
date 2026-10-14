@@ -1,7 +1,7 @@
 <svg xmlns="http://www.w3.org/2000/svg" width="860" height="820" viewBox="0 0 860 820" font-family="Helvetica, Arial, sans-serif">
   <rect width="860" height="820" fill="#ffffff"/>
   <text x="80" y="34" font-size="20" font-weight="bold" fill="#222">Bedroom 1 — proposed layout (4.0m × 4.9m)</text>
-  <text x="80" y="54" font-size="12" fill="#666">Scale approx. 1:40 · 1m = 120px · ceiling height 2.4m · all furniture to scale</text>
+  <text x="80" y="54" font-size="12" fill="#666">Scale approx. 1:40 · 1m = 120px · ceiling height 2.4m · 90mm cove cornice to all walls · all furniture to scale</text>
 
   <!-- North arrow -->
   <g transform="translate(800,60)">

@@ -92,6 +92,15 @@ const outside = new THREE.Mesh(new THREE.PlaneGeometry(14,7), new THREE.MeshBasi
 })}));
 outside.position.set(2,1.6,RL+2.2); outside.rotation.y=Math.PI; scene.add(outside);
 
+// ---------- 90mm cove cornice between walls and ceiling (approx. 65mm drop x 65mm projection) ----------
+{ const r=0.065, sh=new THREE.Shape(); sh.moveTo(0,0); sh.lineTo(0,-r); sh.absarc(r,-r,r,Math.PI,Math.PI/2,true); sh.lineTo(0,0);
+  const corniceM=mat('#f7f4ef',0.9,0,{side:THREE.DoubleSide});
+  function cornice(len,px,pz,rotY){ const g=new THREE.ExtrudeGeometry(sh,{depth:len,bevelEnabled:false,curveSegments:16}); const o=new THREE.Mesh(g,corniceM); o.position.set(px,CH,pz); o.rotation.y=rotY; o.receiveShadow=true; scene.add(o); }
+  cornice(RL,0,0,0);              // west wall
+  cornice(RW,RW,0,-Math.PI/2);    // north wall
+  cornice(RW,0,RL,Math.PI/2);     // south wall
+  cornice(RL,RW,RL,Math.PI);      // east wall
+}
 // ---------- Curtains: slim white track fixed flush to flat ceiling ----------
 box(0.68,3.32,CH-0.03,CH,RL-0.12,RL-0.08,mat('#f4f2ee',0.5),false);
 function drape(x0,x1,z,m,folds,depth){
