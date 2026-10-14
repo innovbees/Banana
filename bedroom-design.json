@@ -142,19 +142,19 @@
         "north_and_south_wall_width_east_west": 4.0,
         "ceiling_height": 2.7
       },
-      "bed_wall": "king bed centered north-south in the room, headboard on the east side facing west toward the TV",
+      "bed_wall": "king bed aligned on the centre line of the 0.9m walkway between the robes (about 2.85m from the north wall, 0.4m south of the room centre), headboard on the east side facing west toward the TV",
       "window_wall": "south wall (4.0m): wide floor-to-ceiling glass sliding doors to a balcony; to the bed's left as you lie in it",
       "entry_door": "0.9m wide door in the east wall at the north-east corner, coming in from the hallway, hinged at the north end and swinging into the room to rest against the north wall; its swing stays clear of the headboard wall and nightstand",
       "ensuite_opening": "0.9m wide opening in the east wall between the two walk-in robes, leading to the ensuite; hidden behind the freestanding headboard wall",
-      "clearances": "east-west across 4.0m: 0.7m walkway + 0.1m headboard wall + about 2.15m king bed + about 0.75m walkway + 0.3m TV unit; north-south along 4.9m: about 1.0m between each nightstand end and the north/south walls, about 1.45m between the sides of the bed and the north/south walls",
-      "headboard_feature_wall": "freestanding headboard wall 1.2m high, 0.1m thick and about 2.9m long (bed plus two nightstands), set 0.7m west of the robes/ensuite opening and centered north-south, leaving about 1.0m clear at each end for access to the robes and ensuite",
+      "clearances": "east-west across 4.0m: 0.7m walkway + 0.1m headboard wall + about 2.15m king bed + about 0.75m walkway + 0.3m TV unit; north-south along 4.9m: bed centred at about 2.85m from the north wall, about 1.9m between the north side of the bed and the north wall, about 1.1m between the south side of the bed and the south glass doors",
+      "headboard_feature_wall": "freestanding headboard wall 1.2m high, 0.1m thick and about 2.9m long (bed plus two nightstands), set 0.7m west of the east wall, centred on the robe walkway so it screens it from the bedroom; about 1.4m clear at the north end (entry door side) and 0.6m at the south end",
       "opposite_wall": "the long left wall facing the foot of the bed: floating TV wall with a 65 inch TV centered on the bed",
       "tv_wall": {
-        "tv": "65 inch ultra-slim TV (approx. 1.45m wide x 0.83m tall), flush wall-mounted, screen center about 1.1m above the floor for viewing from bed, screen off showing a dark glossy surface",
-        "backdrop": "vertical fluted walnut panelling about 2.4m wide behind the TV, with a soft warm LED wash from above",
-        "floating_unit": "wall-hung walnut TV module about 2.2m wide, 0.3m deep and 0.3m high, centered on the 4.9m west wall, floating about 0.35m above the floor with hidden LED glow underneath, push-to-open fronts, travertine top styled with a small sculpture and a low ceramic bowl"
+        "tv": "65 inch ultra-slim TV (approx. 1.45m wide x 0.83m tall), flush wall-mounted and centred on the bed, screen center about 1.1m above the floor for viewing from bed, screen off showing a dark glossy surface",
+        "backdrop": "vertical fluted walnut panelling about 2.0m wide behind the TV, centred on the bed, with a soft warm LED wash from above",
+        "floating_unit": "wall-hung walnut TV module about 1.8m wide, 0.3m deep and 0.3m high, centred on the bed (not the wall), floating about 0.35m above the floor with hidden LED glow underneath, push-to-open fronts, travertine top styled with a small sculpture and a low ceramic bowl"
       },
-      "lounge_nook": "south-west corner, between the end of the TV unit and the south glass doors: sculptural taupe boucle lounge chair angled toward the view, round travertine side table, slim brass floor lamp, small round wool rug",
+      "lounge_nook": "south-west corner, between the south end of the TV unit and the south glass doors, beside the foot of the bed: sculptural taupe boucle lounge chair angled toward the view, round travertine side table, slim brass floor lamp, small round wool rug",
       "orientation": "room runs north-south; west wall (TV wall) 4.9m long, north and south walls 4.0m and solid apart from the south glazing; east side has the entry door (north end), the robes and the ensuite opening"
     }
   }
