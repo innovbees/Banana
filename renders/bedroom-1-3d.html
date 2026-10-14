@@ -50,7 +50,7 @@ const PALS={
   clay:  {wall:'#ece6df',ceil:'#f7f5f1',timber:'#3a3634',stone:'#e9e3da',vein:'160,140,120',boucle:'#e8e0d5',chair:'#b86e4e',sheet:'#fbf9f6',duvet:'#efe7dc',accent:'#b86e4e',throw:'#c98b6b',metal:'#2b2b2b',linen:'#dccfc0',pillowA:'#f8f5f0',pillowB:'#e3cbb8',
           art:['#efe9e1','#e3cbb8','#c98b6b','#b86e4e','#2b2b2b','#f6f2ec','#a89f96']}
 };
-const PAL=PALS[P.get('pal')||'grey']||PALS.grey;
+const PAL=PALS[P.get('pal')||'warm']||PALS.warm;
 function hexRGB(h){ const n=parseInt(h.slice(1),16); return [(n>>16)&255,(n>>8)&255,n&255]; }
 function speckle(base,w,h,n,rad,lightA,darkA,seed){ return (g)=>{ g.fillStyle=base; g.fillRect(0,0,w,h); const r=rnd(seed); const [R,G,B]=hexRGB(base);
   for(let i=0;i<n;i++){ const v=r()<0.5; g.fillStyle=v?`rgba(${Math.min(255,R+35)},${Math.min(255,G+35)},${Math.min(255,B+35)},${lightA})`:`rgba(${R*0.7|0},${G*0.7|0},${B*0.7|0},${darkA})`; g.beginPath(); g.arc(r()*w,r()*h,rad[0]+r()*rad[1],0,7); g.fill(); } }; }
