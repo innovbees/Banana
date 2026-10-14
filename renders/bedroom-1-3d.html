@@ -90,7 +90,20 @@ const frameM = mat('#2b2b2b',0.5,0.3);
 box(0.85,3.15,0.56,0.6,RL,RL+0.04,mat('#e9e4dc',0.6));     // sill
 box(1.98,2.02,0.56,2.1,RL+0.05,RL+0.08,frameM,false);       // mullion
 // robes walls beyond opening (so you see a corridor)
-box(RW,RW+1.3,0,CH,2.28,2.4,plaster); box(RW,RW+1.3,0,CH,3.3,3.42,plaster); box(RW+1.3,RW+1.42,0,CH,2.28,3.42,mat('#efe9e0',0.9));
+// walkway side walls with a 0.75m doorway into each walk-in robe (x 4.25-5.0), ensuite doorway at the end
+for(const [z0,z1] of [[2.28,2.4],[3.3,3.42]]){ box(RW,RW+0.25,0,CH,z0,z1,plaster); box(RW+1.0,RW+1.3,0,CH,z0,z1,plaster); box(RW+0.25,RW+1.0,2.1,CH,z0,z1,plaster); }
+box(RW,RW+1.42,CH,CH+0.02,2.28,3.42,ceilingM,false);
+// robe interiors (glimpse): shelving + hanging rail
+for(const [zw,zr] of [[1.2,2.0],[3.7,3.0]]){ box(RW,RW+1.3,-0.01,0,Math.min(zw,zr)-0.3,Math.max(zw,zr)+0.3,carpet,false,true);
+  box(RW+0.05,RW+1.25,0,CH,zw<2?1.1:3.95,zw<2?1.15:4.0,plaster);
+  box(RW+0.1,RW+1.2,0.4,2.0,zw<2?1.15:3.4,zw<2?1.7:3.95,mat('#efe9df',0.8));
+  cyl(RW+0.65,1.75,zw<2?1.85:3.25,0.012,0.012,1.1,brass,8).rotation.z=Math.PI/2; }
+// ensuite end wall with 0.8m doorway, light tiled ensuite beyond
+box(RW+1.3,RW+1.42,0,CH,2.28,2.45,plaster); box(RW+1.3,RW+1.42,0,CH,3.25,3.42,plaster); box(RW+1.3,RW+1.42,2.1,CH,2.45,3.25,plaster);
+{ const tile=mat('#ffffff',0.35,0,{map:canvasTex(256,256,(g,w,h)=>{ g.fillStyle='#ebe7e0'; g.fillRect(0,0,w,h); g.strokeStyle='rgba(160,150,140,0.5)'; g.lineWidth=2; for(let i=0;i<=4;i++){ g.beginPath(); g.moveTo(0,i*64); g.lineTo(w,i*64); g.stroke(); g.beginPath(); g.moveTo(i*64,0); g.lineTo(i*64,h); g.stroke(); } },3,3)});
+  box(RW+1.42,RW+2.6,-0.01,0,1.8,3.9,tile,false,true); box(RW+2.6,RW+2.7,0,CH,1.8,3.9,tile); box(RW+1.42,RW+2.6,CH,CH+0.02,1.8,3.9,ceilingM,false);
+  box(RW+1.42,RW+2.6,0,CH,1.7,1.8,tile); box(RW+1.42,RW+2.6,0,CH,3.9,4.0,tile);
+  box(RW+2.1,RW+2.6,0.8,0.85,2.3,3.4,mat('#f4f1ec',0.4)); const ensL=new THREE.PointLight('#fff4e2',1.2,4,1.8); ensL.position.set(RW+2.0,2.0,2.85); scene.add(ensL); }
 box(RW,RW+1.3,-0.01,0,2.3,3.4,carpet,false,true);
 // outside: soft garden backdrop
 // hallway behind entry door
@@ -255,6 +268,9 @@ const cam=new THREE.PerspectiveCamera(60,W/H,0.05,50);
 if(VIEW==='corner'){ cam.position.set(3.0,1.6,0.6); cam.fov=68; cam.updateProjectionMatrix(); cam.lookAt(0.9,0.85,4.1); }
 else if(VIEW==='tv'){ cam.position.set(3.75,1.45,2.85); cam.fov=66; cam.updateProjectionMatrix(); cam.lookAt(0,1.0,2.85); }
 else if(VIEW==='bed'){ cam.position.set(1.15,1.55,0.75); cam.fov=66; cam.updateProjectionMatrix(); cam.lookAt(3.3,0.75,3.4); }
+else if(VIEW==='passage'){ cam.position.set(3.5,1.6,1.55); cam.fov=66; cam.updateProjectionMatrix(); cam.lookAt(5.4,1.15,2.95); }
+else if(VIEW==='overview'){ ceilingM.visible=false; scene.traverse(o=>{ if(o.isMesh && o.position.y>CH-0.1 && o.geometry && o.geometry.type==='ExtrudeGeometry') o.visible=false; }); cam.position.set(7.2,6.8,-1.6); cam.fov=50; cam.updateProjectionMatrix(); cam.lookAt(2.7,0,2.7); }
+else if(VIEW==='approach'){ cam.position.set(1.4,1.6,0.45); cam.fov=70; cam.updateProjectionMatrix(); cam.lookAt(3.9,1.2,1.8); }
 else if(VIEW==='dressing'){ cam.position.set(2.5,1.55,4.55); cam.fov=68; cam.updateProjectionMatrix(); cam.lookAt(0.7,1.0,0.4); }
 renderer.render(scene,cam);
 document.title='done';
