@@ -14,7 +14,7 @@
       "physical_properties": {
         "bed": "king size (approx. 1.83m x 2.03m mattress) upholstered bed with tall channel-tufted ivory boucle headboard mounted on a freestanding walnut-panelled headboard wall, slim low-profile frame, bed floating in the middle of the room",
         "bedding": "crisp white sateen sheets, champagne silk-look duvet folded back at the foot, layered euro shams and two lumbar pillows in taupe velvet, chunky knit throw draped at an angle",
-        "nightstand": "walnut veneer nightstand with fluted drawer front and brushed brass pulls, travertine top",
+        "nightstand": "two walnut veneer nightstands, about 0.5m wide each, with fluted drawer fronts, brushed brass pulls and travertine tops",
         "lamp": "sculptural ceramic table lamp with pleated linen shade, switched off",
         "finish": "rich mix of matte, velvet, boucle and brushed metal textures"
       }
@@ -104,7 +104,7 @@
       "focal_length_mm": 24,
       "depth_of_field": "deep",
       "focus_point": "whole room: king bed in the foreground and center, TV wall on the right, lounge nook and balcony doors on the left",
-      "position": "standing in the corner by the entry door, looking diagonally across the room toward the corner where the TV wall meets the balcony doors"
+      "position": "standing just inside the entry door in the north-east corner, looking diagonally south-west across the room toward the corner where the TV wall meets the south glass doors"
     },
     "lighting": {
       "key_light_direction": "left",
@@ -138,23 +138,24 @@
     },
     "room_layout": {
       "dimensions_m": {
-        "length": 4.9,
-        "width": 4.0,
+        "west_wall_length_north_south": 4.9,
+        "north_and_south_wall_width_east_west": 4.0,
         "ceiling_height": 2.7
       },
-      "bed_wall": "bed centered in the room, headboard toward the right side (the ensuite side); bed faces the long solid wall on the left",
-      "window_wall": "short wall to the bed's left side as you lie in it (camera right): wide floor-to-ceiling glass sliding doors opening to a balcony with a pale stone deck",
-      "entry_door": "near the corner beside the headboard wall, on the side away from the window; out of frame",
+      "bed_wall": "king bed centered north-south in the room, headboard on the east side facing west toward the TV",
+      "window_wall": "south wall (4.0m): wide floor-to-ceiling glass sliding doors to a balcony; to the bed's left as you lie in it",
+      "entry_door": "in the north wall at the north-east corner, swinging into the room; its swing stays clear of the north end of the headboard wall",
       "ensuite_opening": "wide opening between two walk-in robes, hidden behind the freestanding headboard wall",
-      "clearances": "about 0.8m walkway behind the headboard wall, about 0.9m on each side of the king bed, slim 0.35m floating TV unit keeps the walkway at the foot of the bed clear; lounge nook sits beside the bed path, not in it",
-      "headboard_feature_wall": "freestanding headboard wall about 1.2m high and the width of the bed plus nightstands, finished in walnut panelling with the ivory boucle headboard mounted on it; set about 0.8m in front of the ensuite opening, so the robes and ensuite are reached by walking around either end",
+      "clearances": "east-west across 4.0m: 0.7m walkway + 0.1m headboard wall + about 2.15m king bed + about 0.75m walkway + 0.3m TV unit; north-south along 4.9m: about 1.0m between each nightstand end and the north/south walls, about 1.45m between the sides of the bed and the north/south walls",
+      "headboard_feature_wall": "freestanding headboard wall 1.2m high, 0.1m thick and about 2.9m long (bed plus two nightstands), set 0.7m west of the robes/ensuite opening and centered north-south, leaving about 1.0m clear at each end for access to the robes and ensuite",
       "opposite_wall": "the long left wall facing the foot of the bed: floating TV wall with a 65 inch TV centered on the bed",
       "tv_wall": {
         "tv": "65 inch ultra-slim TV (approx. 1.45m wide x 0.83m tall), flush wall-mounted, screen center about 1.1m above the floor for viewing from bed, screen off showing a dark glossy surface",
         "backdrop": "vertical fluted walnut panelling about 2.4m wide behind the TV, with a soft warm LED wash from above",
-        "floating_unit": "wall-hung walnut TV module about 2.2m wide, 0.35m deep and 0.3m high, floating about 0.35m above the floor with hidden LED glow underneath, push-to-open fronts, travertine top styled with a small sculpture and a low ceramic bowl"
+        "floating_unit": "wall-hung walnut TV module about 2.2m wide, 0.3m deep and 0.3m high, centered on the 4.9m west wall, floating about 0.35m above the floor with hidden LED glow underneath, push-to-open fronts, travertine top styled with a small sculpture and a low ceramic bowl"
       },
-      "lounge_nook": "corner where the TV wall meets the balcony doors: one sculptural lounge chair in taupe boucle with a curved back, a round travertine side table, a slim brass floor lamp (off) and a small round wool rug, angled toward the balcony view"
+      "lounge_nook": "south-west corner, between the end of the TV unit and the south glass doors: sculptural taupe boucle lounge chair angled toward the view, round travertine side table, slim brass floor lamp, small round wool rug",
+      "orientation": "room runs north-south; west wall (TV wall) 4.9m long, north and south walls 4.0m; east side is the robes and ensuite opening"
     }
   }
 }
