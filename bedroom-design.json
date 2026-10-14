@@ -2,7 +2,7 @@
   "marketing_image": {
     "meta": {
       "spec_version": "1.0.0",
-      "title": "Modern Luxury Bedroom - Bedside Detail",
+      "title": "Modern Luxury Bedroom 1 (4.9m x 4.0m) - Bedside Detail",
       "campaign": "bedroom_redesign",
       "brand_name": "Personal Bedroom Concept",
       "usage_context": "interior_design_concept"
@@ -12,7 +12,7 @@
       "name": "Modern luxury bed and nightstand",
       "variant": "morning, freshly made bed",
       "physical_properties": {
-        "bed": "queen size upholstered bed with tall channel-tufted headboard in ivory boucle, slim low-profile frame",
+        "bed": "king size upholstered bed with tall channel-tufted headboard in ivory boucle, slim low-profile frame, centered on the long wall",
         "bedding": "crisp white sateen sheets, champagne silk-look duvet folded back at the foot, layered euro shams and two lumbar pillows in taupe velvet, chunky knit throw draped at an angle",
         "nightstand": "walnut veneer nightstand with fluted drawer front and brushed brass pulls, travertine top",
         "lamp": "sculptural ceramic table lamp with pleated linen shade, switched off",
@@ -50,10 +50,10 @@
           "notes": "minimal brass swing-arm sconce, off"
         },
         {
-          "type": "window_drapery",
+          "type": "balcony_sliding_doors",
           "count": 1,
-          "position": "right_edge",
-          "notes": "floor-to-ceiling sheer ivory curtains with heavier greige linen drapes pulled open"
+          "position": "left_edge",
+          "notes": "floor-to-ceiling glass sliding doors with sheer ivory curtains and greige linen drapes pulled open; glimpse of balcony and soft greenery beyond"
         }
       ]
     },
@@ -69,13 +69,27 @@
         "effect": "subtle depth falloff"
       },
       "palette": {
-        "primary": ["#F5F1EA", "#E8E0D5", "#B8A99A"],
-        "accents": ["#B08D57", "#5C4033", "#2F3A40"],
+        "primary": [
+          "#F5F1EA",
+          "#E8E0D5",
+          "#B8A99A"
+        ],
+        "accents": [
+          "#B08D57",
+          "#5C4033",
+          "#2F3A40"
+        ],
         "notes": "ivory, greige and taupe base with champagne brass, walnut and a touch of deep slate"
       },
       "atmosphere": {
         "mood": "serene, elegant, boutique-hotel calm on a fresh morning",
-        "keywords": ["luxurious", "airy", "tactile", "refined", "restful"]
+        "keywords": [
+          "luxurious",
+          "airy",
+          "tactile",
+          "refined",
+          "restful"
+        ]
       }
     },
     "camera": {
@@ -84,13 +98,14 @@
       "framing": "medium",
       "focal_length_mm": 35,
       "depth_of_field": "medium",
-      "focus_point": "nightstand and pillows"
+      "focus_point": "nightstand on the window side and the pillows",
+      "position": "standing just inside the ensuite opening, looking across the room toward the headboard wall at a slight angle"
     },
     "lighting": {
-      "key_light_direction": "right",
-      "key_light_source": "large window, morning sunlight filtered through sheer curtains",
+      "key_light_direction": "left",
+      "key_light_source": "morning sunlight through the balcony sliding doors, filtered by sheer curtains",
       "key_light_intensity": "high",
-      "fill_light_direction": "left",
+      "fill_light_direction": "right",
       "fill_light_intensity": "low",
       "rim_light": false,
       "color_temperature": "warm_daylight_5000k",
@@ -99,13 +114,32 @@
     "style": {
       "rendering": "photorealistic interior photography, architectural digest editorial quality",
       "design_style": "modern luxury",
-      "avoid": ["clutter", "visible cables", "people", "text", "harsh shadows", "oversaturated colors"]
+      "avoid": [
+        "clutter",
+        "visible cables",
+        "people",
+        "text",
+        "harsh shadows",
+        "oversaturated colors"
+      ]
     },
     "controls": {
       "lock_subject_geometry": true,
       "lock_logo_and_label": false,
       "allow_background_variation": true,
       "allow_prop_relayout": "small_only"
+    },
+    "room_layout": {
+      "dimensions_m": {
+        "length": 4.9,
+        "width": 4.0,
+        "ceiling_height": 2.7
+      },
+      "bed_wall": "long solid wall opposite the ensuite opening; bed centered on it, headboard against the wall",
+      "window_wall": "short wall to the bed's right side (camera left): wide floor-to-ceiling glass sliding doors opening to a balcony with a pale stone deck",
+      "entry_door": "on the short wall opposite the window, near the corner; out of frame",
+      "ensuite_opening": "wide opening in the wall facing the bed, between two walk-in robes, leading to the ensuite; behind the camera, out of frame",
+      "clearances": "about 0.9m walkway on each side of the bed, about 1.8m open floor between the foot of the bed and the ensuite wall"
     }
   }
 }
