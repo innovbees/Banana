@@ -168,7 +168,7 @@ box(2.8,3.08,0.56,0.57,1.5,1.75,brass); cyl(3.0,0.62,1.7,0.05,0.05,0.04,brass).r
 
 // ---------- West wall: plain limewash plaster (no panelling, no TV) ----------
 // Large abstract artwork centred on bed (z 2.85): 1.2m wide x 1.5m high, bottom 0.65m, thin brass floater frame, brass picture light
-{ const ART=P.get('art')||'portrait'; const AW=ART==='landscape'?1.8:1.2, AH=ART==='landscape'?0.9:1.5, AB=ART==='landscape'?1.0:0.65, ZC=2.85, LY=AB+AH+0.1;
+{ const ART=P.get('art')||'landscape'; const AW=ART==='landscape'?1.8:1.2, AH=ART==='landscape'?0.9:1.5, AB=ART==='landscape'?1.0:0.65, ZC=2.85, LY=AB+AH+0.1;
   const art=canvasTex(ART==='landscape'?900:600,ART==='landscape'?450:750,(g,w,h)=>{ g.fillStyle=PAL.art[0]; g.fillRect(0,0,w,h); const r=rnd(41);
     const blobs=[[PAL.art[1],0.35,0.3,0.42],[PAL.art[2],0.62,0.55,0.34],[PAL.art[3],0.3,0.72,0.16],[PAL.art[4],0.7,0.2,0.1],[PAL.art[5],0.5,0.5,0.25],[PAL.art[6],0.25,0.45,0.2]];
     for(const [c,x,y,rr] of blobs){ for(let i=0;i<60;i++){ g.globalAlpha=0.05+r()*0.06; g.fillStyle=c; g.beginPath(); g.ellipse(x*w+(r()-0.5)*w*0.15,y*h+(r()-0.5)*h*0.15,rr*w*(0.6+r()*0.5),rr*h*(0.4+r()*0.4),r()*3,0,7); g.fill(); } }
@@ -196,23 +196,22 @@ box(1.33,1.5,0.54,0.57,4.48,4.66,mat('#bfc3c6',0.8)); cyl(1.52,0.58,4.62,0.04,0.
 cyl(0.15,0.75,3.95,0.012,0.012,1.5,brass,8); cyl(0.15,0.01,3.95,0.12,0.14,0.02,brass);
 cyl(0.15,1.5,3.95,0.12,0.18,0.22,mat('#f4f4f2',0.9,0,{side:THREE.DoubleSide}),32);
 
-// ---------- Dressing spot: integrated wall-hung mirror + drawer unit on west wall, north end (z 0.5-1.5) ----------
-// walnut backing panel 1.0m wide, from 0.57m to 2.22m; floor below left clear
-box(0,0.03,0.57,2.22,0.5,1.5,walnut);
-// drawer: 1.0m wide x 0.3m deep x 0.18m high, top at 0.75m, travertine top, brass pull, soft under-glow
-box(0.03,0.3,0.57,0.73,0.5,1.5,walnut);
-box(0.3,0.305,0.585,0.715,0.51,1.49,walnut);
-box(0.305,0.32,0.64,0.655,0.92,1.08,brass);
-box(0.03,0.31,0.73,0.75,0.5,1.5,travertine);
-box(0.04,0.29,0.565,0.57,0.52,1.48,mat('#fff2d4',0.5,0,{emissive:'#ffcf8a',emissiveIntensity:0.4}),false,false);
-// styling on drawer top: brass tray with comb + perfume, bud vase
-box(0.08,0.24,0.75,0.762,0.62,0.9,brass); cyl(0.14,0.8,0.7,0.025,0.025,0.08,mat('#e9efe9',0.1,0,{transparent:true,opacity:0.6})); box(0.1,0.22,0.762,0.77,0.78,0.86,mat('#2c2b2a',0.5));
-cyl(0.16,0.82,1.35,0.04,0.03,0.14,mat('#f1f1ef',0.5)); cyl(0.16,0.94,1.35,0.003,0.003,0.12,mat('#6b7f58',0.8),6);
-// mirror inset above drawer: 0.9m wide x 1.42m high (0.78m to 2.2m), thin brass edge
-box(0.03,0.04,0.77,2.21,0.54,1.46,brass);
+// ---------- Dressing spot: tall mirror standing on a floor-level drawer plinth, west wall north end (z 0.5-1.5) ----------
+// walnut backing panel 1.0m wide, from 0.3m to 2.25m
+box(0,0.03,0.3,2.25,0.5,1.5,walnut);
+// floor-level drawer plinth: 1.0m wide x 0.35m deep x 0.3m high, recessed toe-kick, travertine top, brass pull
+box(0.06,0.36,0,0.05,0.53,1.47,mat('#2e1d12',0.7));                      // recessed toe-kick
+box(0.03,0.38,0.05,0.28,0.5,1.5,walnut);                                 // drawer box
+box(0.38,0.385,0.065,0.265,0.51,1.49,walnut);                            // drawer front
+box(0.385,0.4,0.2,0.215,0.88,1.12,brass);                                // long brass pull
+box(0.03,0.39,0.28,0.3,0.5,1.5,travertine);                              // stone top
+// styling on plinth top: small brass tray, bud vase
+box(0.1,0.28,0.3,0.312,0.6,0.85,brass); cyl(0.2,0.36,1.3,0.045,0.035,0.12,mat('#efe9df',0.5)); cyl(0.2,0.5,1.3,0.003,0.003,0.16,mat('#6b7f58',0.8),6);
+// tall mirror above plinth: 0.9m wide x 1.9m high (0.32m to 2.22m), thin brass edge
+box(0.03,0.04,0.31,2.23,0.54,1.46,brass);
 const cubeRT=new THREE.WebGLCubeRenderTarget(512); const cubeCam=new THREE.CubeCamera(0.05,20,cubeRT);
 const mirrorM=mat('#c9d2d4',0.03,1.0,{envMap:cubeRT.texture});
-const mirror=box(0.04,0.05,0.78,2.2,0.55,1.45,mirrorM,false,false);
+const mirror=box(0.04,0.05,0.32,2.22,0.55,1.45,mirrorM,false,false);
 
 // ---------- Lighting: morning sun through south window ----------
 scene.add(new THREE.HemisphereLight('#fff8ee','#a08a70',0.55));

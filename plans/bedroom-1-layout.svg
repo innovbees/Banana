@@ -66,15 +66,15 @@
   <rect x="564" y="94" width="156" height="124" fill="#f2efe9"/><text x="642" y="186" font-size="12" text-anchor="middle" fill="#555">hallway</text><text x="574" y="146" font-size="12" fill="#c0392b" font-weight="bold">← ENTRY DOOR 0.9m</text><text x="574" y="162" font-size="11" fill="#c0392b">(east wall, NE corner)</text>
 
   <!-- Integrated mirror + drawer unit, west wall north end -->
-  <rect x="84" y="150" width="36" height="120" fill="#7a5233" stroke="#4e3420" stroke-width="1.5"/>
+  <rect x="84" y="150" width="42" height="120" fill="#7a5233" stroke="#4e3420" stroke-width="1.5"/>
   <rect x="84" y="156" width="5" height="108" fill="#9fc3d6" stroke="#b08d57" stroke-width="1"/>
-  <text x="104" y="210" font-size="9" fill="#fff" text-anchor="middle" transform="rotate(-90 104 210)">MIRROR + DRAWER 1.0m</text>
+  <text x="104" y="210" font-size="9" fill="#fff" text-anchor="middle" transform="rotate(-90 104 210)">TALL MIRROR + FLOOR DRAWER</text>
   <rect x="128" y="150" width="220" height="96" fill="none" stroke="#2e6f8e" stroke-width="1" stroke-dasharray="4,3"/>
   <text x="238" y="194" font-size="10" fill="#2e6f8e" text-anchor="middle">dressing zone</text>
-  <text x="238" y="210" font-size="10" fill="#2e6f8e" text-anchor="middle">unit 0.3m deep · ~1.5m to bed</text>
+  <text x="238" y="210" font-size="10" fill="#2e6f8e" text-anchor="middle">unit 0.35m deep · ~1.45m to bed</text>
   <!-- Artwork centred on bed, west wall -->
-  <rect x="84" y="360" width="5" height="144" fill="#c77d5a" stroke="#b08d57" stroke-width="1.5"/>
-  <text x="104" y="432" font-size="10" fill="#8a4f33" text-anchor="middle" transform="rotate(-90 104 432)">ARTWORK 1.2×1.5m + picture light</text>
+  <rect x="84" y="324" width="5" height="216" fill="#c77d5a" stroke="#b08d57" stroke-width="1.5"/>
+  <text x="104" y="432" font-size="10" fill="#8a4f33" text-anchor="middle" transform="rotate(-90 104 432)">ARTWORK 1.8×0.9m + picture light</text>
 
 
   <!-- King bed -->

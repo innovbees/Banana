@@ -58,13 +58,13 @@
           "type": "artwork",
           "count": 1,
           "position": "west_wall_centred_on_bed",
-          "notes": "1.2m x 1.5m portrait abstract canvas in warm neutrals with a terracotta accent and a fine slate line, thin brass floater frame, slim brass picture light above"
+          "notes": "1.8m x 0.9m landscape abstract canvas in warm neutrals with a terracotta accent and a fine slate line, thin brass floater frame, slim brass picture light above"
         },
         {
           "type": "mirror_drawer_unit",
           "count": 1,
           "position": "west_wall_north_end",
-          "notes": "1.0m wide integrated wall-hung walnut unit: floating drawer with travertine top at 0.75m and a 0.9m x 1.42m mirror above it with thin brass edge; floor clear below"
+          "notes": "1.0m wide walnut unit: low floor-level drawer plinth (0.3m high, travertine top, brass pull) with a tall 0.9m x 1.9m brass-edged mirror rising above it"
         }
       ]
     },
@@ -175,8 +175,8 @@
       "orientation": "room runs north-south; west wall 4.9m long, north and south walls 4.0m and solid apart from the south glazing; east side has the entry door (north end), the robes and the ensuite opening",
       "ceiling": "flat plasterboard ceiling at 2.4m, painted warm white, with a standard 90mm plaster cove cornice running around all walls where they meet the ceiling (about 65mm down the wall and 65mm across the ceiling); no bulkheads, no recessed curtain pelmet",
       "dressing_zone": "open floor in front of the mirror unit, about 1.5m to the bed; north wall left as plain plaster",
-      "artwork": "one abstract canvas 1.2m wide x 1.5m high (portrait), centred on the bed, bottom 0.65m and top 2.15m above the floor; soft layered warm neutrals (cream, sand, taupe) with a small terracotta accent and one fine slate-grey line; thin brushed-brass floater frame; slim brass picture light above (off)",
-      "mirror_unit": "integrated wall-hung walnut unit on the west wall at its north end (0.5m to 1.5m from the north wall), 1.0m wide: a floating drawer 0.3m deep x 0.18m high with top at 0.75m (travertine top, brass pull, soft LED glow underneath, for combs and small items) and directly above it an inset mirror 0.9m wide x 1.42m high (0.78m to 2.2m) with a thin brass edge on a walnut backing panel; floor below left clear"
+      "artwork": "one wide landscape abstract canvas 1.8m wide x 0.9m high, centred on the bed (about the same width as the bed), bottom 1.0m and top 1.9m above the floor; soft layered warm neutrals (cream, sand, taupe) with a small terracotta accent and one fine slate-grey line; thin brushed-brass floater frame; slim 0.9m brass picture light above (off)",
+      "mirror_unit": "integrated walnut unit on the west wall at its north end (0.5m to 1.5m from the north wall), 1.0m wide: a floor-level drawer plinth 0.35m deep x 0.3m high (recessed toe-kick, one wide drawer with long brass pull, travertine top) for combs and small items, and standing on it a tall mirror 0.9m wide x 1.9m high (0.32m to 2.22m) with a thin brass edge on a walnut backing panel"
     }
   }
 }
