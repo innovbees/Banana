@@ -14,7 +14,8 @@ For each view:
 | View | Reference image | Prompt |
 |---|---|---|
 | Bed / headboard | `view-1-bed-reference.jpg` | `view-1-bed-prompt.txt` |
-| Window + TV wall | `view-2-corner-reference.jpg` | `view-2-corner-prompt.txt` |
+| Window + feature wall + mirror | `view-2-corner-reference.jpg` | `view-2-corner-prompt.txt` |
+| Dressing zone + storage | `view-3-dressing-reference.jpg` | `view-3-dressing-prompt.txt` |
 
 Optional: also attach `../plans/bedroom-1-layout.png` as a second image and add
 "The second image is the floor plan for reference."

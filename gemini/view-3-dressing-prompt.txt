@@ -1,0 +1,22 @@
+Use the attached image as an exact layout reference. It is a 3D massing render of my real bedroom, built to exact measurements.
+
+TASK: Re-render this exact scene as a photorealistic interior photograph (architectural-magazine quality, natural morning light).
+
+STRICT RULES - DO NOT BREAK:
+- Keep the SAME camera position, angle, lens and framing as the reference image.
+- Keep the SAME room shape, wall positions, door opening, robe walkway opening, window size and position.
+- Keep EVERY object in the SAME place, at the SAME size and proportion. Do not move, add, remove, resize or mirror anything.
+- Ceiling is FLAT, 2.4m high, plain white. No bulkheads, no recesses, no coves, no downlights.
+- Only change surfaces, materials, textures, lighting and realism.
+
+WHAT IS IN THE IMAGE (left to right):
+- Left: floor-to-ceiling vertical fluted walnut feature panelling, completely bare - NO TV. Edge of a taupe boucle lounge chair and a brass floor lamp in the bottom-left corner.
+- Centre-left on the side wall: a full-length mirror (0.9m wide x 2.0m high, bottom 0.15m off the floor) with a slim brushed-brass frame, reflecting the room.
+- Back wall (storage wall, 0.45m deep): two floor-to-ceiling cabinets with fluted walnut doors matching the feature wall and long brass pulls, one at each end; between them a 1.7m wide x 0.8m high walnut chest of four drawers with brass pulls and a travertine top, styled with a brass tray, two perfume bottles, a small stack of books and a ceramic vase with a stem. Plain plaster wall above the drawers.
+- Right: the end of the freestanding walnut headboard wall, a white pillow edge, a nightstand and an opal-glass globe pendant on a brass rod; the open doorway to the hallway at the far right.
+- Foreground: the foot of the king bed - champagne duvet folded back, taupe chunky-knit throw.
+- Floor: wide-plank light oak. Walls: warm greige limewash plaster.
+
+LIGHT: morning sun through the window, filtered by the sheers, soft shadows, warm 5000K, all lamps off.
+
+AVOID: changing the layout, any TV, TV unit or console, extra furniture, wall art, people, text, clutter, visible cables, high or vaulted ceilings, balcony, sliding doors, mirrored wardrobe doors.
