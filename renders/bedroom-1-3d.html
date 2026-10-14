@@ -144,6 +144,19 @@ cyl(3.05,0.72,3.9,0.004,0.004,0.1,mat('#5d7a4c',0.8),6); pillow(3.05,0.78,3.9,0.
 box(2.8,3.08,0.56,0.57,1.5,1.75,brass); cyl(3.0,0.62,1.7,0.05,0.05,0.04,brass).rotation.z=Math.PI/2;
 
 // ---------- West wall: plain limewash plaster (no panelling, no TV) ----------
+// Large abstract artwork centred on bed (z 2.85): 1.2m wide x 1.5m high, bottom 0.65m, thin brass floater frame, brass picture light
+{ const art=canvasTex(600,750,(g,w,h)=>{ g.fillStyle='#ece3d4'; g.fillRect(0,0,w,h); const r=rnd(41);
+    const blobs=[['#d9c7ad',0.35,0.3,0.42],['#b89f84',0.62,0.55,0.34],['#c77d5a',0.3,0.72,0.16],['#3f4a52',0.7,0.2,0.1],['#efe6d6',0.5,0.5,0.25],['#a68c72',0.25,0.45,0.2]];
+    for(const [c,x,y,rr] of blobs){ for(let i=0;i<60;i++){ g.globalAlpha=0.05+r()*0.06; g.fillStyle=c; g.beginPath(); g.ellipse(x*w+(r()-0.5)*w*0.15,y*h+(r()-0.5)*h*0.15,rr*w*(0.6+r()*0.5),rr*h*(0.4+r()*0.4),r()*3,0,7); g.fill(); } }
+    g.globalAlpha=0.6; g.strokeStyle='#3f4a52'; g.lineWidth=3; g.beginPath(); g.moveTo(w*0.18,h*0.62); g.bezierCurveTo(w*0.4,h*0.5,w*0.55,h*0.75,w*0.82,h*0.58); g.stroke(); g.globalAlpha=1; });
+  box(0.0,0.045,0.63,2.17,2.23,3.47,brass);                                   // floater frame
+  box(0.045,0.05,0.65,2.15,2.25,3.45,mat('#ffffff',0.9,0,{map:art}));          // canvas face
+  // rotate texture to face east: draw on a plane instead for correct orientation
+  const pl=new THREE.Mesh(new THREE.PlaneGeometry(1.2,1.5),mat('#ffffff',0.9,0,{map:art})); pl.position.set(0.052,1.4,2.85); pl.rotation.y=Math.PI/2; pl.receiveShadow=true; scene.add(pl);
+  box(0.0,0.02,2.24,2.28,2.8,2.9,brass);                                      // light mount
+  box(0.02,0.16,2.255,2.265,2.84,2.86,brass);                                 // arm
+  cyl(0.16,2.24,2.85,0.018,0.018,0.6,brass,16).rotation.x=Math.PI/2;          // light bar
+}
 // (no TV, no TV unit)
 
 // ---------- Lounge nook (SW corner) ----------

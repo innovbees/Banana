@@ -2,7 +2,7 @@
   "marketing_image": {
     "meta": {
       "spec_version": "1.0.0",
-      "title": "Modern Luxury Bedroom 1 (4.9m x 4.0m) - King Bed, Dressing Mirror and Lounge Nook",
+      "title": "Modern Luxury Bedroom 1 (4.9m x 4.0m) - King Bed, Statement Artwork, Dressing Mirror and Lounge Nook",
       "campaign": "bedroom_redesign",
       "brand_name": "Personal Bedroom Concept",
       "usage_context": "interior_design_concept"
@@ -65,6 +65,12 @@
           "count": 1,
           "position": "north_wall_corner_next_to_mirror",
           "notes": "0.6m wide wall-hung walnut drawer with travertine top and brass pull, top at 0.95m"
+        },
+        {
+          "type": "artwork",
+          "count": 1,
+          "position": "west_wall_centred_on_bed",
+          "notes": "1.2m x 1.5m portrait abstract canvas in warm neutrals with a terracotta accent and a fine slate line, thin brass floater frame, slim brass picture light above"
         }
       ]
     },
@@ -144,7 +150,8 @@
         "mirrored wardrobe doors",
         "wardrobes or tall cabinets in the bedroom",
         "chest of drawers",
-        "wall panelling or fluted timber on the west wall"
+        "wall panelling or fluted timber on the west wall",
+        "more than one artwork"
       ],
       "scale_notes": "ceiling is a standard 2.4m, keep proportions realistic: headboard wall 1.2m, window sill 0.56m and head 2.1m"
     },
@@ -166,13 +173,14 @@
       "ensuite_opening": "0.9m wide opening in the east wall between the two walk-in robes, leading to the ensuite; hidden behind the freestanding headboard wall",
       "clearances": "east-west across 4.0m: 0.7m walkway + 0.1m headboard wall + about 2.15m king bed + about 1.0m walkway to the west wall; north-south along 4.9m: bed centred at about 2.85m from the north wall, about 1.9m between the north side of the bed and the north wall, about 1.1m between the south side of the bed and the south window",
       "headboard_feature_wall": "freestanding headboard wall 1.2m high, 0.1m thick and about 2.9m long (bed plus two nightstands), set 0.7m west of the east wall, centred on the robe walkway so it screens it from the bedroom; about 1.4m clear at the north end (entry door side) and 0.6m at the south end",
-      "opposite_wall": "the long west wall facing the foot of the bed: plain warm greige limewash plaster, nothing on it yet",
+      "opposite_wall": "the long west wall facing the foot of the bed: plain warm greige limewash plaster with one large abstract artwork centred on the bed",
       "lounge_nook": "south-west corner, between the west wall and the south window, beside the foot of the bed: sculptural taupe boucle lounge chair angled toward the view, round travertine side table, slim brass floor lamp, small round wool rug; the chair sits partly in front of the west end of the window, below sill height for its seat, catching the daylight",
       "orientation": "room runs north-south; west wall 4.9m long, north and south walls 4.0m and solid apart from the south glazing; east side has the entry door (north end), the robes and the ensuite opening",
       "ceiling": "flat plasterboard ceiling at 2.4m, painted warm white; no bulkheads, no recessed curtain pelmet or cove",
       "mirror": "full-length mirror 0.9m wide x 2.0m high on the west wall at its north end (0.55m to 1.45m from the north wall), bottom 0.15m above the floor, slim brushed-brass frame; side-lit by the south window",
       "dressing_zone": "open floor in front of the mirror and drawer: about 1.2m to the north nightstand and about 1.7m to the side of the bed; north wall otherwise plain plaster",
-      "small_drawer": "one small wall-hung walnut drawer in the north-west corner on the north wall, 0.6m wide x 0.35m deep x 0.18m high, top at 0.95m, travertine top, brass pull, soft LED glow underneath; for combs and small items; styled with a brass tray, perfume and a bud vase"
+      "small_drawer": "one small wall-hung walnut drawer in the north-west corner on the north wall, 0.6m wide x 0.35m deep x 0.18m high, top at 0.95m, travertine top, brass pull, soft LED glow underneath; for combs and small items; styled with a brass tray, perfume and a bud vase",
+      "artwork": "one abstract canvas 1.2m wide x 1.5m high (portrait), centred on the bed, bottom 0.65m and top 2.15m above the floor; soft layered warm neutrals (cream, sand, taupe) with a small terracotta accent and one fine slate-grey line; thin brushed-brass floater frame; slim brass picture light above (off)"
     }
   }
 }
