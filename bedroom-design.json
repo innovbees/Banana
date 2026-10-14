@@ -2,7 +2,7 @@
   "marketing_image": {
     "meta": {
       "spec_version": "1.0.0",
-      "title": "Modern Luxury Bedroom 1 (4.9m x 4.0m) - Bedside Detail",
+      "title": "Modern Luxury Bedroom 1 (4.9m x 4.0m) - King Bed, TV Wall and Lounge Nook",
       "campaign": "bedroom_redesign",
       "brand_name": "Personal Bedroom Concept",
       "usage_context": "interior_design_concept"
@@ -27,6 +27,12 @@
           "count": 4,
           "position": "on_nightstand",
           "notes": "stack of two coffee-table books, small brass tray with a glass carafe, a bud vase with a single white ranunculus, a slim gold alarm clock"
+        },
+        {
+          "type": "lounge_seating",
+          "count": 3,
+          "position": "far_corner_by_balcony_doors",
+          "notes": "sculptural taupe boucle lounge chair, round travertine side table with a cup of coffee and an open book, slim brass arc floor lamp"
         }
       ],
       "background": [
@@ -39,7 +45,7 @@
         {
           "type": "balcony_sliding_doors",
           "count": 1,
-          "position": "right_edge",
+          "position": "left_side_of_frame",
           "notes": "floor-to-ceiling glass sliding doors with sheer ivory curtains and greige linen drapes pulled open; glimpse of balcony and soft greenery beyond"
         },
         {
@@ -47,6 +53,12 @@
           "count": 2,
           "position": "hanging_above_each_nightstand",
           "notes": "small blown-glass pendants on brass rods, off"
+        },
+        {
+          "type": "tv_wall",
+          "count": 1,
+          "position": "right_side_of_frame",
+          "notes": "65 inch slim TV, screen off, on fluted walnut panelling above a floating walnut TV unit with soft LED glow underneath"
         }
       ]
     },
@@ -87,18 +99,18 @@
     },
     "camera": {
       "angle": "three_quarter_front",
-      "height": "eye_level_seated",
-      "framing": "medium",
-      "focal_length_mm": 35,
-      "depth_of_field": "medium",
-      "focus_point": "headboard wall, pillows and the nightstand on the window side",
-      "position": "standing near the long left wall, off to the window side, looking toward the bed and headboard wall at a slight angle"
+      "height": "standing_eye_level",
+      "framing": "wide",
+      "focal_length_mm": 24,
+      "depth_of_field": "deep",
+      "focus_point": "whole room: king bed in the foreground and center, TV wall on the right, lounge nook and balcony doors on the left",
+      "position": "standing in the corner by the entry door, looking diagonally across the room toward the corner where the TV wall meets the balcony doors"
     },
     "lighting": {
-      "key_light_direction": "right",
+      "key_light_direction": "left",
       "key_light_source": "morning sunlight through the balcony sliding doors, filtered by sheer curtains",
       "key_light_intensity": "high",
-      "fill_light_direction": "left",
+      "fill_light_direction": "right",
       "fill_light_intensity": "low",
       "rim_light": false,
       "color_temperature": "warm_daylight_5000k",
@@ -113,7 +125,9 @@
         "people",
         "text",
         "harsh shadows",
-        "oversaturated colors"
+        "oversaturated colors",
+        "visible TV cables",
+        "bright TV screen content"
       ]
     },
     "controls": {
@@ -132,9 +146,15 @@
       "window_wall": "short wall to the bed's left side as you lie in it (camera right): wide floor-to-ceiling glass sliding doors opening to a balcony with a pale stone deck",
       "entry_door": "near the corner beside the headboard wall, on the side away from the window; out of frame",
       "ensuite_opening": "wide opening between two walk-in robes, hidden behind the freestanding headboard wall",
-      "clearances": "about 0.8m walkway behind the headboard wall, about 0.9m on each side of the king bed; no bench at the foot of the bed, keeping the floor clear toward the console",
+      "clearances": "about 0.8m walkway behind the headboard wall, about 0.9m on each side of the king bed, slim 0.35m floating TV unit keeps the walkway at the foot of the bed clear; lounge nook sits beside the bed path, not in it",
       "headboard_feature_wall": "freestanding headboard wall about 1.2m high and the width of the bed plus nightstands, finished in walnut panelling with the ivory boucle headboard mounted on it; set about 0.8m in front of the ensuite opening, so the robes and ensuite are reached by walking around either end",
-      "opposite_wall": "the long left wall facing the foot of the bed: low walnut console with styled objects and large abstract art above it"
+      "opposite_wall": "the long left wall facing the foot of the bed: floating TV wall with a 65 inch TV centered on the bed",
+      "tv_wall": {
+        "tv": "65 inch ultra-slim TV (approx. 1.45m wide x 0.83m tall), flush wall-mounted, screen center about 1.1m above the floor for viewing from bed, screen off showing a dark glossy surface",
+        "backdrop": "vertical fluted walnut panelling about 2.4m wide behind the TV, with a soft warm LED wash from above",
+        "floating_unit": "wall-hung walnut TV module about 2.2m wide, 0.35m deep and 0.3m high, floating about 0.35m above the floor with hidden LED glow underneath, push-to-open fronts, travertine top styled with a small sculpture and a low ceramic bowl"
+      },
+      "lounge_nook": "corner where the TV wall meets the balcony doors: one sculptural lounge chair in taupe boucle with a curved back, a round travertine side table, a slim brass floor lamp (off) and a small round wool rug, angled toward the balcony view"
     }
   }
 }
