@@ -172,21 +172,23 @@ box(1.33,1.5,0.54,0.57,4.48,4.66,mat('#c9b48e',0.8)); cyl(1.52,0.58,4.62,0.04,0.
 cyl(0.15,0.75,3.95,0.012,0.012,1.5,brass,8); cyl(0.15,0.01,3.95,0.12,0.14,0.02,brass);
 cyl(0.15,1.5,3.95,0.12,0.18,0.22,mat('#f3ecdf',0.9,0,{side:THREE.DoubleSide}),32);
 
-// ---------- Dressing spot: small floating drawer on north wall + full-length mirror on west wall ----------
-// small wall-hung drawer in the north-west corner, 0.6m wide x 0.35m deep x 0.18m high, top at 0.95m
-box(0.15,0.75,0.77,0.92,0,0.35,walnut);
-box(0.16,0.74,0.785,0.905,0.35,0.355,walnut);
-box(0.37,0.53,0.84,0.855,0.355,0.37,brass);                           // brass pull
-box(0.15,0.75,0.92,0.95,0,0.36,travertine);                           // stone top
-box(0.15,0.75,0.765,0.77,0.02,0.33,mat('#fff2d4',0.5,0,{emissive:'#ffcf8a',emissiveIntensity:0.4}),false,false); // soft under-glow
-// styling on top: small brass tray, perfume, bud vase
-box(0.25,0.47,0.95,0.962,0.08,0.24,brass); cyl(0.32,1.0,0.16,0.025,0.025,0.08,mat('#e9efe9',0.1,0,{transparent:true,opacity:0.6})); cyl(0.42,0.99,0.15,0.02,0.02,0.06,mat('#d8c9a6',0.3,0.3));
-cyl(0.62,1.02,0.17,0.04,0.03,0.14,mat('#efe9df',0.5)); cyl(0.62,1.14,0.17,0.003,0.003,0.12,mat('#6b7f58',0.8),6);
-// full-length mirror on west wall, north end: 0.9m wide x 2.0m high, slim brass frame
-box(0,0.035,0.15,2.15,0.55,1.45,brass);
+// ---------- Dressing spot: integrated wall-hung mirror + drawer unit on west wall, north end (z 0.5-1.5) ----------
+// walnut backing panel 1.0m wide, from 0.57m to 2.22m; floor below left clear
+box(0,0.03,0.57,2.22,0.5,1.5,walnut);
+// drawer: 1.0m wide x 0.3m deep x 0.18m high, top at 0.75m, travertine top, brass pull, soft under-glow
+box(0.03,0.3,0.57,0.73,0.5,1.5,walnut);
+box(0.3,0.305,0.585,0.715,0.51,1.49,walnut);
+box(0.305,0.32,0.64,0.655,0.92,1.08,brass);
+box(0.03,0.31,0.73,0.75,0.5,1.5,travertine);
+box(0.04,0.29,0.565,0.57,0.52,1.48,mat('#fff2d4',0.5,0,{emissive:'#ffcf8a',emissiveIntensity:0.4}),false,false);
+// styling on drawer top: brass tray with comb + perfume, bud vase
+box(0.08,0.24,0.75,0.762,0.62,0.9,brass); cyl(0.14,0.8,0.7,0.025,0.025,0.08,mat('#e9efe9',0.1,0,{transparent:true,opacity:0.6})); box(0.1,0.22,0.762,0.77,0.78,0.86,mat('#3a2a1e',0.5));
+cyl(0.16,0.82,1.35,0.04,0.03,0.14,mat('#efe9df',0.5)); cyl(0.16,0.94,1.35,0.003,0.003,0.12,mat('#6b7f58',0.8),6);
+// mirror inset above drawer: 0.9m wide x 1.42m high (0.78m to 2.2m), thin brass edge
+box(0.03,0.04,0.77,2.21,0.54,1.46,brass);
 const cubeRT=new THREE.WebGLCubeRenderTarget(512); const cubeCam=new THREE.CubeCamera(0.05,20,cubeRT);
 const mirrorM=mat('#c9d2d4',0.03,1.0,{envMap:cubeRT.texture});
-const mirror=box(0.035,0.045,0.17,2.13,0.57,1.43,mirrorM,false,false);
+const mirror=box(0.04,0.05,0.78,2.2,0.55,1.45,mirrorM,false,false);
 
 // ---------- Lighting: morning sun through south window ----------
 scene.add(new THREE.HemisphereLight('#fff8ee','#a08a70',0.55));

@@ -55,22 +55,16 @@
           "notes": "2.3m wide x 1.54m high window with a 0.56m sill, sheer ivory curtains and greige linen drapes pulled open, both hung from a slim white track fixed flush to the underside of the flat ceiling, fabric falling from ceiling to floor, soft view of greenery outside; not a door, no balcony"
         },
         {
-          "type": "full_length_mirror",
-          "count": 1,
-          "position": "west_wall_north_end",
-          "notes": "0.9m x 2.0m full-length mirror with slim brass frame on the plain west wall, north end"
-        },
-        {
-          "type": "small_floating_drawer",
-          "count": 1,
-          "position": "north_wall_corner_next_to_mirror",
-          "notes": "0.6m wide wall-hung walnut drawer with travertine top and brass pull, top at 0.95m"
-        },
-        {
           "type": "artwork",
           "count": 1,
           "position": "west_wall_centred_on_bed",
           "notes": "1.2m x 1.5m portrait abstract canvas in warm neutrals with a terracotta accent and a fine slate line, thin brass floater frame, slim brass picture light above"
+        },
+        {
+          "type": "mirror_drawer_unit",
+          "count": 1,
+          "position": "west_wall_north_end",
+          "notes": "1.0m wide integrated wall-hung walnut unit: floating drawer with travertine top at 0.75m and a 0.9m x 1.42m mirror above it with thin brass edge; floor clear below"
         }
       ]
     },
@@ -177,10 +171,9 @@
       "lounge_nook": "south-west corner, between the west wall and the south window, beside the foot of the bed: sculptural taupe boucle lounge chair angled toward the view, round travertine side table, slim brass floor lamp, small round wool rug; the chair sits partly in front of the west end of the window, below sill height for its seat, catching the daylight",
       "orientation": "room runs north-south; west wall 4.9m long, north and south walls 4.0m and solid apart from the south glazing; east side has the entry door (north end), the robes and the ensuite opening",
       "ceiling": "flat plasterboard ceiling at 2.4m, painted warm white; no bulkheads, no recessed curtain pelmet or cove",
-      "mirror": "full-length mirror 0.9m wide x 2.0m high on the west wall at its north end (0.55m to 1.45m from the north wall), bottom 0.15m above the floor, slim brushed-brass frame; side-lit by the south window",
-      "dressing_zone": "open floor in front of the mirror and drawer: about 1.2m to the north nightstand and about 1.7m to the side of the bed; north wall otherwise plain plaster",
-      "small_drawer": "one small wall-hung walnut drawer in the north-west corner on the north wall, 0.6m wide x 0.35m deep x 0.18m high, top at 0.95m, travertine top, brass pull, soft LED glow underneath; for combs and small items; styled with a brass tray, perfume and a bud vase",
-      "artwork": "one abstract canvas 1.2m wide x 1.5m high (portrait), centred on the bed, bottom 0.65m and top 2.15m above the floor; soft layered warm neutrals (cream, sand, taupe) with a small terracotta accent and one fine slate-grey line; thin brushed-brass floater frame; slim brass picture light above (off)"
+      "dressing_zone": "open floor in front of the mirror unit, about 1.5m to the bed; north wall left as plain plaster",
+      "artwork": "one abstract canvas 1.2m wide x 1.5m high (portrait), centred on the bed, bottom 0.65m and top 2.15m above the floor; soft layered warm neutrals (cream, sand, taupe) with a small terracotta accent and one fine slate-grey line; thin brushed-brass floater frame; slim brass picture light above (off)",
+      "mirror_unit": "integrated wall-hung walnut unit on the west wall at its north end (0.5m to 1.5m from the north wall), 1.0m wide: a floating drawer 0.3m deep x 0.18m high with top at 0.75m (travertine top, brass pull, soft LED glow underneath, for combs and small items) and directly above it an inset mirror 0.9m wide x 1.42m high (0.78m to 2.2m) with a thin brass edge on a walnut backing panel; floor below left clear"
     }
   }
 }
