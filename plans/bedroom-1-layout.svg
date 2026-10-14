@@ -131,7 +131,7 @@
     <rect x="320" y="768" width="14" height="10" fill="#7a5233"/><text x="340" y="777">walnut joinery</text>
     <line x1="450" y1="773" x2="470" y2="773" stroke="#3b7ea1" stroke-width="3"/><text x="476" y="777">glazing</text>
     <rect x="540" y="768" width="14" height="10" fill="#ebe7e2" stroke="#999"/><text x="560" y="777">robes (existing)</text>
-    <line x1="320" y1="800" x2="340" y2="800" stroke="#b8a99a" stroke-width="3" stroke-dasharray="2,3"/><text x="346" y="804">ceiling-hung curtains</text>
+    <line x1="320" y1="800" x2="340" y2="800" stroke="#b8a99a" stroke-width="3" stroke-dasharray="2,3"/><text x="346" y="804">curtain track fixed to flat ceiling</text>
     <line x1="80" y1="800" x2="100" y2="800" stroke="#2e86c1" stroke-dasharray="6,3" stroke-width="2"/><text x="106" y="804">bed centre = robe walkway centre</text>
   </g>
 </svg>
