@@ -37,29 +37,29 @@ const oak = mat('#ffffff',0.55,0,{map: canvasTex(1024,1024,(g,w,h)=>{
     for(let k=0;k<70;k++){ g.strokeStyle=`rgba(120,85,50,${0.04+r()*0.06})`; g.lineWidth=1+r()*2; const x=i*plank+r()*plank; g.beginPath(); g.moveTo(x,0); g.bezierCurveTo(x+r()*10-5,h/3,x+r()*10-5,2*h/3,x+r()*6-3,h); g.stroke(); }
     g.fillStyle='rgba(90,60,35,0.35)'; g.fillRect(i*plank,0,2,h); const cut=r()*h; g.fillRect(i*plank,cut,plank,2); }
 },2.2,1.2)});
-const plaster = mat('#ffffff',0.95,0,{map: canvasTex(512,512,(g,w,h)=>{ g.fillStyle='#e6ddd1'; g.fillRect(0,0,w,h); const r=rnd(3);
-  for(let i=0;i<3000;i++){ const v=r()<0.5; g.fillStyle=v?`rgba(255,250,242,${r()*0.06})`:`rgba(170,155,138,${r()*0.05})`; g.beginPath(); g.arc(r()*w,r()*h,4+r()*30,0,7); g.fill(); } },2,2)});
-const ceilingM = mat('#f6f3ee',0.95);
-const walnut = mat('#5a3a24',0.55,0,{map: canvasTex(512,512,(g,w,h)=>{ g.fillStyle='#6a4529'; g.fillRect(0,0,w,h); const r=rnd(11);
-  for(let i=0;i<160;i++){ g.strokeStyle=`rgba(${r()<0.5?40:120},${r()<0.5?25:80},${r()<0.5?15:50},${0.15+r()*0.2})`; g.lineWidth=1+r()*3; const y=r()*h; g.beginPath(); g.moveTo(0,y); g.bezierCurveTo(w/3,y+r()*20-10,2*w/3,y+r()*20-10,w,y+r()*10-5); g.stroke(); } })});
-const travertine = mat('#ffffff',0.6,0,{map: canvasTex(512,512,(g,w,h)=>{ g.fillStyle='#ddd0bb'; g.fillRect(0,0,w,h); const r=rnd(5);
-  for(let i=0;i<120;i++){ g.strokeStyle=`rgba(170,150,120,${0.1+r()*0.2})`; g.lineWidth=0.5+r()*2; const y=r()*h; g.beginPath(); g.moveTo(0,y); g.lineTo(w,y+r()*8-4); g.stroke(); }
-  for(let i=0;i<300;i++){ g.fillStyle=`rgba(160,140,110,${r()*0.3})`; g.fillRect(r()*w,r()*h,1+r()*4,1); } })});
-const boucle = mat('#ffffff',1,0,{map: canvasTex(256,256,(g,w,h)=>{ g.fillStyle='#ece5d8'; g.fillRect(0,0,w,h); const r=rnd(13);
-  for(let i=0;i<4000;i++){ const v=r(); g.fillStyle=v<0.5?'rgba(255,252,245,0.5)':'rgba(190,180,165,0.35)'; g.beginPath(); g.arc(r()*w,r()*h,0.8+r()*1.8,0,7); g.fill(); } },3,3)});
-const taupeBoucle = mat('#ffffff',1,0,{map: canvasTex(256,256,(g,w,h)=>{ g.fillStyle='#a8998a'; g.fillRect(0,0,w,h); const r=rnd(17);
-  for(let i=0;i<4000;i++){ const v=r(); g.fillStyle=v<0.5?'rgba(215,205,190,0.45)':'rgba(110,98,86,0.35)'; g.beginPath(); g.arc(r()*w,r()*h,0.8+r()*1.8,0,7); g.fill(); } },3,3)});
-const sheet = mat('#fbfaf7',0.75);
-const duvet = mat('#e5d3ad',0.45,0.05);
-const velvet = mat('#9a8a7a',0.6,0.05);
-const knit = mat('#ffffff',1,0,{map: canvasTex(256,256,(g,w,h)=>{ g.fillStyle='#d8cdbd'; g.fillRect(0,0,w,h); for(let x=0;x<w;x+=16){ for(let y=0;y<h;y+=12){ g.fillStyle='rgba(120,105,88,0.35)'; g.beginPath(); g.ellipse(x+8,y+6,6,5,0,0,7); g.fill(); g.fillStyle='rgba(255,250,240,0.35)'; g.beginPath(); g.ellipse(x+6,y+4,3,2,0,0,7); g.fill(); } } },4,4)});
-const brass = mat('#b08d57',0.3,0.9);
+const plaster = mat('#ffffff',0.95,0,{map: canvasTex(512,512,(g,w,h)=>{ g.fillStyle='#e2e1de'; g.fillRect(0,0,w,h); const r=rnd(3);
+  for(let i=0;i<3000;i++){ const v=r()<0.5; g.fillStyle=v?`rgba(252,252,250,${r()*0.06})`:`rgba(150,150,148,${r()*0.05})`; g.beginPath(); g.arc(r()*w,r()*h,4+r()*30,0,7); g.fill(); } },2,2)});
+const ceilingM = mat('#f6f6f4',0.95);
+const walnut = mat('#4a4744',0.6,0,{map: canvasTex(512,512,(g,w,h)=>{ g.fillStyle='#57534f'; g.fillRect(0,0,w,h); const r=rnd(11);
+  for(let i=0;i<160;i++){ g.strokeStyle=`rgba(${r()<0.5?40:110},${r()<0.5?38:105},${r()<0.5?36:100},${0.15+r()*0.2})`; g.lineWidth=1+r()*3; const y=r()*h; g.beginPath(); g.moveTo(0,y); g.bezierCurveTo(w/3,y+r()*20-10,2*w/3,y+r()*20-10,w,y+r()*10-5); g.stroke(); } })});
+const travertine = mat('#ffffff',0.6,0,{map: canvasTex(512,512,(g,w,h)=>{ g.fillStyle='#ecebe9'; g.fillRect(0,0,w,h); const r=rnd(5);
+  for(let i=0;i<120;i++){ g.strokeStyle=`rgba(140,142,145,${0.08+r()*0.18})`; g.lineWidth=0.5+r()*2; const y=r()*h; g.beginPath(); g.moveTo(0,y); g.lineTo(w,y+r()*8-4); g.stroke(); }
+  for(let i=0;i<300;i++){ g.fillStyle=`rgba(150,152,155,${r()*0.2})`; g.fillRect(r()*w,r()*h,1+r()*4,1); } })});
+const boucle = mat('#ffffff',1,0,{map: canvasTex(256,256,(g,w,h)=>{ g.fillStyle='#e4e3e0'; g.fillRect(0,0,w,h); const r=rnd(13);
+  for(let i=0;i<4000;i++){ const v=r(); g.fillStyle=v<0.5?'rgba(252,252,250,0.5)':'rgba(170,170,168,0.35)'; g.beginPath(); g.arc(r()*w,r()*h,0.8+r()*1.8,0,7); g.fill(); } },3,3)});
+const taupeBoucle = mat('#ffffff',1,0,{map: canvasTex(256,256,(g,w,h)=>{ g.fillStyle='#a6a6a3'; g.fillRect(0,0,w,h); const r=rnd(17);
+  for(let i=0;i<4000;i++){ const v=r(); g.fillStyle=v<0.5?'rgba(215,215,212,0.45)':'rgba(100,100,98,0.35)'; g.beginPath(); g.arc(r()*w,r()*h,0.8+r()*1.8,0,7); g.fill(); } },3,3)});
+const sheet = mat('#fbfbfa',0.75);
+const duvet = mat('#d2d3d1',0.4,0.08);
+const velvet = mat('#5f6b74',0.55,0.05);
+const knit = mat('#ffffff',1,0,{map: canvasTex(256,256,(g,w,h)=>{ g.fillStyle='#7d7d7b'; g.fillRect(0,0,w,h); for(let x=0;x<w;x+=16){ for(let y=0;y<h;y+=12){ g.fillStyle='rgba(60,60,60,0.35)'; g.beginPath(); g.ellipse(x+8,y+6,6,5,0,0,7); g.fill(); g.fillStyle='rgba(200,200,198,0.3)'; g.beginPath(); g.ellipse(x+6,y+4,3,2,0,0,7); g.fill(); } } },4,4)});
+const brass = mat('#b9bdc0',0.32,0.9);
 const black = mat('#101114',0.35,0.3);
 const carpet = mat('#ffffff',1,0,{map: canvasTex(512,512,(g,w,h)=>{ g.fillStyle='#c4c4c1'; g.fillRect(0,0,w,h); const r=rnd(29);
   for(let i=0;i<14000;i++){ const v=r(); g.fillStyle=v<0.5?`rgba(235,235,232,${0.25+r()*0.2})`:`rgba(150,150,148,${0.2+r()*0.2})`; g.fillRect(r()*w,r()*h,1+r()*1.5,1+r()*2); } },8,10)});
 const creamRug = mat('#ffffff',1,0,{map: canvasTex(256,256,(g,w,h)=>{ g.fillStyle='#ece5d8'; g.fillRect(0,0,w,h); const r=rnd(23); for(let i=0;i<5000;i++){ g.fillStyle=`rgba(${r()<0.5?255:200},${r()<0.5?250:190},${r()<0.5?240:175},0.3)`; g.fillRect(r()*w,r()*h,1,2); } },6,6)});
-const linen = mat('#cbbfae',0.95,0,{side:THREE.DoubleSide});
-const sheerM = mat('#fffdf8',0.9,0,{transparent:true,opacity:0.38,side:THREE.DoubleSide});
+const linen = mat('#cfcecb',0.95,0,{side:THREE.DoubleSide});
+const sheerM = mat('#fdfdfc',0.9,0,{transparent:true,opacity:0.38,side:THREE.DoubleSide});
 const glassM = new THREE.MeshPhysicalMaterial({color:'#fff6e6',roughness:0.15,transmission:0.6,transparent:true,opacity:0.55});
 
 // ---------- Room shell ----------
@@ -119,7 +119,7 @@ drape(1.0,3.0,RL-0.1,sheerM,22,0.02);                                       // s
 // ---------- King bed (centre z = 2.85) ----------
 const bz0=1.885, bz1=3.815, bx0=1.05, bx1=3.15;
 rbox(bx1-bx0,0.28,bz1-bz0,0.04,boucle,(bx0+bx1)/2,0.2,(bz0+bz1)/2);
-box(bx0+0.02,bx1-0.02,0.0,0.06,bz0+0.05,bz1-0.05,mat('#3a2a1e',0.6)); // shadow gap plinth
+box(bx0+0.02,bx1-0.02,0.0,0.06,bz0+0.05,bz1-0.05,mat('#2c2b2a',0.6)); // shadow gap plinth
 rbox(bx1-bx0-0.06,0.26,bz1-bz0-0.06,0.06,sheet,(bx0+bx1)/2,0.45,(bz0+bz1)/2);
 // duvet folded back over the foot two-thirds, draping over sides
 rbox(2.38-bx0,0.27,bz1-bz0+0.05,0.05,duvet,(bx0+2.38)/2-0.01,0.47,(bz0+bz1)/2).receiveShadow=false;
@@ -132,7 +132,7 @@ box(3.2,3.3,0,1.2,1.4,4.3,walnut);                           // freestanding hea
 box(3.19,3.31,1.2,1.215,1.4,4.3,mat('#fff3d6',0.4,0,{emissive:'#ffdca0',emissiveIntensity:0.15})); // LED edge (off-ish)
 // pillows
 function pillow(x,y,z,w,h,d,m,tilt){ const o=rbox(d,h,w,Math.min(d,h)*0.45,m,x,y,z); o.rotation.z=tilt; return o; }
-for(const zc of [2.45,3.25]){ pillow(3.03,0.86,zc,0.74,0.6,0.18,mat('#f8f6f1',0.85),0.18); pillow(2.88,0.78,zc,0.68,0.44,0.17,mat('#efe9df',0.85),0.22); }
+for(const zc of [2.45,3.25]){ pillow(3.03,0.86,zc,0.74,0.6,0.18,mat('#f7f7f6',0.85),0.18); pillow(2.88,0.78,zc,0.68,0.44,0.17,mat('#e2e3e2',0.85),0.22); }
 pillow(2.72,0.72,2.85,0.6,0.3,0.15,velvet,0.2);
 
 
@@ -148,8 +148,8 @@ for(const [z0,z1] of [[1.385,1.885],[3.815,4.315]]){
   cyl(2.95,1.59,(z0+z1)/2,0.025,0.025,0.035,brass);
 }
 // styling on south nightstand (window side): books, carafe, bud vase
-box(2.78,3.06,0.56,0.6,3.95,4.15,mat('#d9cfc0',0.8)); box(2.8,3.04,0.6,0.625,3.97,4.13,mat('#3e4a52',0.7));
-cyl(2.85,0.62,4.22,0.035,0.04,0.12,mat('#e9efe9',0.1,0,{transparent:true,opacity:0.5})); cyl(3.05,0.64,3.9,0.025,0.02,0.08,mat('#efe9df',0.4));
+box(2.78,3.06,0.56,0.6,3.95,4.15,mat('#d6d7d8',0.8)); box(2.8,3.04,0.6,0.625,3.97,4.13,mat('#3e4a52',0.7));
+cyl(2.85,0.62,4.22,0.035,0.04,0.12,mat('#e9efe9',0.1,0,{transparent:true,opacity:0.5})); cyl(3.05,0.64,3.9,0.025,0.02,0.08,mat('#f1f1ef',0.4));
 cyl(3.05,0.72,3.9,0.004,0.004,0.1,mat('#5d7a4c',0.8),6); pillow(3.05,0.78,3.9,0.05,0.04,0.05,mat('#fffaf2',0.7),0);
 // north nightstand: small clock + tray
 box(2.8,3.08,0.56,0.57,1.5,1.75,brass); cyl(3.0,0.62,1.7,0.05,0.05,0.04,brass).rotation.z=Math.PI/2;
@@ -157,10 +157,10 @@ box(2.8,3.08,0.56,0.57,1.5,1.75,brass); cyl(3.0,0.62,1.7,0.05,0.05,0.04,brass).r
 // ---------- West wall: plain limewash plaster (no panelling, no TV) ----------
 // Large abstract artwork centred on bed (z 2.85): 1.2m wide x 1.5m high, bottom 0.65m, thin brass floater frame, brass picture light
 { const ART=P.get('art')||'portrait'; const AW=ART==='landscape'?1.8:1.2, AH=ART==='landscape'?0.9:1.5, AB=ART==='landscape'?1.0:0.65, ZC=2.85, LY=AB+AH+0.1;
-  const art=canvasTex(ART==='landscape'?900:600,ART==='landscape'?450:750,(g,w,h)=>{ g.fillStyle='#ece3d4'; g.fillRect(0,0,w,h); const r=rnd(41);
-    const blobs=[['#d9c7ad',0.35,0.3,0.42],['#b89f84',0.62,0.55,0.34],['#c77d5a',0.3,0.72,0.16],['#3f4a52',0.7,0.2,0.1],['#efe6d6',0.5,0.5,0.25],['#a68c72',0.25,0.45,0.2]];
+  const art=canvasTex(ART==='landscape'?900:600,ART==='landscape'?450:750,(g,w,h)=>{ g.fillStyle='#ececea'; g.fillRect(0,0,w,h); const r=rnd(41);
+    const blobs=[['#cfd0cf',0.35,0.3,0.42],['#9c9e9f',0.62,0.55,0.34],['#7f95a6',0.3,0.72,0.16],['#3a3d40',0.7,0.2,0.1],['#f1f1ef',0.5,0.5,0.25],['#b5b7b8',0.25,0.45,0.2]];
     for(const [c,x,y,rr] of blobs){ for(let i=0;i<60;i++){ g.globalAlpha=0.05+r()*0.06; g.fillStyle=c; g.beginPath(); g.ellipse(x*w+(r()-0.5)*w*0.15,y*h+(r()-0.5)*h*0.15,rr*w*(0.6+r()*0.5),rr*h*(0.4+r()*0.4),r()*3,0,7); g.fill(); } }
-    g.globalAlpha=0.6; g.strokeStyle='#3f4a52'; g.lineWidth=3; g.beginPath(); g.moveTo(w*0.18,h*0.62); g.bezierCurveTo(w*0.4,h*0.5,w*0.55,h*0.75,w*0.82,h*0.58); g.stroke(); g.globalAlpha=1; });
+    g.globalAlpha=0.6; g.strokeStyle='#3a3d40'; g.lineWidth=3; g.beginPath(); g.moveTo(w*0.18,h*0.62); g.bezierCurveTo(w*0.4,h*0.5,w*0.55,h*0.75,w*0.82,h*0.58); g.stroke(); g.globalAlpha=1; });
   box(0.0,0.045,AB-0.02,AB+AH+0.02,ZC-AW/2-0.02,ZC+AW/2+0.02,brass);                                   // floater frame
   box(0.045,0.05,AB,AB+AH,ZC-AW/2,ZC+AW/2,mat('#ffffff',0.9,0,{map:art}));          // canvas face
   // rotate texture to face east: draw on a plane instead for correct orientation
@@ -180,9 +180,9 @@ const bk=rbox(0.8,0.48,0.2,0.09,taupeBoucle,0,0.66,-0.3,nook); bk.rotation.x=-0.
 const al=rbox(0.14,0.28,0.66,0.06,taupeBoucle,-0.34,0.52,-0.02,nook); const ar=rbox(0.14,0.28,0.66,0.06,taupeBoucle,0.34,0.52,-0.02,nook);
 // (no rug under chair)
 cyl(1.43,0.25,4.58,0.2,0.2,0.5,travertine); cyl(1.43,0.52,4.58,0.21,0.21,0.04,travertine);
-box(1.33,1.5,0.54,0.57,4.48,4.66,mat('#c9b48e',0.8)); cyl(1.52,0.58,4.62,0.04,0.035,0.08,mat('#fdfbf6',0.3));
+box(1.33,1.5,0.54,0.57,4.48,4.66,mat('#bfc3c6',0.8)); cyl(1.52,0.58,4.62,0.04,0.035,0.08,mat('#fdfbf6',0.3));
 cyl(0.15,0.75,3.95,0.012,0.012,1.5,brass,8); cyl(0.15,0.01,3.95,0.12,0.14,0.02,brass);
-cyl(0.15,1.5,3.95,0.12,0.18,0.22,mat('#f3ecdf',0.9,0,{side:THREE.DoubleSide}),32);
+cyl(0.15,1.5,3.95,0.12,0.18,0.22,mat('#f4f4f2',0.9,0,{side:THREE.DoubleSide}),32);
 
 // ---------- Dressing spot: integrated wall-hung mirror + drawer unit on west wall, north end (z 0.5-1.5) ----------
 // walnut backing panel 1.0m wide, from 0.57m to 2.22m; floor below left clear
@@ -194,8 +194,8 @@ box(0.305,0.32,0.64,0.655,0.92,1.08,brass);
 box(0.03,0.31,0.73,0.75,0.5,1.5,travertine);
 box(0.04,0.29,0.565,0.57,0.52,1.48,mat('#fff2d4',0.5,0,{emissive:'#ffcf8a',emissiveIntensity:0.4}),false,false);
 // styling on drawer top: brass tray with comb + perfume, bud vase
-box(0.08,0.24,0.75,0.762,0.62,0.9,brass); cyl(0.14,0.8,0.7,0.025,0.025,0.08,mat('#e9efe9',0.1,0,{transparent:true,opacity:0.6})); box(0.1,0.22,0.762,0.77,0.78,0.86,mat('#3a2a1e',0.5));
-cyl(0.16,0.82,1.35,0.04,0.03,0.14,mat('#efe9df',0.5)); cyl(0.16,0.94,1.35,0.003,0.003,0.12,mat('#6b7f58',0.8),6);
+box(0.08,0.24,0.75,0.762,0.62,0.9,brass); cyl(0.14,0.8,0.7,0.025,0.025,0.08,mat('#e9efe9',0.1,0,{transparent:true,opacity:0.6})); box(0.1,0.22,0.762,0.77,0.78,0.86,mat('#2c2b2a',0.5));
+cyl(0.16,0.82,1.35,0.04,0.03,0.14,mat('#f1f1ef',0.5)); cyl(0.16,0.94,1.35,0.003,0.003,0.12,mat('#6b7f58',0.8),6);
 // mirror inset above drawer: 0.9m wide x 1.42m high (0.78m to 2.2m), thin brass edge
 box(0.03,0.04,0.77,2.21,0.54,1.46,brass);
 const cubeRT=new THREE.WebGLCubeRenderTarget(512); const cubeCam=new THREE.CubeCamera(0.05,20,cubeRT);

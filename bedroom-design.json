@@ -12,10 +12,10 @@
       "name": "Modern luxury bed and nightstand",
       "variant": "morning, freshly made bed",
       "physical_properties": {
-        "bed": "king size (approx. 1.83m x 2.03m mattress) upholstered bed with tall channel-tufted ivory boucle headboard mounted on a freestanding walnut-panelled headboard wall, slim low-profile frame, bed floating in the middle of the room",
-        "bedding": "crisp white sateen sheets, champagne silk-look duvet folded back at the foot, layered euro shams and two lumbar pillows in taupe velvet, chunky knit throw draped at an angle",
-        "nightstand": "two walnut veneer nightstands, about 0.5m wide each, with fluted drawer fronts, brushed brass pulls and travertine tops",
-        "lamp": "sculptural ceramic table lamp with pleated linen shade, switched off",
+        "bed": "king size (approx. 1.83m x 2.03m mattress) upholstered bed with tall channel-tufted pale oyster-grey boucle headboard mounted on a freestanding smoked charcoal-oak panelled headboard wall, slim low-profile frame, bed floating in the middle of the room",
+        "bedding": "crisp white sateen sheets, silver-grey satin duvet folded back at the foot, layered euro shams and two lumbar pillows in slate blue-grey velvet, chunky knit throw draped at an angle",
+        "nightstand": "two smoked charcoal-oak veneer nightstands, about 0.5m wide each, with fluted drawer fronts, brushed nickel pulls and honed white marble tops",
+        "lamp": "sculptural ceramic table lamp with pleated white linen shade, switched off",
         "finish": "rich mix of matte, velvet, boucle and brushed metal textures"
       }
     },
@@ -26,13 +26,13 @@
           "type": "nightstand_styling",
           "count": 4,
           "position": "on_nightstand",
-          "notes": "stack of two coffee-table books, small brass tray with a glass carafe, a bud vase with a single white ranunculus, a slim gold alarm clock"
+          "notes": "stack of two coffee-table books, small brushed nickel tray with a glass carafe, a bud vase with a single white ranunculus, a slim nickel alarm clock"
         },
         {
           "type": "lounge_seating",
           "count": 3,
           "position": "far_corner_beside_window",
-          "notes": "sculptural taupe boucle lounge chair, round travertine side table with a cup of coffee and an open book, slim brass arc floor lamp"
+          "notes": "sculptural dove-grey boucle lounge chair, round honed white marble side table with a cup of coffee and an open book, slim brushed nickel arc floor lamp"
         }
       ],
       "background": [
@@ -40,31 +40,31 @@
           "type": "headboard_feature_wall",
           "count": 1,
           "position": "behind_bed",
-          "notes": "freestanding walnut-panelled half-height wall with integrated warm LED strip along the top edge (off), glimpse of the doorway to the ensuite visible past one end"
+          "notes": "freestanding smoked charcoal-oak panelled half-height wall with integrated warm LED strip along the top edge (off), glimpse of the doorway to the ensuite visible past one end"
         },
         {
           "type": "pendant_lights",
           "count": 2,
           "position": "hanging_above_each_nightstand",
-          "notes": "small blown-glass pendants on brass rods, off"
+          "notes": "small blown-glass pendants on brushed nickel rods, off"
         },
         {
           "type": "window",
           "count": 1,
           "position": "left_side_of_frame",
-          "notes": "2.3m wide x 1.54m high window with a 0.56m sill, sheer ivory curtains and greige linen drapes pulled open, both hung from a slim white track fixed flush to the underside of the flat ceiling, fabric falling from ceiling to floor, soft view of greenery outside; not a door, no balcony"
+          "notes": "2.3m wide x 1.54m high window with a 0.56m sill, sheer white curtains and pale grey linen drapes pulled open, both hung from a slim white track fixed flush to the underside of the flat ceiling, fabric falling from ceiling to floor, soft view of greenery outside; not a door, no balcony"
         },
         {
           "type": "artwork",
           "count": 1,
           "position": "west_wall_centred_on_bed",
-          "notes": "1.2m x 1.5m portrait abstract canvas in warm neutrals with a terracotta accent and a fine slate line, thin brass floater frame, slim brass picture light above"
+          "notes": "1.2m x 1.5m portrait abstract canvas in greys and charcoal with a dusty-blue accent and a fine charcoal line, thin brushed nickel floater frame, slim brushed nickel picture light above"
         },
         {
           "type": "mirror_drawer_unit",
           "count": 1,
           "position": "west_wall_north_end",
-          "notes": "1.0m wide integrated wall-hung walnut unit: floating drawer with travertine top at 0.75m and a 0.9m x 1.42m mirror above it with thin brass edge; floor clear below"
+          "notes": "1.0m wide integrated wall-hung smoked charcoal-oak unit: floating drawer with honed white marble top at 0.75m and a 0.9m x 1.42m mirror above it with thin brushed nickel edge; floor clear below"
         }
       ]
     },
@@ -75,25 +75,27 @@
         "reflection_strength": 0.0
       },
       "background": {
-        "color": "#E8E0D5",
-        "texture": "limewash plaster wall in warm greige",
+        "color": "#E2E1DE",
+        "texture": "limewash plaster wall in pale stone-grey",
         "effect": "subtle depth falloff"
       },
       "palette": {
         "primary": [
-          "#F5F1EA",
-          "#E8E0D5",
-          "#B8A99A"
+          "#C4C4C1",
+          "#E2E1DE",
+          "#F6F6F4",
+          "#E4E3E0"
         ],
         "accents": [
-          "#B08D57",
-          "#5C4033",
-          "#2F3A40"
+          "#4A4744",
+          "#5F6B74",
+          "#B9BDC0",
+          "#ECEBE9"
         ],
-        "notes": "ivory, greige and taupe base with champagne brass, walnut and a touch of deep slate"
+        "notes": "built around the light grey carpet: pale stone-grey walls, white ceiling and cornice, oyster-grey boucle, smoked charcoal oak timber, honed white marble, brushed nickel metal, one slate blue-grey accent"
       },
       "atmosphere": {
-        "mood": "serene, elegant, boutique-hotel calm on a fresh morning",
+        "mood": "serene, elegant, soft grey boutique-hotel calm on a fresh morning",
         "keywords": [
           "luxurious",
           "airy",
@@ -148,7 +150,10 @@
         "coffered or tray ceiling",
         "decorative ornate cornice",
         "timber or wood flooring",
-        "floor rugs"
+        "floor rugs",
+        "brass or gold finishes",
+        "warm beige, tan or cream tones",
+        "walnut or orange-toned timber"
       ],
       "scale_notes": "ceiling is a standard 2.4m, keep proportions realistic: headboard wall 1.2m, window sill 0.56m and head 2.1m; simple 90mm cove cornice at the wall-ceiling junction"
     },
@@ -165,18 +170,18 @@
         "ceiling_height": 2.4
       },
       "bed_wall": "king bed aligned on the centre line of the 0.9m walkway between the robes (about 2.85m from the north wall, 0.4m south of the room centre), headboard on the east side facing west toward the plain west wall",
-      "window_wall": "south wall (4.0m): one window 2.3m wide x 1.54m high, sill about 0.56m above the floor and head at about 2.1m, centred on the wall (0.85m of solid wall each side); dressed with a slim white curtain track surface-fixed directly to the flat ceiling just in front of the cove cornice, running about 0.15m past each side of the window, sheer ivory curtains and greige linen drapes pulled open, so the window reads larger; to the bed's left as you lie in it",
+      "window_wall": "south wall (4.0m): one window 2.3m wide x 1.54m high, sill about 0.56m above the floor and head at about 2.1m, centred on the wall (0.85m of solid wall each side); dressed with a slim white curtain track surface-fixed directly to the flat ceiling just in front of the cove cornice, running about 0.15m past each side of the window, sheer white curtains and pale grey linen drapes pulled open, so the window reads larger; to the bed's left as you lie in it",
       "entry_door": "0.9m wide door in the east wall at the north-east corner, coming in from the hallway, hinged at the north end and swinging into the room to rest against the north wall; its swing stays clear of the headboard wall and nightstand",
       "ensuite_opening": "0.9m wide opening in the east wall between the two walk-in robes, leading to the ensuite; hidden behind the freestanding headboard wall",
       "clearances": "east-west across 4.0m: 0.7m walkway + 0.1m headboard wall + about 2.15m king bed + about 1.0m walkway to the west wall; north-south along 4.9m: bed centred at about 2.85m from the north wall, about 1.9m between the north side of the bed and the north wall, about 1.1m between the south side of the bed and the south window",
       "headboard_feature_wall": "freestanding headboard wall 1.2m high, 0.1m thick and about 2.9m long (bed plus two nightstands), set 0.7m west of the east wall, centred on the robe walkway so it screens it from the bedroom; about 1.4m clear at the north end (entry door side) and 0.6m at the south end",
-      "opposite_wall": "the long west wall facing the foot of the bed: plain warm greige limewash plaster with one large abstract artwork centred on the bed",
-      "lounge_nook": "south-west corner, between the west wall and the south window, beside the foot of the bed: sculptural taupe boucle lounge chair angled toward the view, round travertine side table, slim brass floor lamp; the chair sits partly in front of the west end of the window, below sill height for its seat, catching the daylight",
+      "opposite_wall": "the long west wall facing the foot of the bed: plain pale stone-grey limewash plaster with one large abstract artwork centred on the bed",
+      "lounge_nook": "south-west corner, between the west wall and the south window, beside the foot of the bed: sculptural dove-grey boucle lounge chair angled toward the view, round honed white marble side table, slim brushed nickel floor lamp; the chair sits partly in front of the west end of the window, below sill height for its seat, catching the daylight",
       "orientation": "room runs north-south; west wall 4.9m long, north and south walls 4.0m and solid apart from the south glazing; east side has the entry door (north end), the robes and the ensuite opening",
       "ceiling": "flat plasterboard ceiling at 2.4m, painted warm white, with a standard 90mm plaster cove cornice running around all walls where they meet the ceiling (about 65mm down the wall and 65mm across the ceiling); no bulkheads, no recessed curtain pelmet",
       "dressing_zone": "open floor in front of the mirror unit, about 1.5m to the bed; north wall left as plain plaster",
-      "artwork": "one abstract canvas 1.2m wide x 1.5m high (portrait), centred on the bed, bottom 0.65m and top 2.15m above the floor; soft layered warm neutrals (cream, sand, taupe) with a small terracotta accent and one fine slate-grey line; thin brushed-brass floater frame; slim brass picture light above (off)",
-      "mirror_unit": "integrated wall-hung walnut unit on the west wall at its north end (0.5m to 1.5m from the north wall), 1.0m wide: a floating drawer 0.3m deep x 0.18m high with top at 0.75m (travertine top, brass pull, soft LED glow underneath, for combs and small items) and directly above it an inset mirror 0.9m wide x 1.42m high (0.78m to 2.2m) with a thin brass edge on a walnut backing panel; floor below left clear"
+      "artwork": "one abstract canvas 1.2m wide x 1.5m high (portrait), centred on the bed, bottom 0.65m and top 2.15m above the floor; soft layered greys (white, dove grey, charcoal) with a small dusty-blue accent and one fine charcoal line; thin brushed-nickel floater frame; slim brushed nickel picture light above (off)",
+      "mirror_unit": "integrated wall-hung smoked charcoal-oak unit on the west wall at its north end (0.5m to 1.5m from the north wall), 1.0m wide: a floating drawer 0.3m deep x 0.18m high with top at 0.75m (honed white marble top, brushed nickel pull, soft LED glow underneath, for combs and small items) and directly above it an inset mirror 0.9m wide x 1.42m high (0.78m to 2.2m) with a thin brushed nickel edge on a smoked oak backing panel; floor below left clear"
     }
   }
 }
