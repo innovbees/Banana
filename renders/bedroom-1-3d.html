@@ -196,6 +196,31 @@ box(1.33,1.5,0.54,0.57,4.48,4.66,mat('#bfc3c6',0.8)); cyl(1.52,0.58,4.62,0.04,0.
 cyl(0.15,0.75,3.95,0.012,0.012,1.5,brass,8); cyl(0.15,0.01,3.95,0.12,0.14,0.02,brass);
 cyl(0.15,1.5,3.95,0.12,0.18,0.22,mat('#f4f4f2',0.9,0,{side:THREE.DoubleSide}),32);
 
+// ---------- Backdrop behind the bed (choose with ?back=none|curtain|screen|grasscloth|ledge) ----------
+const BACK=P.get('back')||'none';
+if(BACK==='curtain'){ // ceiling-hung linen curtain along the east wall, z 1.15-4.85 (clear of entry door), parts at the robe walkway
+  box(3.86,3.9,CH-0.03,CH,1.15,4.85,mat('#f4f2ee',0.5),false);
+  const w=3.7, segs=36*8, g=new THREE.PlaneGeometry(w,CH-0.04,segs,1); const pp=g.attributes.position;
+  for(let i=0;i<pp.count;i++){ const u=(pp.getX(i)+w/2)/w; pp.setZ(i,Math.sin(u*36*Math.PI*2)*0.035); }
+  g.computeVertexNormals(); const c=new THREE.Mesh(g,mat('#d9cfc0',0.95,0,{side:THREE.DoubleSide})); c.position.set(3.88,(CH-0.04)/2,3.0); c.rotation.y=Math.PI/2; c.castShadow=true; c.receiveShadow=true; scene.add(c);
+}
+if(BACK==='screen'){ // slatted walnut screen on top of the headboard wall up to the cornice
+  for(let z=1.42;z<4.28;z+=0.075){ box(3.22,3.28,1.2,CH-0.065,z,z+0.035,walnut); }
+  box(3.2,3.3,CH-0.075,CH-0.065,1.4,4.3,walnut);
+}
+if(BACK==='grasscloth'){ // textured grasscloth wallpaper on the east wall + walnut frame around the robe walkway opening
+  const gc=mat('#ffffff',1,0,{map:canvasTex(512,512,(g,w,h)=>{ g.fillStyle='#cdbfa8'; g.fillRect(0,0,w,h); const r=rnd(51);
+    for(let i=0;i<900;i++){ const x=r()*w; g.strokeStyle=`rgba(${r()<0.5?235:150},${r()<0.5?225:135},${r()<0.5?205:110},${0.15+r()*0.25})`; g.lineWidth=0.6+r()*1.6; g.beginPath(); g.moveTo(x,0); g.lineTo(x+r()*3-1.5,h); g.stroke(); }
+    for(let y=0;y<h;y+=64){ g.fillStyle='rgba(120,100,80,0.12)'; g.fillRect(0,y,w,1.5); } },3,2)});
+  box(3.995,4.0,0,CH,1.0,2.4,gc,false,true); box(3.995,4.0,0,CH,3.3,RL,gc,false,true); box(3.995,4.0,2.1,CH,2.4,3.3,gc,false,true);
+  box(3.95,4.0,0,2.16,2.34,2.4,walnut); box(3.95,4.0,0,2.16,3.3,3.36,walnut); box(3.95,4.0,2.1,2.16,2.34,3.36,walnut);
+}
+if(BACK==='ledge'){ // brass wall sconces on the headboard wall + art ledge on the east wall above it
+  for(const zc of [1.635,4.065]){ box(3.17,3.2,0.95,1.05,zc-0.03,zc+0.03,brass); cyl(3.1,1.08,zc,0.06,0.08,0.14,mat('#f3ecdf',0.9,0,{emissive:'#ffe2b0',emissiveIntensity:0.05}),24); }
+  box(3.86,4.0,1.55,1.58,1.6,4.2,walnut);                       // picture ledge at 1.58m
+  const prints=[[1.75,0.55,0.7,'#d9c7ad'],[2.0,0.4,0.5,'#b89f84'],[3.6,0.4,0.5,'#c77d5a'],[3.95,0.55,0.7,'#a68c72']];
+  for(const [z,w,h,c] of prints){ box(3.93,3.95,1.58,1.58+h,z-w/2,z+w/2,brass); box(3.925,3.93,1.6,1.56+h,z-w/2+0.03,z+w/2-0.03,mat(c,0.9)); }
+}
 // ---------- Dressing spot: tall mirror standing on a floor-level drawer plinth, west wall north end (z 0.5-1.5) ----------
 // walnut backing panel 1.0m wide, from 0.3m to 2.25m
 box(0,0.03,0.3,2.25,0.5,1.5,walnut);
