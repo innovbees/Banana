@@ -2,7 +2,7 @@
   "marketing_image": {
     "meta": {
       "spec_version": "1.0.0",
-      "title": "Modern Luxury Bedroom 1 (4.9m x 4.0m) - King Bed, TV Wall and Lounge Nook",
+      "title": "Modern Luxury Bedroom 1 (4.9m x 4.0m) - King Bed, Fluted Feature Wall and Lounge Nook",
       "campaign": "bedroom_redesign",
       "brand_name": "Personal Bedroom Concept",
       "usage_context": "interior_design_concept"
@@ -49,16 +49,16 @@
           "notes": "small blown-glass pendants on brass rods, off"
         },
         {
-          "type": "tv_wall",
-          "count": 1,
-          "position": "right_side_of_frame",
-          "notes": "65 inch slim TV, screen off, on floor-to-ceiling fluted walnut panelling; nothing below it, clean wall to the floor"
-        },
-        {
           "type": "window",
           "count": 1,
           "position": "left_side_of_frame",
           "notes": "2.3m wide x 1.54m high window with a 0.56m sill, sheer ivory curtains and greige linen drapes pulled open, both hung from a slim white track fixed flush to the underside of the flat ceiling, fabric falling from ceiling to floor, soft view of greenery outside; not a door, no balcony"
+        },
+        {
+          "type": "feature_wall",
+          "count": 1,
+          "position": "right_side_of_frame",
+          "notes": "floor-to-ceiling vertical fluted walnut panelling 2.0m wide, centred on the bed, slim LED strip at the top; no TV, no TV unit, nothing mounted on it"
         }
       ]
     },
@@ -103,8 +103,8 @@
       "framing": "wide",
       "focal_length_mm": 24,
       "depth_of_field": "deep",
-      "focus_point": "whole room: king bed in the foreground and center, TV wall on the right, lounge chair and south window on the left",
-      "position": "standing just inside the entry door in the north-east corner, looking diagonally south-west across the room toward the corner where the TV wall meets the south window"
+      "focus_point": "whole room: king bed in the foreground and center, fluted walnut feature wall on the right, lounge chair and south window on the left",
+      "position": "standing just inside the entry door in the north-east corner, looking diagonally south-west across the room toward the corner where the feature wall meets the south window"
     },
     "lighting": {
       "key_light_direction": "left",
@@ -126,8 +126,6 @@
         "text",
         "harsh shadows",
         "oversaturated colors",
-        "visible TV cables",
-        "bright TV screen content",
         "balcony",
         "sliding glass doors",
         "double-height or very high ceilings",
@@ -135,11 +133,11 @@
         "ceiling bulkhead",
         "cove ceiling",
         "curtain rods on the wall",
-        "TV unit",
-        "TV console",
-        "cabinet below the TV"
+        "television",
+        "TV unit or console",
+        "wall art on the panelling"
       ],
-      "scale_notes": "ceiling is a standard 2.4m, keep proportions realistic: TV unit 0.35m off the floor, TV centre at 1.1m, headboard wall 1.2m, window head at 2.1m"
+      "scale_notes": "ceiling is a standard 2.4m, keep proportions realistic: headboard wall 1.2m, window sill 0.56m and head 2.1m, feature panelling floor to ceiling"
     },
     "controls": {
       "lock_subject_geometry": true,
@@ -153,21 +151,20 @@
         "north_and_south_wall_width_east_west": 4.0,
         "ceiling_height": 2.4
       },
-      "bed_wall": "king bed aligned on the centre line of the 0.9m walkway between the robes (about 2.85m from the north wall, 0.4m south of the room centre), headboard on the east side facing west toward the TV",
+      "bed_wall": "king bed aligned on the centre line of the 0.9m walkway between the robes (about 2.85m from the north wall, 0.4m south of the room centre), headboard on the east side facing west toward the fluted walnut feature wall",
       "window_wall": "south wall (4.0m): one window 2.3m wide x 1.54m high, sill about 0.56m above the floor and head at about 2.1m, centred on the wall (0.85m of solid wall each side); dressed with a slim white curtain track surface-fixed directly to the flat ceiling, running about 0.15m past each side of the window, sheer ivory curtains and greige linen drapes pulled open, so the window reads larger; to the bed's left as you lie in it",
       "entry_door": "0.9m wide door in the east wall at the north-east corner, coming in from the hallway, hinged at the north end and swinging into the room to rest against the north wall; its swing stays clear of the headboard wall and nightstand",
       "ensuite_opening": "0.9m wide opening in the east wall between the two walk-in robes, leading to the ensuite; hidden behind the freestanding headboard wall",
-      "clearances": "east-west across 4.0m: 0.7m walkway + 0.1m headboard wall + about 2.15m king bed + about 0.95m walkway to the TV wall (no TV unit); north-south along 4.9m: bed centred at about 2.85m from the north wall, about 1.9m between the north side of the bed and the north wall, about 1.1m between the south side of the bed and the south glass doors",
+      "clearances": "east-west across 4.0m: 0.7m walkway + 0.1m headboard wall + about 2.15m king bed + about 1.0m walkway to the feature wall; north-south along 4.9m: bed centred at about 2.85m from the north wall, about 1.9m between the north side of the bed and the north wall, about 1.1m between the south side of the bed and the south window",
       "headboard_feature_wall": "freestanding headboard wall 1.2m high, 0.1m thick and about 2.9m long (bed plus two nightstands), set 0.7m west of the east wall, centred on the robe walkway so it screens it from the bedroom; about 1.4m clear at the north end (entry door side) and 0.6m at the south end",
-      "opposite_wall": "the long left wall facing the foot of the bed: floating TV wall with a 65 inch TV centered on the bed",
-      "tv_wall": {
-        "tv": "65 inch ultra-slim TV (approx. 1.45m wide x 0.83m tall), flush wall-mounted and centred on the bed, screen center about 1.1m above the floor for viewing from bed, screen off showing a dark glossy surface",
-        "backdrop": "floor-to-ceiling (2.4m) vertical fluted walnut panelling about 2.0m wide behind the TV, centred on the bed, with a slim LED strip integrated into the top of the panelling (no ceiling cove)",
-        "notes": "no TV unit or console below the TV; clean wall below, cables and power concealed inside the wall"
-      },
-      "lounge_nook": "south-west corner, between the TV wall panelling and the south window, beside the foot of the bed: sculptural taupe boucle lounge chair angled toward the view, round travertine side table, slim brass floor lamp, small round wool rug; the chair sits partly in front of the west end of the window, below sill height for its seat, catching the daylight",
-      "orientation": "room runs north-south; west wall (TV wall) 4.9m long, north and south walls 4.0m and solid apart from the south glazing; east side has the entry door (north end), the robes and the ensuite opening",
-      "ceiling": "flat plasterboard ceiling at 2.4m, painted warm white; no bulkheads, no recessed curtain pelmet or cove"
+      "opposite_wall": "the long west wall facing the foot of the bed: floor-to-ceiling fluted walnut feature panelling, 2.0m wide, centred on the bed; no TV",
+      "lounge_nook": "south-west corner, between the feature wall panelling and the south window, beside the foot of the bed: sculptural taupe boucle lounge chair angled toward the view, round travertine side table, slim brass floor lamp, small round wool rug; the chair sits partly in front of the west end of the window, below sill height for its seat, catching the daylight",
+      "orientation": "room runs north-south; west wall (feature wall) 4.9m long, north and south walls 4.0m and solid apart from the south glazing; east side has the entry door (north end), the robes and the ensuite opening",
+      "ceiling": "flat plasterboard ceiling at 2.4m, painted warm white; no bulkheads, no recessed curtain pelmet or cove",
+      "feature_wall": {
+        "panelling": "floor-to-ceiling (2.4m) vertical fluted walnut panelling about 2.0m wide, centred on the bed, with a slim LED strip integrated into the top of the panelling (no ceiling cove)",
+        "notes": "no TV and no TV unit; nothing mounted on the panelling"
+      }
     }
   }
 }
