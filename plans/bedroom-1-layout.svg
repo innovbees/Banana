@@ -1,7 +1,7 @@
 <svg xmlns="http://www.w3.org/2000/svg" width="860" height="820" viewBox="0 0 860 820" font-family="Helvetica, Arial, sans-serif">
   <rect width="860" height="820" fill="#ffffff"/>
   <text x="80" y="34" font-size="20" font-weight="bold" fill="#222">Bedroom 1 — proposed layout (4.0m × 4.9m)</text>
-  <text x="80" y="54" font-size="12" fill="#666">Scale approx. 1:40 · 1m = 120px · all furniture to scale</text>
+  <text x="80" y="54" font-size="12" fill="#666">Scale approx. 1:40 · 1m = 120px · ceiling height 2.4m · all furniture to scale</text>
 
   <!-- North arrow -->
   <g transform="translate(800,60)">
@@ -29,8 +29,8 @@
     <!-- west wall -->
     <line x1="80" y1="90" x2="80" y2="678"/>
     <!-- south wall, glass between 1.06m and 3.92m -->
-    <line x1="80" y1="678" x2="207" y2="678"/>
-    <line x1="550" y1="678" x2="560" y2="678"/>
+    <line x1="80" y1="678" x2="241" y2="678"/>
+    <line x1="517" y1="678" x2="560" y2="678"/>
     <!-- east wall, entry door 0.1m-1.0m, opening between WIRs 2.4m-3.3m (0.9m) -->
     <line x1="560" y1="90" x2="560" y2="102"/>
     <line x1="560" y1="210" x2="560" y2="378"/>
@@ -46,9 +46,10 @@
 
   <!-- Glass sliding doors (south) -->
   <g stroke="#3b7ea1" stroke-width="2">
-    <line x1="207" y1="674" x2="550" y2="674"/>
-    <line x1="207" y1="682" x2="550" y2="682"/>
-    <line x1="378" y1="670" x2="378" y2="686"/>
+    <line x1="241" y1="674" x2="517" y2="674"/>
+    <line x1="241" y1="682" x2="517" y2="682"/>
+    <line x1="379" y1="670" x2="379" y2="686"/>
+    <line x1="221" y1="664" x2="537" y2="664" stroke="#b8a99a" stroke-width="3" stroke-dasharray="2,3"/>
   </g>
   <rect x="80" y="690" width="480" height="40" fill="url(#hatch)" opacity="0.6"/>
   <defs>
@@ -56,7 +57,7 @@
       <line x1="0" y1="0" x2="0" y2="10" stroke="#aaa" stroke-width="2"/>
     </pattern>
   </defs>
-  <text x="378" y="748" font-size="12" text-anchor="middle" fill="#3b7ea1">GLASS SLIDING DOORS → BALCONY (assumed)</text>
+  <text x="379" y="748" font-size="12" text-anchor="middle" fill="#3b7ea1">WINDOW 2.3m wide × 1.54m high (sill ≈ 0.56m, head 2.1m — assumed)</text>
 
   <!-- Entry door cut-out and swing (hinge at east jamb, swings into room) -->
   <path d="M560,210 A108,108 0 0,1 452,102" fill="none" stroke="#c0392b" stroke-width="1.5" stroke-dasharray="5,4"/>
@@ -130,6 +131,7 @@
     <rect x="320" y="768" width="14" height="10" fill="#7a5233"/><text x="340" y="777">walnut joinery</text>
     <line x1="450" y1="773" x2="470" y2="773" stroke="#3b7ea1" stroke-width="3"/><text x="476" y="777">glazing</text>
     <rect x="540" y="768" width="14" height="10" fill="#ebe7e2" stroke="#999"/><text x="560" y="777">robes (existing)</text>
+    <line x1="320" y1="800" x2="340" y2="800" stroke="#b8a99a" stroke-width="3" stroke-dasharray="2,3"/><text x="346" y="804">ceiling-hung curtains</text>
     <line x1="80" y1="800" x2="100" y2="800" stroke="#2e86c1" stroke-dasharray="6,3" stroke-width="2"/><text x="106" y="804">bed centre = robe walkway centre</text>
   </g>
 </svg>
