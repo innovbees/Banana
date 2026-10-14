@@ -1,7 +1,7 @@
 <svg xmlns="http://www.w3.org/2000/svg" width="860" height="820" viewBox="0 0 860 820" font-family="Helvetica, Arial, sans-serif">
   <rect width="860" height="820" fill="#ffffff"/>
   <text x="80" y="34" font-size="20" font-weight="bold" fill="#222">Bedroom 1 — proposed layout (4.0m × 4.9m)</text>
-  <text x="80" y="54" font-size="12" fill="#666">Scale approx. 1:40 · 1m = 120px · ceiling height 2.4m · 90mm cove cornice to all walls · all furniture to scale</text>
+  <text x="80" y="54" font-size="12" fill="#666">Scale approx. 1:40 · 1m = 120px · ceiling height 2.4m · 90mm cove cornice · light grey carpet · all furniture to scale</text>
 
   <!-- North arrow -->
   <g transform="translate(800,60)">
@@ -10,7 +10,7 @@
   </g>
 
   <!-- floor -->
-  <rect x="80" y="90" width="480" height="588" fill="#f6f1ea"/>
+  <rect x="80" y="90" width="480" height="588" fill="#e4e4e2"/>
 
   <!-- Robes / ensuite context (outside room, east) -->
   <rect x="564" y="222" width="156" height="156" fill="#ebe7e2" stroke="#999" stroke-width="2"/>
@@ -76,8 +76,6 @@
   <rect x="84" y="360" width="5" height="144" fill="#c77d5a" stroke="#b08d57" stroke-width="1.5"/>
   <text x="104" y="432" font-size="10" fill="#8a4f33" text-anchor="middle" transform="rotate(-90 104 432)">ARTWORK 1.2×1.5m + picture light</text>
 
-  <!-- Rug under bed -->
-  <rect x="180" y="286" width="270" height="292" rx="4" fill="#e9e2d6" stroke="#d6cbb8" stroke-width="1"/>
 
   <!-- King bed -->
   <rect x="206" y="316" width="258" height="232" rx="6" fill="#ffffff" stroke="#8a7a68" stroke-width="2"/>
@@ -100,7 +98,7 @@
   <text x="488" y="432" font-size="11" fill="#4e3420" text-anchor="middle" transform="rotate(90 488 432)">HEADBOARD WALL 2.9m × 1.2m high</text>
 
   <!-- Lounge nook (SW corner) -->
-  <circle cx="150" cy="610" r="60" fill="#ece5da" stroke="#d6cbb8"/>
+  
   <g transform="translate(152 612) rotate(-45)">
     <rect x="-43" y="-43" width="86" height="86" rx="22" fill="#b8a99a" stroke="#7d6e60" stroke-width="2"/>
     <rect x="-43" y="-43" width="86" height="20" rx="10" fill="#9c8d7e"/>

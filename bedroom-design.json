@@ -70,9 +70,9 @@
     },
     "environment": {
       "surface": {
-        "material": "wood",
-        "details": "wide-plank light oak floor with a plush cream wool rug under the bed",
-        "reflection_strength": 0.1
+        "material": "carpet",
+        "details": "wall-to-wall light grey carpet, soft low-pile, cool neutral grey; no rugs",
+        "reflection_strength": 0.0
       },
       "background": {
         "color": "#E8E0D5",
@@ -146,7 +146,9 @@
         "wall panelling or fluted timber on the west wall",
         "more than one artwork",
         "coffered or tray ceiling",
-        "decorative ornate cornice"
+        "decorative ornate cornice",
+        "timber or wood flooring",
+        "floor rugs"
       ],
       "scale_notes": "ceiling is a standard 2.4m, keep proportions realistic: headboard wall 1.2m, window sill 0.56m and head 2.1m; simple 90mm cove cornice at the wall-ceiling junction"
     },
@@ -169,7 +171,7 @@
       "clearances": "east-west across 4.0m: 0.7m walkway + 0.1m headboard wall + about 2.15m king bed + about 1.0m walkway to the west wall; north-south along 4.9m: bed centred at about 2.85m from the north wall, about 1.9m between the north side of the bed and the north wall, about 1.1m between the south side of the bed and the south window",
       "headboard_feature_wall": "freestanding headboard wall 1.2m high, 0.1m thick and about 2.9m long (bed plus two nightstands), set 0.7m west of the east wall, centred on the robe walkway so it screens it from the bedroom; about 1.4m clear at the north end (entry door side) and 0.6m at the south end",
       "opposite_wall": "the long west wall facing the foot of the bed: plain warm greige limewash plaster with one large abstract artwork centred on the bed",
-      "lounge_nook": "south-west corner, between the west wall and the south window, beside the foot of the bed: sculptural taupe boucle lounge chair angled toward the view, round travertine side table, slim brass floor lamp, small round wool rug; the chair sits partly in front of the west end of the window, below sill height for its seat, catching the daylight",
+      "lounge_nook": "south-west corner, between the west wall and the south window, beside the foot of the bed: sculptural taupe boucle lounge chair angled toward the view, round travertine side table, slim brass floor lamp; the chair sits partly in front of the west end of the window, below sill height for its seat, catching the daylight",
       "orientation": "room runs north-south; west wall 4.9m long, north and south walls 4.0m and solid apart from the south glazing; east side has the entry door (north end), the robes and the ensuite opening",
       "ceiling": "flat plasterboard ceiling at 2.4m, painted warm white, with a standard 90mm plaster cove cornice running around all walls where they meet the ceiling (about 65mm down the wall and 65mm across the ceiling); no bulkheads, no recessed curtain pelmet",
       "dressing_zone": "open floor in front of the mirror unit, about 1.5m to the bed; north wall left as plain plaster",
