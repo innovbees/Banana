@@ -37,28 +37,40 @@ const oak = mat('#ffffff',0.55,0,{map: canvasTex(1024,1024,(g,w,h)=>{
     for(let k=0;k<70;k++){ g.strokeStyle=`rgba(120,85,50,${0.04+r()*0.06})`; g.lineWidth=1+r()*2; const x=i*plank+r()*plank; g.beginPath(); g.moveTo(x,0); g.bezierCurveTo(x+r()*10-5,h/3,x+r()*10-5,2*h/3,x+r()*6-3,h); g.stroke(); }
     g.fillStyle='rgba(90,60,35,0.35)'; g.fillRect(i*plank,0,2,h); const cut=r()*h; g.fillRect(i*plank,cut,plank,2); }
 },2.2,1.2)});
-const plaster = mat('#ffffff',0.95,0,{map: canvasTex(512,512,(g,w,h)=>{ g.fillStyle='#e2e1de'; g.fillRect(0,0,w,h); const r=rnd(3);
-  for(let i=0;i<3000;i++){ const v=r()<0.5; g.fillStyle=v?`rgba(252,252,250,${r()*0.06})`:`rgba(150,150,148,${r()*0.05})`; g.beginPath(); g.arc(r()*w,r()*h,4+r()*30,0,7); g.fill(); } },2,2)});
-const ceilingM = mat('#f6f6f4',0.95);
-const walnut = mat('#4a4744',0.6,0,{map: canvasTex(512,512,(g,w,h)=>{ g.fillStyle='#57534f'; g.fillRect(0,0,w,h); const r=rnd(11);
-  for(let i=0;i<160;i++){ g.strokeStyle=`rgba(${r()<0.5?40:110},${r()<0.5?38:105},${r()<0.5?36:100},${0.15+r()*0.2})`; g.lineWidth=1+r()*3; const y=r()*h; g.beginPath(); g.moveTo(0,y); g.bezierCurveTo(w/3,y+r()*20-10,2*w/3,y+r()*20-10,w,y+r()*10-5); g.stroke(); } })});
-const travertine = mat('#ffffff',0.6,0,{map: canvasTex(512,512,(g,w,h)=>{ g.fillStyle='#ecebe9'; g.fillRect(0,0,w,h); const r=rnd(5);
-  for(let i=0;i<120;i++){ g.strokeStyle=`rgba(140,142,145,${0.08+r()*0.18})`; g.lineWidth=0.5+r()*2; const y=r()*h; g.beginPath(); g.moveTo(0,y); g.lineTo(w,y+r()*8-4); g.stroke(); }
-  for(let i=0;i<300;i++){ g.fillStyle=`rgba(150,152,155,${r()*0.2})`; g.fillRect(r()*w,r()*h,1+r()*4,1); } })});
-const boucle = mat('#ffffff',1,0,{map: canvasTex(256,256,(g,w,h)=>{ g.fillStyle='#e4e3e0'; g.fillRect(0,0,w,h); const r=rnd(13);
-  for(let i=0;i<4000;i++){ const v=r(); g.fillStyle=v<0.5?'rgba(252,252,250,0.5)':'rgba(170,170,168,0.35)'; g.beginPath(); g.arc(r()*w,r()*h,0.8+r()*1.8,0,7); g.fill(); } },3,3)});
-const taupeBoucle = mat('#ffffff',1,0,{map: canvasTex(256,256,(g,w,h)=>{ g.fillStyle='#a6a6a3'; g.fillRect(0,0,w,h); const r=rnd(17);
-  for(let i=0;i<4000;i++){ const v=r(); g.fillStyle=v<0.5?'rgba(215,215,212,0.45)':'rgba(100,100,98,0.35)'; g.beginPath(); g.arc(r()*w,r()*h,0.8+r()*1.8,0,7); g.fill(); } },3,3)});
-const sheet = mat('#fbfbfa',0.75);
-const duvet = mat('#d2d3d1',0.4,0.08);
-const velvet = mat('#5f6b74',0.55,0.05);
-const knit = mat('#ffffff',1,0,{map: canvasTex(256,256,(g,w,h)=>{ g.fillStyle='#7d7d7b'; g.fillRect(0,0,w,h); for(let x=0;x<w;x+=16){ for(let y=0;y<h;y+=12){ g.fillStyle='rgba(60,60,60,0.35)'; g.beginPath(); g.ellipse(x+8,y+6,6,5,0,0,7); g.fill(); g.fillStyle='rgba(200,200,198,0.3)'; g.beginPath(); g.ellipse(x+6,y+4,3,2,0,0,7); g.fill(); } } },4,4)});
-const brass = mat('#b9bdc0',0.32,0.9);
+// ---------- Colour palettes (choose with ?pal=...) - floor is always light grey carpet ----------
+const PALS={
+  grey:  {wall:'#e2e1de',ceil:'#f6f6f4',timber:'#57534f',stone:'#ecebe9',vein:'140,142,145',boucle:'#e4e3e0',chair:'#a6a6a3',sheet:'#fbfbfa',duvet:'#d2d3d1',accent:'#5f6b74',throw:'#7d7d7b',metal:'#b9bdc0',linen:'#cfcecb',pillowA:'#f7f7f6',pillowB:'#e2e3e2',
+          art:['#ececea','#cfd0cf','#9c9e9f','#7f95a6','#3a3d40','#f1f1ef','#b5b7b8']},
+  warm:  {wall:'#e6ddd1',ceil:'#f6f3ee',timber:'#6a4529',stone:'#ddd0bb',vein:'170,150,120',boucle:'#ece5d8',chair:'#a8998a',sheet:'#fbfaf7',duvet:'#e5d3ad',accent:'#8c7b6b',throw:'#cfc3b2',metal:'#b08d57',linen:'#cbbfae',pillowA:'#f8f6f1',pillowB:'#efe9df',
+          art:['#ece3d4','#d9c7ad','#b89f84','#c77d5a','#3f4a52','#efe6d6','#a68c72']},
+  sage:  {wall:'#ebe8e1',ceil:'#f7f6f2',timber:'#b48d63',stone:'#efece6',vein:'170,165,155',boucle:'#9fae98',chair:'#efeae0',sheet:'#fbfaf6',duvet:'#f1ede4',accent:'#6f8467',throw:'#d9d2c3',metal:'#b8975d',linen:'#dcd6ca',pillowA:'#f8f6f0',pillowB:'#c9d1c2',
+          art:['#efece4','#c9d1c2','#9fae98','#6f8467','#c8b48f','#f6f3ec','#a9b3a2']},
+  navy:  {wall:'#eceae6',ceil:'#f8f7f4',timber:'#2a3546',stone:'#f0efec',vein:'150,150,155',boucle:'#2f3d55',chair:'#c9b48e',sheet:'#fcfcfb',duvet:'#f4f2ee',accent:'#b8975d',throw:'#2f3d55',metal:'#b8975d',linen:'#d9d6d0',pillowA:'#fcfcfb',pillowB:'#d7dbe2',
+          art:['#efede9','#cfd3da','#2f3d55','#b8975d','#1f2633','#f7f6f3','#8a96a8']},
+  clay:  {wall:'#ece6df',ceil:'#f7f5f1',timber:'#3a3634',stone:'#e9e3da',vein:'160,140,120',boucle:'#e8e0d5',chair:'#b86e4e',sheet:'#fbf9f6',duvet:'#efe7dc',accent:'#b86e4e',throw:'#c98b6b',metal:'#2b2b2b',linen:'#dccfc0',pillowA:'#f8f5f0',pillowB:'#e3cbb8',
+          art:['#efe9e1','#e3cbb8','#c98b6b','#b86e4e','#2b2b2b','#f6f2ec','#a89f96']}
+};
+const PAL=PALS[P.get('pal')||'grey']||PALS.grey;
+function hexRGB(h){ const n=parseInt(h.slice(1),16); return [(n>>16)&255,(n>>8)&255,n&255]; }
+function speckle(base,w,h,n,rad,lightA,darkA,seed){ return (g)=>{ g.fillStyle=base; g.fillRect(0,0,w,h); const r=rnd(seed); const [R,G,B]=hexRGB(base);
+  for(let i=0;i<n;i++){ const v=r()<0.5; g.fillStyle=v?`rgba(${Math.min(255,R+35)},${Math.min(255,G+35)},${Math.min(255,B+35)},${lightA})`:`rgba(${R*0.7|0},${G*0.7|0},${B*0.7|0},${darkA})`; g.beginPath(); g.arc(r()*w,r()*h,rad[0]+r()*rad[1],0,7); g.fill(); } }; }
+const plaster = mat('#ffffff',0.95,0,{map: canvasTex(512,512,speckle(PAL.wall,512,512,3000,[4,30],0.05,0.04,3),2,2)});
+const ceilingM = mat(PAL.ceil,0.95);
+const walnut = mat('#ffffff',0.6,0,{map: canvasTex(512,512,(g,w,h)=>{ g.fillStyle=PAL.timber; g.fillRect(0,0,w,h); const r=rnd(11); const [R,G,B]=hexRGB(PAL.timber);
+  for(let i=0;i<160;i++){ const k=r()<0.5?0.7:1.25; g.strokeStyle=`rgba(${Math.min(255,R*k)|0},${Math.min(255,G*k)|0},${Math.min(255,B*k)|0},${0.15+r()*0.2})`; g.lineWidth=1+r()*3; const y=r()*h; g.beginPath(); g.moveTo(0,y); g.bezierCurveTo(w/3,y+r()*20-10,2*w/3,y+r()*20-10,w,y+r()*10-5); g.stroke(); } })});
+const travertine = mat('#ffffff',0.6,0,{map: canvasTex(512,512,(g,w,h)=>{ g.fillStyle=PAL.stone; g.fillRect(0,0,w,h); const r=rnd(5);
+  for(let i=0;i<120;i++){ g.strokeStyle=`rgba(${PAL.vein},${0.08+r()*0.18})`; g.lineWidth=0.5+r()*2; const y=r()*h; g.beginPath(); g.moveTo(0,y); g.lineTo(w,y+r()*8-4); g.stroke(); } })});
+const boucle = mat('#ffffff',1,0,{map: canvasTex(256,256,speckle(PAL.boucle,256,256,4000,[0.8,1.8],0.45,0.3,13),3,3)});
+const taupeBoucle = mat('#ffffff',1,0,{map: canvasTex(256,256,speckle(PAL.chair,256,256,4000,[0.8,1.8],0.4,0.3,17),3,3)});
+const sheet = mat(PAL.sheet,0.75);
+const duvet = mat(PAL.duvet,0.42,0.06);
+const velvet = mat(PAL.accent,0.55,0.05);
+const knit = mat('#ffffff',1,0,{map: canvasTex(256,256,(g,w,h)=>{ g.fillStyle=PAL.throw; g.fillRect(0,0,w,h); for(let x=0;x<w;x+=16){ for(let y=0;y<h;y+=12){ g.fillStyle='rgba(0,0,0,0.18)'; g.beginPath(); g.ellipse(x+8,y+6,6,5,0,0,7); g.fill(); g.fillStyle='rgba(255,255,255,0.18)'; g.beginPath(); g.ellipse(x+6,y+4,3,2,0,0,7); g.fill(); } } },4,4)});
+const brass = mat(PAL.metal,0.32,0.9);
 const black = mat('#101114',0.35,0.3);
 const carpet = mat('#ffffff',1,0,{map: canvasTex(512,512,(g,w,h)=>{ g.fillStyle='#c4c4c1'; g.fillRect(0,0,w,h); const r=rnd(29);
   for(let i=0;i<14000;i++){ const v=r(); g.fillStyle=v<0.5?`rgba(235,235,232,${0.25+r()*0.2})`:`rgba(150,150,148,${0.2+r()*0.2})`; g.fillRect(r()*w,r()*h,1+r()*1.5,1+r()*2); } },8,10)});
-const creamRug = mat('#ffffff',1,0,{map: canvasTex(256,256,(g,w,h)=>{ g.fillStyle='#ece5d8'; g.fillRect(0,0,w,h); const r=rnd(23); for(let i=0;i<5000;i++){ g.fillStyle=`rgba(${r()<0.5?255:200},${r()<0.5?250:190},${r()<0.5?240:175},0.3)`; g.fillRect(r()*w,r()*h,1,2); } },6,6)});
-const linen = mat('#cfcecb',0.95,0,{side:THREE.DoubleSide});
+const linen = mat(PAL.linen,0.95,0,{side:THREE.DoubleSide});
 const sheerM = mat('#fdfdfc',0.9,0,{transparent:true,opacity:0.38,side:THREE.DoubleSide});
 const glassM = new THREE.MeshPhysicalMaterial({color:'#fff6e6',roughness:0.15,transmission:0.6,transparent:true,opacity:0.55});
 
@@ -132,7 +144,7 @@ box(3.2,3.3,0,1.2,1.4,4.3,walnut);                           // freestanding hea
 box(3.19,3.31,1.2,1.215,1.4,4.3,mat('#fff3d6',0.4,0,{emissive:'#ffdca0',emissiveIntensity:0.15})); // LED edge (off-ish)
 // pillows
 function pillow(x,y,z,w,h,d,m,tilt){ const o=rbox(d,h,w,Math.min(d,h)*0.45,m,x,y,z); o.rotation.z=tilt; return o; }
-for(const zc of [2.45,3.25]){ pillow(3.03,0.86,zc,0.74,0.6,0.18,mat('#f7f7f6',0.85),0.18); pillow(2.88,0.78,zc,0.68,0.44,0.17,mat('#e2e3e2',0.85),0.22); }
+for(const zc of [2.45,3.25]){ pillow(3.03,0.86,zc,0.74,0.6,0.18,mat(PAL.pillowA,0.85),0.18); pillow(2.88,0.78,zc,0.68,0.44,0.17,mat(PAL.pillowB,0.85),0.22); }
 pillow(2.72,0.72,2.85,0.6,0.3,0.15,velvet,0.2);
 
 
@@ -157,10 +169,10 @@ box(2.8,3.08,0.56,0.57,1.5,1.75,brass); cyl(3.0,0.62,1.7,0.05,0.05,0.04,brass).r
 // ---------- West wall: plain limewash plaster (no panelling, no TV) ----------
 // Large abstract artwork centred on bed (z 2.85): 1.2m wide x 1.5m high, bottom 0.65m, thin brass floater frame, brass picture light
 { const ART=P.get('art')||'portrait'; const AW=ART==='landscape'?1.8:1.2, AH=ART==='landscape'?0.9:1.5, AB=ART==='landscape'?1.0:0.65, ZC=2.85, LY=AB+AH+0.1;
-  const art=canvasTex(ART==='landscape'?900:600,ART==='landscape'?450:750,(g,w,h)=>{ g.fillStyle='#ececea'; g.fillRect(0,0,w,h); const r=rnd(41);
-    const blobs=[['#cfd0cf',0.35,0.3,0.42],['#9c9e9f',0.62,0.55,0.34],['#7f95a6',0.3,0.72,0.16],['#3a3d40',0.7,0.2,0.1],['#f1f1ef',0.5,0.5,0.25],['#b5b7b8',0.25,0.45,0.2]];
+  const art=canvasTex(ART==='landscape'?900:600,ART==='landscape'?450:750,(g,w,h)=>{ g.fillStyle=PAL.art[0]; g.fillRect(0,0,w,h); const r=rnd(41);
+    const blobs=[[PAL.art[1],0.35,0.3,0.42],[PAL.art[2],0.62,0.55,0.34],[PAL.art[3],0.3,0.72,0.16],[PAL.art[4],0.7,0.2,0.1],[PAL.art[5],0.5,0.5,0.25],[PAL.art[6],0.25,0.45,0.2]];
     for(const [c,x,y,rr] of blobs){ for(let i=0;i<60;i++){ g.globalAlpha=0.05+r()*0.06; g.fillStyle=c; g.beginPath(); g.ellipse(x*w+(r()-0.5)*w*0.15,y*h+(r()-0.5)*h*0.15,rr*w*(0.6+r()*0.5),rr*h*(0.4+r()*0.4),r()*3,0,7); g.fill(); } }
-    g.globalAlpha=0.6; g.strokeStyle='#3a3d40'; g.lineWidth=3; g.beginPath(); g.moveTo(w*0.18,h*0.62); g.bezierCurveTo(w*0.4,h*0.5,w*0.55,h*0.75,w*0.82,h*0.58); g.stroke(); g.globalAlpha=1; });
+    g.globalAlpha=0.6; g.strokeStyle=PAL.art[4]; g.lineWidth=3; g.beginPath(); g.moveTo(w*0.18,h*0.62); g.bezierCurveTo(w*0.4,h*0.5,w*0.55,h*0.75,w*0.82,h*0.58); g.stroke(); g.globalAlpha=1; });
   box(0.0,0.045,AB-0.02,AB+AH+0.02,ZC-AW/2-0.02,ZC+AW/2+0.02,brass);                                   // floater frame
   box(0.045,0.05,AB,AB+AH,ZC-AW/2,ZC+AW/2,mat('#ffffff',0.9,0,{map:art}));          // canvas face
   // rotate texture to face east: draw on a plane instead for correct orientation
