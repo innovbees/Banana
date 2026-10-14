@@ -12,7 +12,7 @@
       "name": "Modern luxury bed and nightstand",
       "variant": "morning, freshly made bed",
       "physical_properties": {
-        "bed": "king size upholstered bed with tall channel-tufted ivory boucle headboard mounted on a freestanding walnut-panelled headboard wall, slim low-profile frame, bed floating in the middle of the room",
+        "bed": "king size (approx. 1.83m x 2.03m mattress) upholstered bed with tall channel-tufted ivory boucle headboard mounted on a freestanding walnut-panelled headboard wall, slim low-profile frame, bed floating in the middle of the room",
         "bedding": "crisp white sateen sheets, champagne silk-look duvet folded back at the foot, layered euro shams and two lumbar pillows in taupe velvet, chunky knit throw draped at an angle",
         "nightstand": "walnut veneer nightstand with fluted drawer front and brushed brass pulls, travertine top",
         "lamp": "sculptural ceramic table lamp with pleated linen shade, switched off",
@@ -20,14 +20,7 @@
       }
     },
     "props": {
-      "foreground": [
-        {
-          "type": "bench",
-          "count": 1,
-          "position": "bottom_left_edge_partially_cropped",
-          "notes": "end-of-bed bench in taupe velvet, softly out of focus"
-        }
-      ],
+      "foreground": [],
       "midground": [
         {
           "type": "nightstand_styling",
@@ -139,7 +132,7 @@
       "window_wall": "short wall to the bed's left side as you lie in it (camera right): wide floor-to-ceiling glass sliding doors opening to a balcony with a pale stone deck",
       "entry_door": "near the corner beside the headboard wall, on the side away from the window; out of frame",
       "ensuite_opening": "wide opening between two walk-in robes, hidden behind the freestanding headboard wall",
-      "clearances": "about 0.8m walkway behind the headboard wall, about 0.9m on each side of the bed, and roughly 0.75m to 1.6m between the foot of the bed and the left wall depending on room orientation",
+      "clearances": "about 0.8m walkway behind the headboard wall, about 0.9m on each side of the king bed; no bench at the foot of the bed, keeping the floor clear toward the console",
       "headboard_feature_wall": "freestanding headboard wall about 1.2m high and the width of the bed plus nightstands, finished in walnut panelling with the ivory boucle headboard mounted on it; set about 0.8m in front of the ensuite opening, so the robes and ensuite are reached by walking around either end",
       "opposite_wall": "the long left wall facing the foot of the bed: low walnut console with styled objects and large abstract art above it"
     }
