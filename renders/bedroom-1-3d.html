@@ -209,17 +209,13 @@ box(1.33,1.5,0.54,0.57,4.48,4.66,mat('#bfc3c6',0.8)); cyl(1.52,0.58,4.62,0.04,0.
 cyl(0.15,0.75,3.95,0.012,0.012,1.5,brass,8); cyl(0.15,0.01,3.95,0.12,0.14,0.02,brass);
 cyl(0.15,1.5,3.95,0.12,0.18,0.22,mat('#f4f4f2',0.9,0,{side:THREE.DoubleSide}),32);
 
-// ---------- Backdrop behind the bed (choose with ?back=none|curtain|screen|grasscloth|ledge) ----------
+// ---------- Backdrop behind the bed (choose with ?back=none|curtain|grasscloth|ledge) ----------
 const BACK=P.get('back')||'none';
 if(BACK==='curtain'){ // ceiling-hung linen curtain along the east wall, z 1.15-4.85 (clear of entry door), parts at the robe walkway
   box(3.86,3.9,CH-0.03,CH,1.15,4.85,mat('#f4f2ee',0.5),false);
   const w=3.7, segs=36*8, g=new THREE.PlaneGeometry(w,CH-0.04,segs,1); const pp=g.attributes.position;
   for(let i=0;i<pp.count;i++){ const u=(pp.getX(i)+w/2)/w; pp.setZ(i,Math.sin(u*36*Math.PI*2)*0.035); }
   g.computeVertexNormals(); const c=new THREE.Mesh(g,mat('#d9cfc0',0.95,0,{side:THREE.DoubleSide})); c.position.set(3.88,(CH-0.04)/2,3.0); c.rotation.y=Math.PI/2; c.castShadow=true; c.receiveShadow=true; scene.add(c);
-}
-if(BACK==='screen'){ // slatted walnut screen on top of the headboard wall up to the cornice
-  for(let z=1.42;z<4.28;z+=0.075){ box(3.22,3.28,1.2,CH-0.065,z,z+0.035,walnut); }
-  box(3.2,3.3,CH-0.075,CH-0.065,1.4,4.3,walnut);
 }
 if(BACK==='grasscloth'){ // textured grasscloth wallpaper on the east wall + walnut frame around the robe walkway opening
   const gc=mat('#ffffff',1,0,{map:canvasTex(512,512,(g,w,h)=>{ g.fillStyle='#cdbfa8'; g.fillRect(0,0,w,h); const r=rnd(51);
