@@ -2,7 +2,7 @@
   "marketing_image": {
     "meta": {
       "spec_version": "1.0.0",
-      "title": "Modern Luxury Bedroom 1 (4.9m x 4.0m) - King Bed, Dressing Zone, Storage and Lounge Nook",
+      "title": "Modern Luxury Bedroom 1 (4.9m x 4.0m) - King Bed, Dressing Mirror and Lounge Nook",
       "campaign": "bedroom_redesign",
       "brand_name": "Personal Bedroom Concept",
       "usage_context": "interior_design_concept"
@@ -61,16 +61,16 @@
           "notes": "floor-to-ceiling vertical fluted walnut panelling 2.0m wide, centred on the bed, slim LED strip at the top; no TV, no TV unit, nothing mounted on it"
         },
         {
-          "type": "storage_wall",
-          "count": 1,
-          "position": "north_wall",
-          "notes": "two tall fluted walnut cabinets flanking a 1.7m low walnut drawer unit with travertine top"
-        },
-        {
           "type": "full_length_mirror",
           "count": 1,
           "position": "west_wall_north_end",
           "notes": "0.9m x 2.0m full-length mirror with slim brass frame, beside the fluted feature panel"
+        },
+        {
+          "type": "small_floating_drawer",
+          "count": 1,
+          "position": "north_wall_corner_next_to_mirror",
+          "notes": "0.6m wide wall-hung walnut drawer with travertine top and brass pull, top at 0.95m"
         }
       ]
     },
@@ -148,7 +148,9 @@
         "television",
         "TV unit or console",
         "wall art on the panelling",
-        "mirrored wardrobe doors"
+        "mirrored wardrobe doors",
+        "wardrobes or tall cabinets in the bedroom",
+        "chest of drawers"
       ],
       "scale_notes": "ceiling is a standard 2.4m, keep proportions realistic: headboard wall 1.2m, window sill 0.56m and head 2.1m, feature panelling floor to ceiling"
     },
@@ -178,13 +180,9 @@
         "panelling": "floor-to-ceiling (2.4m) vertical fluted walnut panelling about 2.0m wide, centred on the bed, with a slim LED strip integrated into the top of the panelling (no ceiling cove)",
         "notes": "no TV and no TV unit; nothing mounted on the panelling"
       },
-      "storage": {
-        "location": "north wall, 0.45m deep, from the west corner to 2.9m (stops 0.2m short of the open entry door leaf)",
-        "tall_cabinets": "two floor-to-ceiling (2.4m) cabinets, 0.6m wide each, one in the north-west corner and one at the east end, fluted walnut doors matching the feature wall, long brass pulls; hanging rail or shelves inside",
-        "drawer_unit": "1.7m wide x 0.8m high low unit between the tall cabinets, four large drawers with brass pulls on a recessed plinth, travertine top used as a dressing surface (tray, perfume, vase, books)"
-      },
       "mirror": "full-length mirror 0.9m wide x 2.0m high on the west wall at its north end (0.55m to 1.45m from the north wall), bottom 0.15m above the floor, slim brushed-brass frame; side-lit by the south window",
-      "dressing_zone": "open floor in front of the mirror and drawers: about 0.95m from the joinery to the north nightstand and about 1.4m to the side of the bed"
+      "dressing_zone": "open floor in front of the mirror and drawer: about 1.2m to the north nightstand and about 1.7m to the side of the bed; north wall otherwise plain plaster",
+      "small_drawer": "one small wall-hung walnut drawer in the north-west corner on the north wall, 0.6m wide x 0.35m deep x 0.18m high, top at 0.95m, travertine top, brass pull, soft LED glow underneath; for combs and small items; styled with a brass tray, perfume and a bud vase"
     }
   }
 }
