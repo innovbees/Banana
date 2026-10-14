@@ -1,0 +1,111 @@
+{
+  "marketing_image": {
+    "meta": {
+      "spec_version": "1.0.0",
+      "title": "Modern Luxury Bedroom - Bedside Detail",
+      "campaign": "bedroom_redesign",
+      "brand_name": "Personal Bedroom Concept",
+      "usage_context": "interior_design_concept"
+    },
+    "subject": {
+      "type": "interior_bedroom_vignette",
+      "name": "Modern luxury bed and nightstand",
+      "variant": "morning, freshly made bed",
+      "physical_properties": {
+        "bed": "queen size upholstered bed with tall channel-tufted headboard in ivory boucle, slim low-profile frame",
+        "bedding": "crisp white sateen sheets, champagne silk-look duvet folded back at the foot, layered euro shams and two lumbar pillows in taupe velvet, chunky knit throw draped at an angle",
+        "nightstand": "walnut veneer nightstand with fluted drawer front and brushed brass pulls, travertine top",
+        "lamp": "sculptural ceramic table lamp with pleated linen shade, switched off",
+        "finish": "rich mix of matte, velvet, boucle and brushed metal textures"
+      }
+    },
+    "props": {
+      "foreground": [
+        {
+          "type": "bench",
+          "count": 1,
+          "position": "bottom_left_edge_partially_cropped",
+          "notes": "end-of-bed bench in taupe velvet, softly out of focus"
+        }
+      ],
+      "midground": [
+        {
+          "type": "nightstand_styling",
+          "count": 4,
+          "position": "on_nightstand",
+          "notes": "stack of two coffee-table books, small brass tray with a glass carafe, a bud vase with a single white ranunculus, a slim gold alarm clock"
+        }
+      ],
+      "background": [
+        {
+          "type": "wall_art",
+          "count": 1,
+          "position": "above_headboard_partially_visible",
+          "notes": "large abstract canvas in warm neutrals with a thin brass frame"
+        },
+        {
+          "type": "wall_sconce",
+          "count": 1,
+          "position": "beside_headboard",
+          "notes": "minimal brass swing-arm sconce, off"
+        },
+        {
+          "type": "window_drapery",
+          "count": 1,
+          "position": "right_edge",
+          "notes": "floor-to-ceiling sheer ivory curtains with heavier greige linen drapes pulled open"
+        }
+      ]
+    },
+    "environment": {
+      "surface": {
+        "material": "wood",
+        "details": "wide-plank light oak floor with a plush cream wool rug under the bed",
+        "reflection_strength": 0.1
+      },
+      "background": {
+        "color": "#E8E0D5",
+        "texture": "limewash plaster wall in warm greige",
+        "effect": "subtle depth falloff"
+      },
+      "palette": {
+        "primary": ["#F5F1EA", "#E8E0D5", "#B8A99A"],
+        "accents": ["#B08D57", "#5C4033", "#2F3A40"],
+        "notes": "ivory, greige and taupe base with champagne brass, walnut and a touch of deep slate"
+      },
+      "atmosphere": {
+        "mood": "serene, elegant, boutique-hotel calm on a fresh morning",
+        "keywords": ["luxurious", "airy", "tactile", "refined", "restful"]
+      }
+    },
+    "camera": {
+      "angle": "three_quarter_front",
+      "height": "eye_level_seated",
+      "framing": "medium",
+      "focal_length_mm": 35,
+      "depth_of_field": "medium",
+      "focus_point": "nightstand and pillows"
+    },
+    "lighting": {
+      "key_light_direction": "right",
+      "key_light_source": "large window, morning sunlight filtered through sheer curtains",
+      "key_light_intensity": "high",
+      "fill_light_direction": "left",
+      "fill_light_intensity": "low",
+      "rim_light": false,
+      "color_temperature": "warm_daylight_5000k",
+      "notes": "soft sunbeams falling across the bedding, gentle shadows, no artificial lights on"
+    },
+    "style": {
+      "rendering": "photorealistic interior photography, architectural digest editorial quality",
+      "design_style": "modern luxury",
+      "avoid": ["clutter", "visible cables", "people", "text", "harsh shadows", "oversaturated colors"]
+    },
+    "controls": {
+      "lock_subject_geometry": true,
+      "lock_logo_and_label": false,
+      "allow_background_variation": true,
+      "allow_prop_relayout": "small_only"
+    }
+  }
+}
