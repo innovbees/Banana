@@ -1,0 +1,23 @@
+Use the attached image as an exact layout reference. It is a 3D massing render of my real bedroom, built to exact measurements.
+
+TASK: Re-render this exact scene as a photorealistic interior photograph (architectural-magazine quality, natural morning light).
+
+STRICT RULES - DO NOT BREAK:
+- Keep the SAME camera position, angle, lens and framing as the reference image.
+- Keep the SAME room shape, wall positions, window size and position.
+- Keep EVERY object in the SAME place, at the SAME size and proportion. Do not move, add, remove, resize or mirror anything.
+- Ceiling is FLAT, 2.4m high, plain white. No bulkheads, no recesses, no coves, no downlights.
+- Only change surfaces, materials, textures, lighting and realism.
+
+WHAT IS IN THE IMAGE (left to right):
+- Left foreground: the back/top edge of a freestanding half-height headboard wall (1.2m high) in dark walnut panels with a thin travertine-coloured top; an ivory boucle channel-tufted headboard mounted on it; a walnut nightstand with travertine top in the bottom-left corner.
+- Two small opal-glass globe pendants on thin brass rods hanging above the nightstands (lights off).
+- Centre: king bed seen from the headboard end - two ivory euro pillows, white pillows, taupe velvet lumbar cushion, white sheets, champagne duvet folded back over the foot, taupe chunky-knit throw across the foot. Cream wool rug under the bed.
+- Back wall, centre-left: one window (2.3m wide x 1.54m high, sill about 0.56m above floor), sheer ivory curtains and greige linen drapes hanging from a slim white track fixed directly to the flat ceiling, falling to the floor. Soft green garden outside.
+- Back corner, right of the window: sculptural taupe boucle lounge chair, small round travertine side table, slim brass floor lamp with linen shade.
+- Right wall: floor-to-ceiling vertical fluted walnut panelling (2.0m wide) with a 65-inch slim black TV (screen off) and below it a floating walnut TV unit (1.8m wide, 0.3m deep) with travertine top, a ceramic bowl and a small dark sculpture, soft LED glow underneath.
+- Floor: wide-plank light oak. Walls: warm greige limewash plaster.
+
+LIGHT: morning sun through the window, filtered by the sheers, soft shadows, warm 5000K, all lamps off.
+
+AVOID: changing the layout, extra furniture, wall art, people, text, clutter, visible cables, high or vaulted ceilings, balcony, sliding doors, bright TV screen.
