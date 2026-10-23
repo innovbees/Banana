@@ -8,6 +8,8 @@ layout; the prompt tells Gemini only to make it photorealistic.
 | 1 | Bed & headboard (from NW corner) | `view-1-bed-reference.jpg` | `view-1-bed-prompt.txt` |
 | 2 | Room, window, artwork & mirror (from entry) | `view-2-corner-reference.jpg` | `view-2-corner-prompt.txt` |
 | 3 | Dressing mirror & artwork (from window side) | `view-3-dressing-reference.jpg` | `view-3-dressing-prompt.txt` |
+| 4 | Bed & headboard - EVENING, lights on | `view-4-bed-evening-reference.jpg` | `view-4-bed-evening-prompt.txt` |
+| 5 | Room, window, artwork & mirror - EVENING, lights on | `view-5-corner-evening-reference.jpg` | `view-5-corner-evening-prompt.txt` |
 
 ## Steps
 1. Gemini app → **Create images** → choose the **Thinking** model (Nano Banana Pro),
@@ -24,4 +26,6 @@ layout; the prompt tells Gemini only to make it photorealistic.
 - "The artwork is a wide landscape rectangle, 1.8m x 0.9m, centred on the bed."
 - "The mirror is tall (0.9m x 1.9m) and stands on a low floor-level drawer, not a floating shelf."
 - "There is no TV and no TV unit on any wall."
+- "Keep the ceiling lights as small flush recessed downlights exactly where the dots are in the reference - no chandelier, no light over the bed."
+- "Remove the picture light above the artwork - it is lit from the ceiling."
 - "Make the metal finishes brushed brass and the timber walnut."

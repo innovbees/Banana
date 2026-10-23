@@ -180,6 +180,7 @@ cyl(3.05,0.72,3.9,0.004,0.004,0.1,mat('#5d7a4c',0.8),6); pillow(3.05,0.78,3.9,0.
 box(2.8,3.08,0.56,0.57,1.5,1.75,brass); cyl(3.0,0.62,1.7,0.05,0.05,0.04,brass).rotation.z=Math.PI/2;
 
 // ---------- West wall: plain limewash plaster (no panelling, no TV) ----------
+// (picture light removed - art lit by ceiling spotlights A1/A2)
 // Large abstract artwork centred on bed (z 2.85): 1.2m wide x 1.5m high, bottom 0.65m, thin brass floater frame, brass picture light
 { const ART=P.get('art')||'landscape'; const AW=ART==='landscape'?1.8:1.2, AH=ART==='landscape'?0.9:1.5, AB=ART==='landscape'?1.0:0.65, ZC=2.85, LY=AB+AH+0.1;
   const art=canvasTex(ART==='landscape'?900:600,ART==='landscape'?450:750,(g,w,h)=>{ g.fillStyle=PAL.art[0]; g.fillRect(0,0,w,h); const r=rnd(41);
@@ -190,9 +191,6 @@ box(2.8,3.08,0.56,0.57,1.5,1.75,brass); cyl(3.0,0.62,1.7,0.05,0.05,0.04,brass).r
   box(0.045,0.05,AB,AB+AH,ZC-AW/2,ZC+AW/2,mat('#ffffff',0.9,0,{map:art}));          // canvas face
   // rotate texture to face east: draw on a plane instead for correct orientation
   const pl=new THREE.Mesh(new THREE.PlaneGeometry(AW,AH),mat('#ffffff',0.9,0,{map:art})); pl.position.set(0.052,AB+AH/2,ZC); pl.rotation.y=Math.PI/2; pl.receiveShadow=true; scene.add(pl);
-  box(0.0,0.02,LY-0.01,LY+0.03,2.8,2.9,brass);                                      // light mount
-  box(0.02,0.16,LY+0.005,LY+0.015,2.84,2.86,brass);                                 // arm
-  cyl(0.16,LY,2.85,0.018,0.018,ART==='landscape'?0.9:0.6,brass,16).rotation.x=Math.PI/2;          // light bar
 }
 // (no TV, no TV unit)
 
@@ -258,6 +256,26 @@ const win=new THREE.PointLight('#fff4e2',4,9,1.6); win.position.set(2,1.4,RL-0.6
 const fill=new THREE.PointLight('#fff1dc',1.8,10,1.6); fill.position.set(2.0,1.7,2.0); scene.add(fill);
 const fill2=new THREE.PointLight('#ffe9cc',1.2,8,1.8); fill2.position.set(0.8,2.1,1.0); scene.add(fill2);
 
+// ---------- Recessed ceiling lighting (timber ceiling), see plans/bedroom-1-lighting.png ----------
+const TIME=P.get('time')||'morning'; const EVE=TIME==='evening';
+const trimM=mat('#2b2622',0.5,0.4), lensM=mat('#fffaf0',0.3,0,{emissive:'#ffd59a',emissiveIntensity:EVE?2.2:0.02});
+const DLS=[[1.0,1.2],[2.2,1.2],[1.0,4.35],[2.2,4.35],[3.62,0.55],[3.65,2.85],[4.65,2.85]];
+const GIMB=[[0.75,2.45,[0,1.45,2.6]],[0.75,3.25,[0,1.45,3.1]],[0.7,1.0,[0,1.2,1.0]]];
+for(const [x,z] of DLS){ cyl(x,CH-0.004,z,0.045,0.045,0.008,trimM,24).castShadow=false; cyl(x,CH-0.009,z,0.033,0.033,0.004,lensM,24).castShadow=false; }
+for(const [x,z] of GIMB){ cyl(x,CH-0.004,z,0.045,0.045,0.008,trimM,24).castShadow=false; cyl(x,CH-0.012,z,0.03,0.03,0.008,lensM,24).castShadow=false; }
+box(0.7,3.3,CH-0.004,CH,RL-0.24,RL-0.21,mat('#d8d4cc',0.4,0.5),false);                 // S1 curtain-wash channel, flush
+box(0.72,3.28,CH-0.008,CH-0.004,RL-0.235,RL-0.215,lensM,false);
+box(3.3,3.31,0.03,0.05,1.45,4.25,lensM,false);                                         // N1 low-level night path strip
+if(EVE){
+  sun.intensity=0; win.intensity=0; fill.intensity=0.08; fill2.intensity=0.06;
+  scene.traverse(o=>{ if(o.isHemisphereLight) o.intensity=0.1; if(o.isMesh && o.material && o.material.emissiveIntensity>0 && o.material!==lensM) o.material.emissiveIntensity=2.0; });
+  outside.material.color.set('#3a4560');
+  const warm='#ffc98a';
+  for(const [x,z] of DLS){ const L=new THREE.SpotLight(warm,4.5,6,0.62,0.7,1.6); L.position.set(x,CH-0.05,z); L.target.position.set(x,0,z); scene.add(L); scene.add(L.target); }
+  for(const [x,z,t] of GIMB){ const L=new THREE.SpotLight(warm,6,5,0.38,0.6,1.5); L.position.set(x,CH-0.05,z); L.target.position.set(...t); scene.add(L); scene.add(L.target); }
+  for(let x=0.9;x<3.3;x+=0.45){ const L=new THREE.PointLight(warm,0.9,1.8,1.6); L.position.set(x,2.2,RL-0.3); scene.add(L); }
+  for(const z of [1.635,4.065]){ const L=new THREE.PointLight('#ffd9a8',1.6,3,1.6); L.position.set(2.95,1.42,z); scene.add(L); }
+}
 mirror.visible=false; cubeCam.position.set(0.9,1.3,1.0); scene.add(cubeCam); cubeCam.update(renderer,scene); mirror.visible=true;
 // ---------- Camera ----------
 const cam=new THREE.PerspectiveCamera(60,W/H,0.05,50);

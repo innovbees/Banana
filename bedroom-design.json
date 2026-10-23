@@ -58,7 +58,7 @@
           "type": "artwork",
           "count": 1,
           "position": "west_wall_centred_on_bed",
-          "notes": "1.8m x 0.9m landscape abstract canvas in warm neutrals with a terracotta accent and a fine slate line, thin brass floater frame, slim brass picture light above"
+          "notes": "1.8m x 0.9m landscape abstract canvas in warm neutrals with a terracotta accent and a fine slate line, thin brass floater frame; lit by two recessed ceiling spotlights"
         },
         {
           "type": "mirror_drawer_unit",
@@ -148,7 +148,10 @@
         "coffered or tray ceiling",
         "decorative ornate cornice",
         "timber or wood flooring",
-        "floor rugs"
+        "floor rugs",
+        "large or bulky ceiling lights",
+        "chandeliers",
+        "lights directly over the bed"
       ],
       "scale_notes": "ceiling is a standard 2.4m, keep proportions realistic: headboard wall 1.2m, window sill 0.56m and head 2.1m; simple 90mm cove cornice at the wall-ceiling junction"
     },
@@ -173,10 +176,18 @@
       "opposite_wall": "the long west wall facing the foot of the bed: plain warm greige limewash plaster with one large abstract artwork centred on the bed",
       "lounge_nook": "south-west corner, between the west wall and the south window, beside the foot of the bed: sculptural taupe boucle lounge chair angled toward the view, round travertine side table, slim brass floor lamp; the chair sits partly in front of the west end of the window, below sill height for its seat, catching the daylight",
       "orientation": "room runs north-south; west wall 4.9m long, north and south walls 4.0m and solid apart from the south glazing; east side has the entry door (north end), the robes and the ensuite opening",
-      "ceiling": "flat plasterboard ceiling at 2.4m, painted warm white, with a standard 90mm plaster cove cornice running around all walls where they meet the ceiling (about 65mm down the wall and 65mm across the ceiling); no bulkheads, no recessed curtain pelmet",
+      "ceiling": "flat plasterboard ceiling at 2.4m, painted warm white, with a standard 90mm plaster cove cornice running around all walls where they meet the ceiling (about 65mm down the wall and 65mm across the ceiling); no bulkheads, no recessed curtain pelmet; small recessed lights only (see lighting)",
       "dressing_zone": "open floor in front of the mirror unit, about 1.5m to the bed; north wall left as plain plaster",
-      "artwork": "one wide landscape abstract canvas 1.8m wide x 0.9m high, centred on the bed (about the same width as the bed), bottom 1.0m and top 1.9m above the floor; soft layered warm neutrals (cream, sand, taupe) with a small terracotta accent and one fine slate-grey line; thin brushed-brass floater frame; slim 0.9m brass picture light above (off)",
-      "mirror_unit": "integrated walnut unit on the west wall at its north end (0.5m to 1.5m from the north wall), 1.0m wide: a floor-level drawer plinth 0.35m deep x 0.3m high (recessed toe-kick, one wide drawer with long brass pull, travertine top) for combs and small items, and standing on it a tall mirror 0.9m wide x 1.9m high (0.32m to 2.22m) with a thin brass edge on a walnut backing panel"
+      "artwork": "one wide landscape abstract canvas 1.8m wide x 0.9m high, centred on the bed (about the same width as the bed), bottom 1.0m and top 1.9m above the floor; soft layered warm neutrals (cream, sand, taupe) with a small terracotta accent and one fine slate-grey line; thin brushed-brass floater frame; lit by two small adjustable recessed ceiling spotlights, no picture light",
+      "mirror_unit": "integrated walnut unit on the west wall at its north end (0.5m to 1.5m from the north wall), 1.0m wide: a floor-level drawer plinth 0.35m deep x 0.3m high (recessed toe-kick, one wide drawer with long brass pull, travertine top) for combs and small items, and standing on it a tall mirror 0.9m wide x 1.9m high (0.32m to 2.22m) with a thin brass edge on a walnut backing panel",
+      "lighting_plan": {
+        "ambient": "4 small deep-recessed downlights (dark bronze trim, ~75mm), 2700K: two along the north side of the room 1.2m from the north wall, two along the window side 4.35m from the north wall; none directly over the bed",
+        "accent": "2 adjustable recessed spotlights 0.75m from the west wall aimed at the artwork; 1 adjustable recessed spotlight 0.7m in front of the mirror",
+        "circulation": "1 downlight inside the entry door, 1 in the passage behind the headboard wall in line with the robe walkway, 1 in the robe walkway",
+        "curtain_wash": "a slim LED strip in a flush aluminium channel set into the ceiling just inside the curtain track, washing light down the curtains",
+        "night_path": "low-level warm LED strip at the base of the headboard wall on the passage side, motion activated",
+        "existing": "two opal-glass globe pendants above the nightstands"
+      }
     }
   }
 }

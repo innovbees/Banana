@@ -1,0 +1,26 @@
+Use the attached image as an exact layout reference. It is a 3D massing render of my real bedroom, built to exact measurements.
+
+TASK: Re-render this exact scene as a photorealistic interior photograph (architectural-magazine quality, warm evening lighting).
+
+STRICT RULES - DO NOT BREAK:
+- Keep the SAME camera position, angle, lens and framing as the reference image.
+- Keep the SAME room shape, wall positions, door opening, robe walkway opening, window size and position.
+- Keep EVERY object in the SAME place, at the SAME size and proportion. Do not move, add, remove, resize or mirror anything.
+- Ceiling is FLAT, 2.4m high, plain white, with a simple 90mm plaster cove cornice running around every wall where it meets the ceiling. No bulkheads, no recesses, no ornate cornice. Small flush recessed lights only, exactly where shown in the reference image.
+- Only change surfaces, materials, textures, lighting and realism.
+
+WHAT IS IN THE IMAGE (left to right):
+- Far left: open doorway to the hallway (plain white door frame).
+- Centre-left, behind the bed: a wide opening leading to the walk-in robes, partly hidden by the headboard wall.
+- Centre: a freestanding half-height headboard wall (1.2m high) in dark walnut timber panels with a thin travertine top edge. Mounted on it: a tall ivory boucle headboard with vertical channel tufting.
+- The king bed with ivory boucle upholstered base, crisp white sateen sheets, champagne silk-look duvet folded back over the foot, a taupe chunky-knit throw across the foot, two ivory euro pillows, two white pillows, one taupe velvet lumbar cushion.
+- Left of bed: walnut nightstand with fluted front, travertine top, small brass tray and gold clock.
+- Above each nightstand: a small opal-glass globe pendant on a thin brass rod (lights ON, soft warm glow).
+- Right: one window (2.3m wide x 1.54m high, sill about 0.56m above floor) with sheer ivory curtains and greige linen drapes hanging from a slim white track fixed directly to the flat ceiling just in front of the cornice, falling to the floor. Dusky blue evening sky outside, garden in soft silhouette.
+- Right corner: sculptural taupe boucle lounge chair, round travertine side table with a coffee cup and book.
+- Ceiling lights (ON, warm 2700K, dimmed to about 60%): small flush recessed downlights with thin dark-bronze trims set into the flat ceiling exactly where the small dark circles are in the reference image - none over the bed; a slim flush LED channel in the ceiling just inside the curtain track glowing softly down the closed sheer curtains. Light pools on the carpet and walls; the fixtures themselves stay small and subtle.
+- Floor: wall-to-wall light grey carpet (soft low-pile), no rugs. Walls: warm greige limewash plaster.
+
+LIGHT: evening after sunset. Dusky blue sky outside the window, sheer curtains drawn. Warm 2700K layered lighting: soft pools from the recessed downlights, two recessed spotlights grazing the artwork, curtain-wash glow along the window, both bedside globe pendants glowing. Cosy, calm, boutique-hotel mood, gentle shadows, no harsh hotspots.
+
+AVOID: changing the layout, chandeliers, bulky ceiling lights, lights over the bed, wall-mounted picture lights, timber floors, rugs, any TV, TV unit or console, wall panelling on the side wall, extra furniture, wall art, people, text, clutter, visible cables, high or vaulted ceilings, balcony, sliding doors, wardrobes or tall cabinets.
