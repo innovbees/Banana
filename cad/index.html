@@ -1,0 +1,119 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>BananaCAD</title>
+<link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+<div id="app">
+  <header id="topbar">
+    <div class="brand"><span class="logo">B</span>BananaCAD</div>
+    <div class="qa">
+      <button data-cmd="NEW" data-icon="new" title="New drawing (Ctrl+N)"></button>
+      <button data-cmd="OPEN" data-icon="open" title="Open .bcad / .dxf (Ctrl+O)"></button>
+      <button data-cmd="SAVE" data-icon="save" title="Save .bcad (Ctrl+S)"></button>
+      <span class="sep"></span>
+      <button data-cmd="UNDO" data-icon="undo" title="Undo (Ctrl+Z)"></button>
+      <button data-cmd="REDO" data-icon="redo" title="Redo (Ctrl+Y)"></button>
+      <span class="sep"></span>
+      <button data-cmd="EXPORT:DXF" data-icon="export" title="Export DXF for AutoCAD">DXF</button>
+      <button data-cmd="EXPORT:SVG" data-icon="export" title="Export SVG">SVG</button>
+      <button data-cmd="EXPORT:PNG" data-icon="export" title="Export PNG image">PNG</button>
+      <button data-cmd="PLOT" data-icon="print" title="Print (Ctrl+P)"></button>
+    </div>
+    <div class="docname" id="docname">Drawing1</div>
+    <div class="qa right">
+      <button data-cmd="HELP" data-icon="help" title="Command reference (F1)">Help</button>
+      <button id="sidetoggle" title="Show / hide side panel">Panel</button>
+    </div>
+  </header>
+  <nav id="ribbon"></nav>
+  <main id="main">
+    <div id="viewport">
+      <canvas id="cv"></canvas>
+      <div id="dyn"></div>
+      <div id="osnaptip"></div>
+      <div id="ctxmenu"></div>
+      <div id="editor">
+        <div class="edbar"><span id="edhint"></span><button id="edok">OK</button><button id="edcancel">Cancel</button></div>
+        <textarea id="edtext" spellcheck="false" rows="1"></textarea>
+      </div>
+    </div>
+    <aside id="side">
+      <div class="tabs">
+        <button class="tab on" data-panel="props">Properties</button>
+        <button class="tab" data-panel="layers">Layers</button>
+        <button class="tab" data-panel="settings">Settings</button>
+      </div>
+      <div id="panelbody"></div>
+    </aside>
+  </main>
+  <section id="cmdline">
+    <div id="history"></div>
+    <div id="cmdrow">
+      <button id="histtoggle" title="Expand command history (F2)">≡</button>
+      <span id="prompt">Command:</span>
+      <input id="cmdinput" autocomplete="off" spellcheck="false" placeholder="Type a command">
+    </div>
+    <div id="ac"></div>
+  </section>
+  <footer id="status">
+    <span id="coords">0, 0</span>
+    <span class="toggles">
+      <button data-toggle="grid" title="Grid (F7)">GRID</button>
+      <button data-toggle="snap" title="Snap to grid (F9)">SNAP</button>
+      <button data-toggle="ortho" title="Ortho mode (F8) — hold Shift to flip temporarily">ORTHO</button>
+      <button data-toggle="osnap" title="Object snap (F3)">OSNAP</button>
+      <button data-toggle="dyn" title="Dynamic input near cursor (F12)">DYN</button>
+    </span>
+    <span class="layerbox"><span id="layerswatch"></span><select id="layersel" title="Current layer (or layer of selected objects)"></select></span>
+  </footer>
+</div>
+
+<div id="help" class="modal">
+  <div class="mbox">
+    <button id="helpclose" class="mclose">×</button>
+    <div id="helpbody"></div>
+  </div>
+</div>
+<template id="helpintro">
+  <h2>BananaCAD — command reference</h2>
+  <p>Works like AutoCAD: type a command name or alias in the command line and press <kbd>Enter</kbd> (or <kbd>Space</kbd>).
+  Follow the prompts; options in <b>[brackets]</b> can be typed by their first letters or clicked. Values in <b>&lt;angle brackets&gt;</b> are defaults — just press Enter.</p>
+  <h3>Entering points</h3>
+  <table class="cmdtbl">
+    <tr><td><code>100,50</code></td><td>Absolute coordinates X,Y</td></tr>
+    <tr><td><code>@30,0</code></td><td>Relative to the last point</td></tr>
+    <tr><td><code>@50&lt;45</code></td><td>Relative polar: distance &lt; angle (degrees, counter-clockwise from east)</td></tr>
+    <tr><td><code>25</code></td><td>Direct distance: move the cursor in a direction and type a length</td></tr>
+    <tr><td>Click</td><td>Pick a point (object snaps such as Endpoint / Midpoint / Center are shown in yellow)</td></tr>
+  </table>
+  <h3>Keys &amp; mouse</h3>
+  <table class="cmdtbl">
+    <tr><td><kbd>Enter</kbd> / <kbd>Space</kbd> / right-click</td><td>Confirm · finish · repeat last command</td></tr>
+    <tr><td><kbd>Esc</kbd></td><td>Cancel command · clear selection</td></tr>
+    <tr><td>Wheel · middle-drag</td><td>Zoom at cursor · pan</td></tr>
+    <tr><td>Click / window</td><td>Select. Drag left→right = window (fully inside), right→left = crossing. Shift+click removes.</td></tr>
+    <tr><td>Blue grips</td><td>Click a grip of a selected object to stretch it</td></tr>
+    <tr><td>Double-click</td><td>Edit text, notes, leaders and dimension text</td></tr>
+    <tr><td><kbd>F3</kbd> <kbd>F7</kbd> <kbd>F8</kbd> <kbd>F9</kbd> <kbd>F12</kbd></td><td>Osnap · Grid · Ortho (Shift flips) · Snap · Dynamic input</td></tr>
+    <tr><td><kbd>Ctrl</kbd>+Z/Y/S/O/N/A/C/X/V/P</td><td>Undo · Redo · Save · Open · New · Select all · Copy · Cut · Paste · Print</td></tr>
+    <tr><td><kbd>↑</kbd> <kbd>↓</kbd> <kbd>Tab</kbd></td><td>Command history / autocomplete</td></tr>
+  </table>
+  <h3>Comments &amp; notes</h3>
+  <p><code>MLEADER</code> (aliases <code>LE</code>, <code>NOTE</code>, <code>COMMENT</code>) draws an arrow to a point and opens a text box for your note.
+  <code>MTEXT</code> (<code>T</code>) writes a paragraph inside a box, <code>TEXT</code> (<code>DT</code>) writes single lines in place, and
+  <code>REVCLOUD</code> draws a revision cloud around an area. Put them on the <i>Annotation</i> layer to switch them on/off together.</p>
+</template>
+<input type="file" id="fileinput" accept=".bcad,.json,.dxf" hidden>
+
+<script src="js/geom.js"></script>
+<script src="js/entities.js"></script>
+<script src="js/render.js"></script>
+<script src="js/io.js"></script>
+<script src="js/commands.js"></script>
+<script src="js/app.js"></script>
+</body>
+</html>
