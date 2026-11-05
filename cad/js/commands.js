@@ -869,7 +869,7 @@ defCmd('NEW', ['QNEW'], 'Start a new drawing', function* (c) {
   }
   c.app.newDrawing();
 }, { noUndo: true });
-defCmd('OPEN', [], 'Open a drawing (.bcad / .json / .dxf)', function* (c) { c.app.openFile(); }, { noUndo: true });
+defCmd('OPEN', [], 'Open a drawing (.dwg / .dxf / .bcad)', function* (c) { c.app.openFile(); }, { noUndo: true });
 defCmd('SAVE', ['QSAVE'], 'Save the drawing (.bcad)', function* (c) { c.app.saveFile(); }, { transparent: true });
 defCmd('SAVEAS', [], 'Save the drawing under a new name', function* (c) {
   const n = yield P.str('Enter file name', { def: c.doc.name, spaces: true });

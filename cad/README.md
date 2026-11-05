@@ -40,9 +40,13 @@ The default drawing has an **Annotation** layer, so you can put notes on it and 
 
 ## Files
 
-- **Save / Open** use the native `.bcad` format, which is JSON. Your work is also autosaved in the browser and restored the next time you open the app.
-- **Export DXF** writes AutoCAD R12 ASCII DXF, which opens in AutoCAD, LibreCAD, DraftSight and similar programs. **Open** also imports DXF: lines, circles, arcs, polylines (including arc segments), ellipses, text and MTEXT. Block inserts and native DXF dimensions are not imported yet.
-- **Export SVG / PNG** and **PLOT** produce a white-background print. White and very light colours are output as black.
+- **Opening DWG:** Open (Ctrl+O), or drag a `.dwg` file onto the drawing area. BananaCAD reads AutoCAD DWG files using LibreDWG, which runs inside your browser, so files are never uploaded. LibreDWG supports most versions from R13 to 2018 and later. The DWG reader is about 3.4 MB and loads the first time you open a DWG.
+- **Opening DXF:** The importer handles lines, polylines (including arc segments), circles, arcs, ellipses, splines, text, MTEXT, attributes, hatches, leaders and multileader notes. It also handles blocks, including nested, scaled, rotated and mirrored ones, and dimensions. Blocks and dimensions are converted into ordinary objects. Layers keep their colour, linetype and on/off state. Paper-space layouts, xrefs, images and 3D objects are skipped, and the command line tells you what was left out.
+- **Saving:** Save / Open use the native `.bcad` format, which is JSON. Your work is also autosaved in the browser.
+- **Sending a drawing back to AutoCAD:** Export DXF writes AutoCAD R12 ASCII DXF. AutoCAD, LibreCAD, DraftSight and others open it directly, and in AutoCAD you can use `SAVEAS` to turn it into DWG. Writing DWG directly isn't supported because LibreDWG's DWG writer is still experimental.
+- **Export SVG / PNG and PLOT** produce a white-background print. White and very light colours are output as black.
+
+The DWG reader lives in `lib/libredwg/`, which is LibreDWG (GPL-3.0); see `lib/libredwg/NOTICE.md`.
 
 ## Code layout
 
@@ -51,7 +55,7 @@ The default drawing has an **Annotation** layer, so you can put notes on it and 
 | `js/geom.js` | Vector math, intersections, polygon and hatch helpers |
 | `js/entities.js` | Entity types: drawing ops, picking, snaps, grips, transforms, trim/offset support |
 | `js/render.js` | Canvas renderer and SVG export |
-| `js/io.js` | DXF import/export, downloads |
+| `js/io.js` | DWG import (via LibreDWG), DXF import/export with block expansion, downloads |
 | `js/commands.js` | All commands, written as generators that `yield` prompts |
 | `js/app.js` | Command runner, command line, mouse/keyboard, panels, drawing loop |
 

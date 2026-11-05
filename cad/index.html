@@ -12,7 +12,7 @@
     <div class="brand"><span class="logo">B</span>BananaCAD</div>
     <div class="qa">
       <button data-cmd="NEW" data-icon="new" title="New drawing (Ctrl+N)"></button>
-      <button data-cmd="OPEN" data-icon="open" title="Open .bcad / .dxf (Ctrl+O)"></button>
+      <button data-cmd="OPEN" data-icon="open" title="Open .dwg / .dxf / .bcad (Ctrl+O)"></button>
       <button data-cmd="SAVE" data-icon="save" title="Save .bcad (Ctrl+S)"></button>
       <span class="sep"></span>
       <button data-cmd="UNDO" data-icon="undo" title="Undo (Ctrl+Z)"></button>
@@ -102,12 +102,16 @@
     <tr><td><kbd>Ctrl</kbd>+Z/Y/S/O/N/A/C/X/V/P</td><td>Undo · Redo · Save · Open · New · Select all · Copy · Cut · Paste · Print</td></tr>
     <tr><td><kbd>↑</kbd> <kbd>↓</kbd> <kbd>Tab</kbd></td><td>Command history / autocomplete</td></tr>
   </table>
+  <h3>DWG &amp; DXF files</h3>
+  <p><b>Open</b> (Ctrl+O) reads AutoCAD <code>.dwg</code> (R13–2018+) and <code>.dxf</code> files — or drag a file onto the drawing area.
+  Blocks, dimensions, hatches and notes are converted to ordinary objects. To send a drawing back to AutoCAD use <b>DXF</b> export
+  (AutoCAD opens DXF directly and can save it as DWG).</p>
   <h3>Comments &amp; notes</h3>
   <p><code>MLEADER</code> (aliases <code>LE</code>, <code>NOTE</code>, <code>COMMENT</code>) draws an arrow to a point and opens a text box for your note.
   <code>MTEXT</code> (<code>T</code>) writes a paragraph inside a box, <code>TEXT</code> (<code>DT</code>) writes single lines in place, and
   <code>REVCLOUD</code> draws a revision cloud around an area. Put them on the <i>Annotation</i> layer to switch them on/off together.</p>
 </template>
-<input type="file" id="fileinput" accept=".bcad,.json,.dxf" hidden>
+<input type="file" id="fileinput" accept=".dwg,.dxf,.bcad,.json" hidden>
 
 <script src="js/geom.js"></script>
 <script src="js/entities.js"></script>

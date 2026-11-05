@@ -139,3 +139,6 @@ code, kbd { font-family: var(--mono); background: #1f252c; border: 1px solid #44
   #side { display: none; }
   .docname { display: none; }
 }
+
+#viewport.drop::after { content: "Drop DWG / DXF / BCAD file to open"; position: absolute; inset: 12px; display: grid; place-items: center; border: 2px dashed var(--accent); border-radius: 10px; background: rgba(59,140,255,.12); color: #fff; font-size: 18px; pointer-events: none; }
+body.busy, body.busy #viewport { cursor: progress; }

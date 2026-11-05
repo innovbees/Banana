@@ -465,6 +465,16 @@ const App = {
     document.getElementById('sidetoggle').onclick = () => { document.body.classList.toggle('noside'); this.resize(); };
     document.addEventListener('mousedown', (ev) => { if (!this.el.ctx.contains(ev.target)) this.el.ctx.style.display = 'none'; });
     window.addEventListener('beforeunload', () => this.autosave());
+    vp.addEventListener('dragover', (ev) => { ev.preventDefault(); vp.classList.add('drop'); });
+    vp.addEventListener('dragleave', () => vp.classList.remove('drop'));
+    vp.addEventListener('drop', (ev) => {
+      ev.preventDefault(); vp.classList.remove('drop');
+      const f = ev.dataTransfer.files && ev.dataTransfer.files[0];
+      if (!f) return;
+      if (this.cmd) this.cancel(true);
+      if (this.doc.entities.length && !confirm(`Open "${f.name}" and replace the current drawing? (Save first if you need it.)`)) return;
+      this.openBlob(f);
+    });
   },
   resize() {
     const r = this.el.vp.getBoundingClientRect();
@@ -1042,9 +1052,18 @@ const App = {
     this.print(`Saved "${this.doc.name}.bcad" to your downloads.`);
   },
   openFile() { this.el.file.value = ''; this.el.file.click(); },
-  onFile() {
-    const f = this.el.file.files[0];
-    if (!f) return;
+  onFile() { const f = this.el.file.files[0]; if (f) this.openBlob(f); },
+  openBlob(f) {
+    if (/\.dwg$/i.test(f.name)) {
+      this.print(`Reading DWG "${f.name}"…${IO._dwg ? '' : ' (loading the DWG reader the first time takes a few seconds)'}`);
+      document.body.classList.add('busy');
+      f.arrayBuffer()
+        .then((buf) => IO.dwgToDXF(buf))
+        .then((dxf) => this.loadText(f.name.replace(/\.dwg$/i, '.dxf'), dxf))
+        .catch((err) => { console.error(err); this.print('Could not open DWG: ' + (err && err.message ? err.message : err)); })
+        .finally(() => document.body.classList.remove('busy'));
+      return;
+    }
     const rd = new FileReader();
     rd.onload = () => this.loadText(f.name, String(rd.result));
     rd.readAsText(f);
@@ -1059,9 +1078,9 @@ const App = {
         for (const l of r.layers) { const ex = d.layers.find((x) => x.name === l.name); if (ex) Object.assign(ex, l); else d.layers.push(l); }
         for (const e of r.entities) { if (!d.layers.find((l) => l.name === e.layer)) d.layers.push({ name: e.layer, color: '#ffffff', visible: true, locked: false, linetype: 'Continuous' }); e.id = d.nextId++; d.entities.push(e); }
         this.doc = d;
-        this.print(`Imported ${r.entities.length} objects from "${name}".`);
+        this.print(`Imported ${r.entities.length} objects and ${r.layers.length} layers from "${name}".`);
         const sk = Object.entries(r.skipped);
-        if (sk.length) this.print(`Skipped unsupported DXF entities: ${sk.map(([k, v]) => `${k}×${v}`).join(', ')}`);
+        if (sk.length) this.print(`Not imported: ${sk.map(([k, v]) => `${k}×${v}`).join(', ')}`);
       } else {
         const o = JSON.parse(text);
         const d = o.doc || o;
