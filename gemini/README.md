@@ -1,31 +1,32 @@
-# Gemini (Nano Banana Pro) render inputs - Bedroom 1
+# Gemini (Nano Banana Pro) render inputs - Bedroom 1, layout B
 
-Each view = 1 reference image + 1 prompt. The reference image fixes the exact
-layout; the prompt tells Gemini only to make it photorealistic.
+Layout B: Nick Scali Elyse king bed with its head to the south window (400 mm gap),
+artwork on the west wall, tall mirror + floor drawer on the east wall, lounge chair
+in the north-west corner, light grey carpet, flat 2.4 m ceiling with cove cornice.
+
+Each view = 1 reference image + 1 prompt. The image fixes the exact layout; the prompt
+tells Gemini only to make it photorealistic.
 
 | # | View | Attach this image | Paste this prompt |
 |---|---|---|---|
-| 1 | Bed & headboard (from NW corner) | `view-1-bed-reference.jpg` | `view-1-bed-prompt.txt` |
-| 2 | Room, window, artwork & mirror (from entry) | `view-2-corner-reference.jpg` | `view-2-corner-prompt.txt` |
-| 3 | Dressing mirror & artwork (from window side) | `view-3-dressing-reference.jpg` | `view-3-dressing-prompt.txt` |
-| 4 | Bed & headboard - EVENING, lights on | `view-4-bed-evening-reference.jpg` | `view-4-bed-evening-prompt.txt` |
-| 5 | Room, window, artwork & mirror - EVENING, lights on | `view-5-corner-evening-reference.jpg` | `view-5-corner-evening-prompt.txt` |
+| 1 | From the entry side: bed, window, artwork | `view-1-bed-reference.jpg` | `view-1-bed-prompt.txt` |
+| 2 | From the north-west: mirror, bed, window, artwork | `view-2-corner-reference.jpg` | `view-2-corner-prompt.txt` |
+| 3 | From the bed, looking north: chair, door, mirror | `view-3-dressing-reference.jpg` | `view-3-dressing-prompt.txt` |
+| 4 | View 1 in the evening, lights on | `view-4-bed-evening-reference.jpg` | `view-4-bed-evening-prompt.txt` |
+| 5 | View 2 in the evening, lights on | `view-5-corner-evening-reference.jpg` | `view-5-corner-evening-prompt.txt` |
 
 ## Steps
-1. Gemini app → **Create images** → choose the **Thinking** model (Nano Banana Pro),
-   or Google AI Studio → `gemini-3-pro-image`.
-2. Attach the reference image (optionally also `../plans/bedroom-1-layout.png`
-   and add the line: "The second image is the floor plan, for reference only.").
-3. Paste the full prompt text and send.
-4. Start a **new chat for each view** so styles don't bleed between them.
+1. Gemini app -> Create images -> Thinking model (Nano Banana Pro), or Google AI Studio.
+2. Attach the reference image. Optional 2nd image: `../plans/bedroom-1-plan-B-head-to-window.png`
+   with the line "The second image is the floor plan, for reference only."
+3. Paste the whole prompt and send.
+4. New chat for each view.
 
 ## Fix-up replies (if Gemini drifts)
 - "Keep the layout identical to the reference image. Only fix: <item>."
-- "The ceiling is flat 2.4m with a small cove cornice - remove any bulkhead/recess/downlights."
+- "The bed's headboard is low (930 mm) and stands 400 mm in front of the window - do not add a wall or panelling behind it."
+- "The artwork is on the west wall beside the bed, not above the bed."
 - "Remove the rug - the floor is wall-to-wall light grey carpet."
-- "The artwork is a wide landscape rectangle, 1.8m x 0.9m, centred on the bed."
-- "The mirror is tall (0.9m x 1.9m) and stands on a low floor-level drawer, not a floating shelf."
-- "There is no TV and no TV unit on any wall."
-- "Keep the ceiling lights as small flush recessed downlights exactly where the dots are in the reference - no chandelier, no light over the bed."
-- "Remove the picture light above the artwork - it is lit from the ceiling."
-- "Make the metal finishes brushed brass and the timber walnut."
+- "Keep the ceiling flat with a small cove cornice and small flush downlights - no chandelier, no light over the bed."
+- "The mirror is tall (0.9 x 1.9 m) and stands on a low floor-level drawer on the east wall."
+- "There is no TV anywhere in the room."
