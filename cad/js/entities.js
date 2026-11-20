@@ -17,18 +17,21 @@ const CAP_RATIO = 0.716; // cap height / em size for Arial
 const LINE_SPACING = 1.6667;
 
 const _measureCtx = document.createElement('canvas').getContext('2d');
-function textWidth(str, h) {
-  _measureCtx.font = `100px ${FONT_FAMILY}`;
-  return (_measureCtx.measureText(str || '').width / 100) * (h / CAP_RATIO);
+const DEFAULT_TSTYLE = { name: 'Standard', font: 'Arial', width: 1, oblique: 0 };
+const fontStack = (f) => (f && f !== 'Arial' ? `"${f}", ${FONT_FAMILY}` : FONT_FAMILY);
+function textWidth(str, h, st) {
+  st = st || DEFAULT_TSTYLE;
+  _measureCtx.font = `100px ${fontStack(st.font)}`;
+  return (_measureCtx.measureText(str || '').width / 100) * (h / CAP_RATIO) * (st.width || 1);
 }
-function wrapLines(text, h, width) {
+function wrapLines(text, h, width, st) {
   const out = [];
   for (const para of String(text ?? '').split('\n')) {
     if (!width || width <= 0) { out.push(para); continue; }
     let cur = '';
     for (const w of para.split(' ')) {
       const t = cur ? cur + ' ' + w : w;
-      if (cur && textWidth(t, h) > width) { out.push(cur); cur = w; } else cur = t;
+      if (cur && textWidth(t, h, st) > width) { out.push(cur); cur = w; } else cur = t;
     }
     out.push(cur);
   }
@@ -184,17 +187,42 @@ E.attribsFor = (blk, values = {}) => blk.ents.filter((c) => c.type === 'attdef')
   tag: d.tag, value: values[d.tag] ?? d.def ?? '', p: { ...d.p }, h: d.h, rot: d.rot || 0, align: d.align || 'left', invisible: !!d.invisible, layer: d.layer, color: d.color,
 }));
 
-E.dimText = (e, meas, dec) => {
-  const v = fmtNum(meas, dec);
+/* ---------- styles ---------- */
+const DEFAULT_DSTYLE = { name: 'Standard', textStyle: 'Standard', txt: 2.5, asz: 2.5, arrow: 'closed', exo: 0.625, exe: 1.25, gap: 0.625, dec: 2, adec: 0, scale: 1, pre: '', suf: '', tad: 'above', dli: 3.75 };
+E.tstyle = (name) => {
+  const L = (E.ctxDoc && E.ctxDoc.textStyles) || [];
+  return L.find((x) => x.name === name) || L.find((x) => x.name === 'Standard') || L[0] || DEFAULT_TSTYLE;
+};
+/* Effective dimension style of a dimension (legacy dims without a style keep their own size). */
+E.dstyle = (e) => {
+  const L = (E.ctxDoc && E.ctxDoc.dimStyles) || [];
+  if (e.dimstyle) { const st = L.find((x) => x.name === e.dimstyle); if (st) return { ...DEFAULT_DSTYLE, ...st }; }
+  const sc = e.scale || 1;
+  return { ...DEFAULT_DSTYLE, scale: sc, txt: (e.h || 2.5 * sc) / sc, dec: E.ctxDoc ? E.ctxDoc.dimDec ?? 2 : 2 };
+};
+E.dimText = (e, meas, st) => {
+  const v = e.kind === 'angular' ? fmtNum(meas, st.adec ?? 0) + '°' : (st.pre || '') + fmtNum(meas, st.dec) + (st.suf || '');
   if (e.text && e.text.length) return e.text.replace('<>', v);
   if (e.kind === 'radius') return 'R' + v;
   if (e.kind === 'diameter') return '⌀' + v;
   return v;
 };
+/* Arrowhead at tip; dir points from the dimension line into the tip; ln = direction of the dim line. */
+function arrowOps(tip, dir, asz, type, ln) {
+  switch (type) {
+    case 'none': return [];
+    case 'tick': { const t = G.rotate(ln || dir, { x: 0, y: 0 }, Math.PI / 4); return [{ op: 'poly', pts: [G.sub(tip, G.mul(t, asz / 2)), G.add(tip, G.mul(t, asz / 2))], lw: 2 }]; }
+    case 'dot': { const pts = []; for (let i = 0; i < 16; i++) pts.push(G.polar(tip, (i / 16) * TAU, asz / 4)); return [{ op: 'fill', pts }]; }
+    case 'open': { const p = arrowPts(tip, dir, asz); return [{ op: 'poly', pts: [p[1], p[0], p[2]] }]; }
+    default: return [{ op: 'fill', pts: arrowPts(tip, dir, asz) }];
+  }
+}
 
-E.dimOps = (e, dec = 2) => {
-  const s = e.scale || 1, asz = 2.5 * s, th = e.h || 2.5 * s, gap = 0.625 * s, ext = 1.25 * s;
-  const ops = [];
+E.dimOps = (e) => {
+  const st = E.dstyle(e), s = st.scale || 1;
+  const asz = st.asz * s, th = st.txt * s, gap = st.gap * s, exo = st.exo * s, exe = st.exe * s;
+  const tst = st.textStyle, ops = [];
+  const text = (p, rot, str, align) => ops.push({ op: 'text', p, h: th, rot, str, align, style: tst });
   if (e.kind === 'radius' || e.kind === 'diameter') {
     const r = e.r, c = e.c;
     let dir = G.norm(G.sub(e.pos, c));
@@ -202,20 +230,52 @@ E.dimOps = (e, dec = 2) => {
     const tip = G.polar(c, Math.atan2(dir.y, dir.x), r);
     const outside = G.dist(e.pos, c) > r;
     const meas = e.kind === 'radius' ? r : 2 * r;
+    const arrowT = st.arrow === 'tick' ? 'closed' : st.arrow;
     if (e.kind === 'radius') {
       ops.push({ op: 'poly', pts: outside ? [c, e.pos] : [c, tip] });
-      ops.push({ op: 'fill', pts: arrowPts(tip, outside ? G.mul(dir, -1) : dir, asz) });
+      ops.push(...arrowOps(tip, outside ? G.mul(dir, -1) : dir, asz, arrowT));
     } else {
       const tip2 = G.sub(c, G.mul(dir, r));
       ops.push({ op: 'poly', pts: outside ? [tip2, e.pos] : [tip2, tip] });
-      ops.push({ op: 'fill', pts: arrowPts(tip, outside ? G.mul(dir, -1) : dir, asz) });
-      ops.push({ op: 'fill', pts: arrowPts(tip2, G.mul(dir, -1), asz) });
+      ops.push(...arrowOps(tip, outside ? G.mul(dir, -1) : dir, asz, arrowT));
+      ops.push(...arrowOps(tip2, G.mul(dir, -1), asz, arrowT));
     }
     const right = e.pos.x >= c.x;
     const land = { x: e.pos.x + (right ? 1 : -1) * asz, y: e.pos.y };
     if (outside) ops.push({ op: 'poly', pts: [e.pos, land] });
     const tp = outside ? { x: land.x + (right ? gap : -gap), y: e.pos.y - th / 2 } : { x: e.pos.x, y: e.pos.y + gap };
-    ops.push({ op: 'text', p: tp, h: th, rot: 0, str: E.dimText(e, meas, dec), align: outside ? (right ? 'left' : 'right') : 'center' });
+    text(tp, 0, E.dimText(e, meas, st), outside ? (right ? 'left' : 'right') : 'center');
+    return ops;
+  }
+  if (e.kind === 'angular') {
+    const c = e.c, a1 = G.angle(c, e.p1), a2 = G.angle(c, e.p2), sw = G.ccwSweep(a1, a2), r = Math.max(G.dist(c, e.pos), 1e-9);
+    for (const [a, p] of [[a1, e.p1], [a2, e.p2]]) {
+      const rp = G.dist(c, p);
+      if (r > rp + gap) ops.push({ op: 'poly', pts: [G.polar(c, a, rp + exo), G.polar(c, a, r + exe)] });
+    }
+    ops.push({ op: 'arc', c, r, a1, a2 });
+    const e1 = G.polar(c, a1, r), e2 = G.polar(c, a2, r);
+    const t1 = { x: Math.sin(a1), y: -Math.cos(a1) }, t2 = { x: -Math.sin(a2), y: Math.cos(a2) };
+    const inside = r * sw > asz * 2.6;
+    ops.push(...arrowOps(e1, inside ? t1 : G.mul(t1, -1), asz, st.arrow, t2));
+    ops.push(...arrowOps(e2, inside ? t2 : G.mul(t2, -1), asz, st.arrow, t2));
+    const am = a1 + sw / 2, raw = am - Math.PI / 2, ta = readableAngle(raw);
+    const flipped = Math.abs(Math.atan2(Math.sin(ta - raw), Math.cos(ta - raw))) > 1;
+    text(G.polar(c, am, r + gap + (flipped ? th : 0)), ta, E.dimText(e, sw / DEG, st), 'center');
+    return ops;
+  }
+  if (e.kind === 'ordinate') {
+    const axis = e.axis || 'x', p1 = e.p1, pos = e.pos;
+    const val = axis === 'x' ? p1.x : p1.y;
+    if (axis === 'x') {
+      const sg = pos.y >= p1.y ? 1 : -1;
+      ops.push({ op: 'poly', pts: [{ x: p1.x, y: p1.y + sg * exo }, { x: p1.x, y: pos.y - sg * Math.min(Math.abs(pos.y - p1.y) / 3, asz * 2) }, pos] });
+      text({ x: pos.x + th / 2, y: pos.y + sg * gap }, Math.PI / 2, E.dimText(e, val, st), sg > 0 ? 'left' : 'right');
+    } else {
+      const sg = pos.x >= p1.x ? 1 : -1;
+      ops.push({ op: 'poly', pts: [{ x: p1.x + sg * exo, y: p1.y }, { x: pos.x - sg * Math.min(Math.abs(pos.x - p1.x) / 3, asz * 2), y: p1.y }, pos] });
+      text({ x: pos.x + sg * gap, y: pos.y - th / 2 }, 0, E.dimText(e, val, st), sg > 0 ? 'left' : 'right');
+    }
     return ops;
   }
   let u;
@@ -229,26 +289,68 @@ E.dimOps = (e, dec = 2) => {
   for (const [p, d] of [[e.p1, d1], [e.p2, d2]]) {
     const v = G.sub(d, p), l = G.len(v);
     const nn = l > 1e-9 ? G.mul(v, 1 / l) : n;
-    if (l > gap) ops.push({ op: 'poly', pts: [G.add(p, G.mul(nn, gap)), G.add(d, G.mul(nn, ext))] });
-    else ops.push({ op: 'poly', pts: [d, G.add(d, G.mul(nn, ext))] });
+    if (l > exo) ops.push({ op: 'poly', pts: [G.add(p, G.mul(nn, exo)), G.add(d, G.mul(nn, exe))] });
+    else ops.push({ op: 'poly', pts: [d, G.add(d, G.mul(nn, exe))] });
   }
   const dd = G.dist(d1, d2);
   const du = dd > 1e-9 ? G.norm(G.sub(d2, d1)) : u;
-  const inside = dd > asz * 2.6;
-  if (inside) {
-    ops.push({ op: 'poly', pts: [d1, d2] });
-    ops.push({ op: 'fill', pts: arrowPts(d1, G.mul(du, -1), asz) });
-    ops.push({ op: 'fill', pts: arrowPts(d2, du, asz) });
-  } else {
-    ops.push({ op: 'poly', pts: [G.sub(d1, G.mul(du, asz * 2)), G.add(d2, G.mul(du, asz * 2))] });
-    ops.push({ op: 'fill', pts: arrowPts(d1, du, asz) });
-    ops.push({ op: 'fill', pts: arrowPts(d2, G.mul(du, -1), asz) });
-  }
+  const str = E.dimText(e, meas, st);
+  const tw = textWidth(str, th, E.tstyle(tst));
   const ta = readableAngle(Math.atan2(du.y, du.x));
   const up = { x: -Math.sin(ta), y: Math.cos(ta) };
-  ops.push({ op: 'text', p: G.add(G.mid(d1, d2), G.mul(up, gap)), h: th, rot: ta, str: E.dimText(e, meas, dec), align: 'center' });
+  const mid = G.mid(d1, d2);
+  const inside = st.arrow === 'tick' || st.arrow === 'none' || st.arrow === 'dot' ? dd > asz : dd > asz * 2.6;
+  const centered = st.tad === 'centered' && dd > tw + 2 * gap + 2 * asz;
+  if (inside) {
+    if (centered) {
+      ops.push({ op: 'poly', pts: [d1, G.sub(mid, G.mul(du, tw / 2 + gap))] });
+      ops.push({ op: 'poly', pts: [G.add(mid, G.mul(du, tw / 2 + gap)), d2] });
+    } else ops.push({ op: 'poly', pts: [d1, d2] });
+    ops.push(...arrowOps(d1, G.mul(du, -1), asz, st.arrow, du));
+    ops.push(...arrowOps(d2, du, asz, st.arrow, du));
+  } else {
+    ops.push({ op: 'poly', pts: [G.sub(d1, G.mul(du, asz * 2)), G.add(d2, G.mul(du, asz * 2))] });
+    ops.push(...arrowOps(d1, du, asz, st.arrow, du));
+    ops.push(...arrowOps(d2, G.mul(du, -1), asz, st.arrow, du));
+  }
+  text(centered ? G.sub(mid, G.mul(up, th / 2)) : G.add(mid, G.mul(up, gap)), ta, str, 'center');
   return ops;
 };
+
+/* ---------- tables ---------- */
+E.tableGeom = (e) => {
+  const W = e.cw.reduce((a, b) => a + b, 0), H = e.rh.reduce((a, b) => a + b, 0);
+  const xs = [0], ys = [0];
+  for (const w of e.cw) xs.push(xs[xs.length - 1] + w);
+  for (const h of e.rh) ys.push(ys[ys.length - 1] + h);
+  const L = (x, y) => G.add(e.p, G.rotate({ x, y: -y }, { x: 0, y: 0 }, e.rot || 0));
+  return { W, H, xs, ys, L };
+};
+E.tableCellAt = (e, pt) => {
+  const g = E.tableGeom(e);
+  const q = G.rotate(G.sub(pt, e.p), { x: 0, y: 0 }, -(e.rot || 0));
+  const x = q.x, y = -q.y;
+  if (x < 0 || y < 0 || x > g.W || y > g.H) return null;
+  let c = 0, r = 0;
+  while (c < e.cw.length - 1 && x > g.xs[c + 1]) c++;
+  while (r < e.rh.length - 1 && y > g.ys[r + 1]) r++;
+  return { r, c };
+};
+function tableOps(e) {
+  const g = E.tableGeom(e), ops = [], h = e.h, rot = e.rot || 0, st = E.tstyle(e.style);
+  ops.push({ op: 'poly', pts: [g.L(0, 0), g.L(g.W, 0), g.L(g.W, g.H), g.L(0, g.H)], closed: true });
+  for (let i = 1; i < g.ys.length - 1; i++) ops.push({ op: 'poly', pts: [g.L(0, g.ys[i]), g.L(g.W, g.ys[i])] });
+  for (let j = 1; j < g.xs.length - 1; j++) ops.push({ op: 'poly', pts: [g.L(g.xs[j], 0), g.L(g.xs[j], g.H)] });
+  e.cells.forEach((row, r) => row.forEach((txt, c) => {
+    if (txt == null || txt === '') return;
+    const lines = wrapLines(String(txt), h, e.cw[c] - h * 1.2, st);
+    const bh = h + (lines.length - 1) * h * LINE_SPACING;
+    const top = g.ys[r] + (e.rh[r] - bh) / 2;
+    const center = r === 0 && e.header !== false;
+    lines.forEach((str, k) => ops.push({ op: 'text', p: g.L(center ? g.xs[c] + e.cw[c] / 2 : g.xs[c] + h * 0.6, top + h + k * h * LINE_SPACING), h, rot, str, align: center ? 'center' : 'left', style: e.style }));
+  }));
+  return ops;
+}
 
 E.leaderGeom = (e) => {
   const pts = e.pts, n = pts.length, h = e.h || 2.5;
@@ -270,11 +372,12 @@ E.ops = (e, doc) => {
     case 'circle': return [{ op: 'circle', c: e.c, r: e.r }];
     case 'arc': return [{ op: 'arc', c: e.c, r: e.r, a1: e.a1, a2: e.a2 }];
     case 'ellipse': return [{ op: 'ellipse', c: e.c, rx: G.len(e.maj), ry: G.len(e.maj) * e.ratio, rot: Math.atan2(e.maj.y, e.maj.x) }];
-    case 'text': return [{ op: 'text', p: e.p, h: e.h, rot: e.rot || 0, str: e.text, align: e.align || 'left' }];
+    case 'text': return [{ op: 'text', p: e.p, h: e.h, rot: e.rot || 0, str: e.text, align: e.align || 'left', style: e.style }];
     case 'mtext': {
-      const lines = wrapLines(e.text, e.h, e.width), rot = e.rot || 0;
-      return lines.map((str, i) => ({ op: 'text', p: G.rotate(G.add(e.p, { x: 0, y: -e.h - i * e.h * LINE_SPACING }), e.p, rot), h: e.h, rot, str, align: 'left' }));
+      const lines = wrapLines(e.text, e.h, e.width, E.tstyle(e.style)), rot = e.rot || 0;
+      return lines.map((str, i) => ({ op: 'text', p: G.rotate(G.add(e.p, { x: 0, y: -e.h - i * e.h * LINE_SPACING }), e.p, rot), h: e.h, rot, str, align: 'left', style: e.style }));
     }
+    case 'table': return tableOps(e);
     case 'leader': {
       const g = E.leaderGeom(e), h = e.h || 2.5, ops = [];
       ops.push({ op: 'poly', pts: [...e.pts, g.land] });
@@ -282,20 +385,20 @@ E.ops = (e, doc) => {
         const d = G.norm(G.sub(e.pts[0], e.pts[1]));
         ops.push({ op: 'fill', pts: arrowPts(e.pts[0], d, h) });
       }
-      g.lines.forEach((str, i) => ops.push({ op: 'text', p: { x: g.tx, y: g.firstBase - i * h * LINE_SPACING }, h, rot: 0, str, align: g.dir > 0 ? 'left' : 'right' }));
+      g.lines.forEach((str, i) => ops.push({ op: 'text', p: { x: g.tx, y: g.firstBase - i * h * LINE_SPACING }, h, rot: 0, str, align: g.dir > 0 ? 'left' : 'right', style: e.style }));
       return ops;
     }
-    case 'dim': return E.dimOps(e, dec);
+    case 'dim': return E.dimOps(e);
     case 'revcloud': return [{ op: 'poly', pts: revcloudPts(e.pts, e.arc), closed: true }];
     case 'hatch': return [{ op: 'hatch', loops: e.loops, pattern: e.pattern, scale: e.scale, angle: e.angle }];
-    case 'attdef': return [{ op: 'text', p: e.p, h: e.h, rot: e.rot || 0, str: e.tag, align: e.align || 'left' }];
+    case 'attdef': return [{ op: 'text', p: e.p, h: e.h, rot: e.rot || 0, str: e.tag, align: e.align || 'left', style: e.style }];
     case 'insert': { const out = []; for (const c of E.children(e)) for (const op of E.ops(c, doc)) out.push(op); return out; }
   }
   return [];
 };
 
 E.textBox = (op) => {
-  const h = op.h, w = op.str ? textWidth(op.str, h) : h * 0.5;
+  const h = op.h, w = op.str ? textWidth(op.str, h, E.tstyle(op.style)) : h * 0.5;
   const x0 = op.align === 'center' ? -w / 2 : op.align === 'right' ? -w : 0;
   return [{ x: x0, y: -0.22 * h }, { x: x0 + w, y: -0.22 * h }, { x: x0 + w, y: 1.08 * h }, { x: x0, y: 1.08 * h }]
     .map((q) => G.add(op.p, G.rotate(q, { x: 0, y: 0 }, op.rot || 0)));
@@ -324,6 +427,7 @@ E.outline = (e, doc) => {
       case 'hatch': out.push({ kind: 'region', loops: op.loops }); for (const l of op.loops) addAll(segsOf(l, true)); break;
     }
   }
+  if (e.type === 'table') { const g = E.tableGeom(e); out.push({ kind: 'box', pts: [g.L(0, 0), g.L(g.W, 0), g.L(g.W, g.H), g.L(0, g.H)] }); }
   return out;
 };
 
@@ -422,7 +526,8 @@ E.grips = (e) => {
     case 'arc': { const sw = G.ccwSweep(e.a1, e.a2); return [G.polar(e.c, e.a1, e.r), G.polar(e.c, e.a1 + sw / 2, e.r), G.polar(e.c, e.a2, e.r), e.c]; }
     case 'ellipse': { const mn = G.mul(G.perp(e.maj), e.ratio); return [e.c, G.add(e.c, e.maj), G.sub(e.c, e.maj), G.add(e.c, mn), G.sub(e.c, mn)]; }
     case 'text': case 'mtext': case 'attdef': case 'insert': return [e.p];
-    case 'dim': return e.kind === 'radius' || e.kind === 'diameter' ? [e.pos] : [e.p1, e.p2, e.pos];
+    case 'dim': return E.dimKeys(e).map((k) => e[k]);
+    case 'table': return [e.p];
   }
   return [];
 };
@@ -471,14 +576,13 @@ E.setGrip = (e, i, p) => {
       break;
     }
     case 'text': case 'mtext': case 'attdef': case 'insert': e.p = p; break;
-    case 'dim':
-      if (e.kind === 'radius' || e.kind === 'diameter') e.pos = p;
-      else if (i === 0) e.p1 = p; else if (i === 1) e.p2 = p; else e.pos = p;
-      break;
+    case 'dim': { const k = E.dimKeys(e)[i]; if (k) e[k] = p; if (k !== 'pos' && e.assoc) delete e.assoc[k]; break; }
+    case 'table': e.p = p; break;
   }
 };
 
 E.clone = (e) => JSON.parse(JSON.stringify(e));
+E.dimKeys = (e) => (e.kind === 'radius' || e.kind === 'diameter' ? ['pos'] : e.kind === 'angular' ? ['c', 'p1', 'p2', 'pos'] : e.kind === 'ordinate' ? ['p1', 'pos'] : ['p1', 'p2', 'pos']);
 
 E.transform = (e, xf) => {
   const P = xf.p, s = Math.abs(xf.s);
@@ -509,6 +613,12 @@ E.transform = (e, xf) => {
       for (const k of ['p1', 'p2', 'pos', 'c']) if (e[k]) e[k] = P(e[k]);
       if (e.r) e.r *= s;
       if (e.kind === 'linear') e.dirAng = angOf(e.dirAng || 0);
+      if (e.kind === 'angular' && xf.mirror) [e.p1, e.p2] = [e.p2, e.p1];
+      if (e.kind === 'ordinate' && Math.abs(Math.sin(xf.rot)) > 0.7 && !xf.mirror) e.axis = e.axis === 'x' ? 'y' : 'x';
+      break;
+    case 'table':
+      e.p = P(e.p); e.h *= s; e.cw = e.cw.map((v) => v * s); e.rh = e.rh.map((v) => v * s);
+      if (!xf.mirror) e.rot = angOf(e.rot || 0);
       break;
     case 'hatch':
       e.loops = e.loops.map((l) => l.map(P)); e.scale *= s; e.angle = angOf((e.angle || 0) * DEG) / DEG;
@@ -644,21 +754,22 @@ E.explode = (e, doc) => {
   if (e.type === 'spline') return [{ ...base, type: 'pline', pts: splinePts(e), closed: !!e.closed }];
   if (e.type === 'insert') return E.children(e).map((c) => { const n = E.clone(c); delete n.id; return n; });
   if (e.type === 'mtext') return E.ops(e, doc).map((op) => ({ ...base, type: 'text', p: op.p, h: op.h, rot: op.rot, text: op.str, align: 'left' }));
-  if (['dim', 'leader', 'revcloud'].includes(e.type)) {
+  if (['dim', 'leader', 'revcloud', 'table'].includes(e.type)) {
     const out = [];
     for (const op of E.ops(e, doc)) {
       if (op.op === 'poly') {
         if (op.pts.length === 2 && !op.closed) out.push({ ...base, type: 'line', p1: op.pts[0], p2: op.pts[1] });
         else out.push({ ...base, type: 'pline', pts: op.pts, closed: !!op.closed });
       } else if (op.op === 'fill') out.push({ ...base, type: 'pline', pts: op.pts, closed: true });
-      else if (op.op === 'text') out.push({ ...base, type: 'text', p: op.p, h: op.h, rot: op.rot, text: op.str, align: op.align });
+      else if (op.op === 'text') out.push({ ...base, type: 'text', p: op.p, h: op.h, rot: op.rot, text: op.str, align: op.align, style: op.style });
+      else if (op.op === 'arc') out.push({ ...base, type: 'arc', c: op.c, r: op.r, a1: op.a1, a2: op.a2 });
     }
     return out;
   }
   return null;
 };
 
-E.label = (t) => ({ line: 'Line', pline: 'Polyline', spline: 'Spline', circle: 'Circle', arc: 'Arc', ellipse: 'Ellipse', text: 'Text', mtext: 'MText', leader: 'Leader', dim: 'Dimension', revcloud: 'Revision cloud', hatch: 'Hatch', insert: 'Block reference', attdef: 'Attribute definition' }[t] || t);
+E.label = (t) => ({ line: 'Line', pline: 'Polyline', spline: 'Spline', circle: 'Circle', arc: 'Arc', ellipse: 'Ellipse', text: 'Text', mtext: 'MText', leader: 'Leader', dim: 'Dimension', revcloud: 'Revision cloud', hatch: 'Hatch', table: 'Table', insert: 'Block reference', attdef: 'Attribute definition' }[t] || t);
 
 E.describe = (e, doc) => {
   const f = (v) => fmtNum(v, 4), P = (p) => `X=${f(p.x)}  Y=${f(p.y)}`;
@@ -671,7 +782,8 @@ E.describe = (e, doc) => {
     case 'ellipse': L.push(`  center ${P(e.c)}`, `  Major=${f(G.len(e.maj))}  Minor=${f(G.len(e.maj) * e.ratio)}`); break;
     case 'text': case 'mtext': L.push(`  at ${P(e.p)}  Height=${f(e.h)}`, `  "${e.text}"`); break;
     case 'leader': L.push(`  arrow at ${P(e.pts[0])}`, `  "${e.text}"`); break;
-    case 'dim': L.push(`  ${e.kind}`); break;
+    case 'dim': L.push(`  ${e.kind} dimension, style "${e.dimstyle || '(legacy)'}"${e.assoc && Object.keys(e.assoc).length ? ', associative' : ''}`); break;
+    case 'table': L.push(`  ${e.rh.length} rows × ${e.cw.length} columns`); break;
     case 'hatch': L.push(`  Pattern=${e.pattern}  Scale=${e.scale}  Angle=${e.angle}°`); break;
     case 'insert': L.push(`  Block "${e.name}" at ${P(e.p)}`, `  Scale X=${f(e.sx ?? 1)} Y=${f(e.sy ?? 1)}  Rotation=${f(G.normAng(e.rot || 0) / DEG)}°`); for (const a of e.attribs || []) L.push(`  ${a.tag} = "${a.value}"`); break;
     case 'attdef': L.push(`  Tag=${e.tag}  Prompt="${e.prompt || ''}"  Default="${e.def || ''}"`); break;

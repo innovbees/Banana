@@ -50,8 +50,9 @@ const IO = {
     w(0, 'TABLE'); w(2, 'LAYER'); w(70, doc.layers.length);
     for (const l of doc.layers) { w(0, 'LAYER'); w(2, l.name); w(70, l.locked ? 4 : 0); w(62, (l.visible ? 1 : -1) * hexToAci(l.color)); w(6, 'CONTINUOUS'); }
     w(0, 'ENDTAB');
-    w(0, 'TABLE'); w(2, 'STYLE'); w(70, 1);
-    w(0, 'STYLE'); w(2, 'STANDARD'); w(70, 0); w(40, 0); w(41, 1); w(50, 0); w(71, 0); w(42, 2.5); w(3, 'txt'); w(4, '');
+    const tstyles = doc.textStyles && doc.textStyles.length ? doc.textStyles : [DEFAULT_TSTYLE];
+    w(0, 'TABLE'); w(2, 'STYLE'); w(70, tstyles.length);
+    for (const st of tstyles) { w(0, 'STYLE'); w(2, st.name); w(70, 0); w(40, 0); w(41, st.width || 1); w(50, st.oblique || 0); w(71, 0); w(42, 2.5); w(3, IO.fontFile(st.font)); w(4, ''); }
     w(0, 'ENDTAB');
     w(0, 'ENDSEC');
     const head = (type, e) => { w(0, type); w(8, e.layer || '0'); if (e.color === 'byblock') w(62, 0); else if (e.color && e.color !== 'bylayer') w(62, hexToAci(e.color)); };
@@ -101,6 +102,7 @@ const IO = {
             if (!op.str) break;
             head('TEXT', e); P(op.p); w(40, op.h); w(1, op.str);
             if (op.rot) w(50, G.normAng(op.rot) / DEG);
+            { const ts = E.tstyle(op.style); w(7, ts.name); if (ts.width && ts.width !== 1) w(41, ts.width); if (ts.oblique) w(51, ts.oblique); }
             textAlign(op);
             break;
           }
@@ -129,6 +131,26 @@ const IO = {
     return L.join('\r\n') + '\r\n';
   },
 
+  fontFile(f) {
+    const m = { 'Arial': 'arial.ttf', 'Arial Narrow': 'arialn.ttf', 'Times New Roman': 'times.ttf', 'Courier New': 'cour.ttf', 'Georgia': 'georgia.ttf', 'Verdana': 'verdana.ttf',
+      'Tahoma': 'tahoma.ttf', 'Trebuchet MS': 'trebuc.ttf', 'Calibri': 'calibri.ttf', 'Segoe UI': 'segoeui.ttf', 'Consolas': 'consola.ttf', 'Comic Sans MS': 'comic.ttf', 'Impact': 'impact.ttf' };
+    return m[f] || 'arial.ttf';
+  },
+  fontFamily(file) {
+    const f = String(file || '').toLowerCase();
+    if (/arialn|narrow/.test(f)) return 'Arial Narrow';
+    if (/times/.test(f)) return 'Times New Roman';
+    if (/cour/.test(f)) return 'Courier New';
+    if (/georgia/.test(f)) return 'Georgia';
+    if (/verdana/.test(f)) return 'Verdana';
+    if (/tahoma/.test(f)) return 'Tahoma';
+    if (/trebuc/.test(f)) return 'Trebuchet MS';
+    if (/calibri/.test(f)) return 'Calibri';
+    if (/consol|monotxt/.test(f)) return 'Consolas';
+    if (/segoe/.test(f)) return 'Segoe UI';
+    if (/comic/.test(f)) return 'Comic Sans MS';
+    return 'Arial';
+  },
   /* ---------------- DXF import ----------------
    * Reads model-space entities, layers and blocks. Block references (INSERT),
    * dimensions (stored as anonymous blocks) and nested blocks are expanded
@@ -151,13 +173,21 @@ const IO = {
         const v = v0.trim();
         if (v === 'SECTION') { expectName = true; continue; }
         if (v === 'ENDSEC') { section = null; continue; }
-        if (section === 'ENTITIES' || section === 'BLOCKS' || (section === 'TABLES' && v === 'LAYER')) cur = { type: v, g: [], section };
+        if (section === 'ENTITIES' || section === 'BLOCKS' || (section === 'TABLES' && (v === 'LAYER' || v === 'STYLE'))) cur = { type: v, g: [], section };
       } else if (c === 2 && expectName) { section = v0.trim(); expectName = false; }
       else if (cur) cur.g.push([c, v0]);
     }
     if (cur) objs.push(cur);
 
     const skipped = {};
+    let styleIndex = null;
+    const styleName = (raw) => {
+      if (!styleIndex) {
+        styleIndex = {};
+        for (const o of objs) if (o.section === 'TABLES' && o.type === 'STYLE') { const n = (get(o, 2, '') || '').trim(); if (n) styleIndex[n.toLowerCase()] = /^standard$/i.test(n) ? 'Standard' : n; }
+      }
+      return raw ? styleIndex[String(raw).trim().toLowerCase()] : undefined;
+    };
     const skip = (t) => (skipped[t] = (skipped[t] || 0) + 1);
     const get = (o, c, d) => { const p = o.g.find((x) => x[0] === c); return p ? p[1] : d; };
     const num = (o, c, d = 0) => { const v = get(o, c); const n = v === undefined ? NaN : parseFloat(v); return isNaN(n) ? d : n; };
@@ -336,8 +366,9 @@ const IO = {
                 if (lastIns) (lastIns.atts = lastIns.atts || []).push({ tag: (get(o, 2, '') || '').trim(), value: str, p, h, rot, align, invisible: (parseInt(get(o, 70, '0'), 10) & 1) === 1 });
                 break;
               }
-              if (o.type === 'ATTDEF') { out.push({ ...b, type: 'attdef', tag: (get(o, 2, '') || '').trim(), prompt: uni(get(o, 3, '')), def: str, p, h, rot, align, invisible: (parseInt(get(o, 70, '0'), 10) & 1) === 1 }); break; }
-              out.push({ ...b, type: 'text', p, h, rot, text: str, align });
+              const style = styleName(get(o, 7));
+              if (o.type === 'ATTDEF') { out.push({ ...b, type: 'attdef', tag: (get(o, 2, '') || '').trim(), prompt: uni(get(o, 3, '')), def: str, p, h, rot, align, style, invisible: (parseInt(get(o, 70, '0'), 10) & 1) === 1 }); break; }
+              out.push({ ...b, type: 'text', p, h, rot, text: str, align, style });
               break;
             }
             case 'MTEXT': {
@@ -346,7 +377,7 @@ const IO = {
               let rot = num(o, 50, 0) * DEG;
               if (get(o, 11) !== undefined) rot = Math.atan2(num(o, 21), num(o, 11));
               const h = num(o, 40, 2.5), width = num(o, 41, 0);
-              const e = { ...b, type: 'mtext', p: P(o, 10), h, width, rot, text: txt };
+              const e = { ...b, type: 'mtext', p: P(o, 10), h, width, rot, text: txt, style: styleName(get(o, 7)) };
               const att = parseInt(get(o, 71, '1'), 10);
               if (att > 1 && att <= 9) {
                 const ls = wrapLines(txt, h, width);
@@ -487,6 +518,14 @@ const IO = {
     };
 
     // tables
+    const textStyles = [];
+    for (const o of objs) {
+      if (o.section !== 'TABLES' || o.type !== 'STYLE') continue;
+      if (parseInt(get(o, 70, '0'), 10) & 1) continue; // shape file
+      const name = (get(o, 2, '') || '').trim();
+      if (!name || textStyles.find((t) => t.name.toLowerCase() === name.toLowerCase())) continue;
+      textStyles.push({ name: /^standard$/i.test(name) ? 'Standard' : name, font: IO.fontFamily(get(o, 3, '') || get(o, 1000, '')), width: num(o, 41, 1) || 1, oblique: num(o, 50, 0) });
+    }
     const layers = [];
     for (const o of objs) {
       if (o.section !== 'TABLES' || o.type !== 'LAYER') continue;
@@ -555,7 +594,7 @@ const IO = {
     const used = new Set(), visit = (list) => { for (const e of list) if (e.type === 'insert' && !used.has(e.name)) { used.add(e.name); visit(blocks[e.name].ents); } };
     visit(ents);
     for (const k of Object.keys(blocks)) if (k.startsWith('*') && !used.has(k)) delete blocks[k];
-    return { layers, entities: ents, blocks, skipped };
+    return { layers, entities: ents, blocks, textStyles, skipped };
   },
 
   /* ---------------- DWG import (via LibreDWG WebAssembly) ---------------- */

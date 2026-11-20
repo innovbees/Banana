@@ -407,7 +407,7 @@ defCmd('TEXT', ['DT', 'DTEXT', 'TX'], 'Single-line text (type in place, Enter fo
   for (;;) {
     const t = yield P.text({ at: p, h, rot: r, multiline: false, align });
     if (t == null || t === '') return;
-    c.add({ type: 'text', p, h, rot: r, text: t, align });
+    c.add({ type: 'text', p, h, rot: r, text: t, align, style: d.textStyle });
     p = G.add(p, G.rotate({ x: 0, y: -h * LINE_SPACING }, { x: 0, y: 0 }, r));
   }
 });
@@ -428,7 +428,7 @@ defCmd('MTEXT', ['T', 'MT'], 'Multiline text / notes in a box', function* (c) {
   const width = Math.abs(p2.x - p1.x);
   const t = yield P.text({ at, h: d.textSize, rot: 0, multiline: true, width });
   if (!t) return;
-  c.add({ type: 'mtext', p: at, h: d.textSize, rot: 0, width, text: t });
+  c.add({ type: 'mtext', p: at, h: d.textSize, rot: 0, width, text: t, style: d.textStyle });
 });
 
 defCmd('MLEADER', ['MLD', 'LE', 'LEADER', 'QLEADER', 'NOTE', 'COMMENT'], 'Leader with a note/comment (arrow + text)', function* (c) {
@@ -446,7 +446,7 @@ defCmd('MLEADER', ['MLD', 'LE', 'LEADER', 'QLEADER', 'NOTE', 'COMMENT'], 'Leader
   const g = E.leaderGeom(mk());
   const t = yield P.text({ at: { x: g.tx, y: g.firstBase + d.textSize }, h: d.textSize, rot: 0, multiline: true, align: g.dir > 0 ? 'left' : 'right', previewEnt: mk() });
   if (t == null || t === '') { c.print('Leader cancelled (no text).'); return; }
-  c.add({ type: 'leader', pts, h: d.textSize, text: t });
+  c.add({ type: 'leader', pts, h: d.textSize, text: t, style: d.textStyle });
 });
 
 function autoDirAng(p1, p2, m) {
@@ -461,10 +461,12 @@ function* dimCmd(c, kind) {
   const d = c.doc;
   const p1 = yield P.point('Specify first extension line origin');
   if (!p1) return;
+  const r1 = c.app.takeSnapRef();
   const p2 = yield P.point('Specify second extension line origin', { base: p1 });
   if (!p2) return;
+  const r2 = c.app.takeSnapRef();
   let text = '', fixed = null;
-  const mk = (m) => ({ type: 'dim', kind, p1, p2, pos: m, dirAng: fixed != null ? fixed : autoDirAng(p1, p2, m), h: 2.5 * d.dimScale, scale: d.dimScale, text });
+  const mk = (m) => ({ type: 'dim', kind, p1, p2, pos: m, dirAng: fixed != null ? fixed : autoDirAng(p1, p2, m), dimstyle: d.dimStyle, text });
   for (;;) {
     const kws = kind === 'linear' ? ['Text', 'Horizontal', 'Vertical', 'Rotated'] : ['Text'];
     const r = yield P.point('Specify dimension line location', { keywords: kws, rubber: false, preview: (m) => [mk(m)] });
@@ -474,10 +476,17 @@ function* dimCmd(c, kind) {
     if (r.kw === 'Vertical') { fixed = Math.PI / 2; continue; }
     if (r.kw === 'Rotated') { const a = yield P.angle('Specify angle of dimension line', { def: 0 }); if (a != null) fixed = a * DEG; continue; }
     const e = c.add(mk(r));
+    setAssoc(e, { p1: r1, p2: r2 });
+    d.lastDimId = e.id;
     const meas = kind === 'aligned' ? G.dist(p1, p2) : Math.abs(G.dot(G.sub(p2, p1), { x: Math.cos(e.dirAng), y: Math.sin(e.dirAng) }));
-    c.print(`Dimension text = ${fmtNum(meas, d.dimDec)}`);
+    c.print(`Dimension text = ${fmtNum(meas, E.dstyle(e).dec)}`);
     return;
   }
+}
+function setAssoc(e, refs) {
+  const a = {};
+  for (const [k, v] of Object.entries(refs)) if (v) a[k] = v;
+  if (Object.keys(a).length) e.assoc = a;
 }
 defCmd('DIMLINEAR', ['DLI', 'DIMLIN'], 'Horizontal / vertical dimension', (c) => dimCmd(c, 'linear'));
 defCmd('DIMALIGNED', ['DAL', 'DIMALI'], 'Aligned dimension', (c) => dimCmd(c, 'aligned'));
@@ -487,13 +496,15 @@ function* dimRadCmd(c, kind) {
   const s = yield P.ent(`Select arc or circle`, { filter: (e) => e.type === 'circle' || e.type === 'arc', filterMsg: 'Object must be an arc or circle.' });
   if (!s) return;
   let text = '';
-  const mk = (m) => ({ type: 'dim', kind, c: { ...s.e.c }, r: s.e.r, pos: m, h: 2.5 * d.dimScale, scale: d.dimScale, text });
-  c.print(`Dimension text = ${fmtNum(kind === 'radius' ? s.e.r : 2 * s.e.r, d.dimDec)}`);
+  const mk = (m) => ({ type: 'dim', kind, c: { ...s.e.c }, r: s.e.r, pos: m, dimstyle: d.dimStyle, text });
   for (;;) {
     const r = yield P.point('Specify dimension line location', { keywords: ['Text'], rubber: false, preview: (m) => [mk(m)] });
     if (!r) return;
     if (r.kw === 'Text') { const t = yield P.str('Enter dimension text (<> = measured value)', { def: '<>', spaces: true }); if (t != null) text = t === '<>' ? '' : t; continue; }
-    c.add(mk(r)); return;
+    const e = c.add(mk(r));
+    e.assoc = { circ: s.e.id };
+    c.print(`Dimension text = ${fmtNum(kind === 'radius' ? s.e.r : 2 * s.e.r, E.dstyle(e).dec)}`);
+    return;
   }
 }
 defCmd('DIMRADIUS', ['DRA', 'DIMRAD'], 'Radius dimension', (c) => dimRadCmd(c, 'radius'));
@@ -933,8 +944,17 @@ function setVar(name, key, msg, check = (v) => v > 0) {
   }, { transparent: true });
 }
 setVar('TEXTSIZE', 'textSize', 'Default text height');
-setVar('DIMSCALE', 'dimScale', 'Overall scale of dimension arrows/text');
-setVar('DIMDEC', 'dimDec', 'Decimal places in dimensions', (v) => v >= 0 && v <= 8 && Number.isInteger(v));
+const curDimStyle = (c) => c.doc.dimStyles.find((x) => x.name === c.doc.dimStyle) || c.doc.dimStyles[0];
+defCmd('DIMSCALE', [], 'Overall scale of the current dimension style', function* (c) {
+  const st = curDimStyle(c);
+  const v = yield P.num(`Enter overall scale for dimension style "${st.name}"`, { def: st.scale });
+  if (v > 0) { st.scale = v; c.changed(); c.app.refreshUI(); }
+}, { transparent: true });
+defCmd('DIMDEC', [], 'Decimal places in the current dimension style', function* (c) {
+  const st = curDimStyle(c);
+  const v = yield P.int(`Enter decimal places for dimension style "${st.name}"`, { def: st.dec });
+  if (v != null && v >= 0 && v <= 8) { st.dec = v; c.changed(); c.app.refreshUI(); }
+}, { transparent: true });
 
 defCmd('GRID', [], 'Grid display and spacing', function* (c) {
   const s = c.app.settings;
@@ -1395,7 +1415,7 @@ defCmd('ATTDEF', ['ATT', 'DDATTDEF'], 'Define an attribute (editable text field)
   const def = yield P.str('Enter default value', { def: '', spaces: true }); if (def == null) return;
   const p = yield P.point('Specify start point'); if (!p) return;
   const h = yield P.dist('Specify text height', { base: p, def: d.textSize }); if (!(h > 0)) return;
-  c.add({ type: 'attdef', tag, prompt, def, p, h, rot: 0, align: 'left' });
+  c.add({ type: 'attdef', tag, prompt, def, p, h, rot: 0, align: 'left', style: d.textStyle });
   c.print('Include this attribute definition when you create the block with BLOCK.');
 });
 
@@ -1486,3 +1506,187 @@ defCmd('PURGE', ['PU'], 'Remove unused blocks and layers', function* (c) {
 });
 
 defCmd('BLOCKSPALETTE', ['BP', 'BLOCKS', 'LIBRARY'], 'Show the Blocks panel (drawing blocks + symbol library)', function* (c) { c.app.showPanel('blocks'); }, { transparent: true });
+
+
+/* ======================= ANNOTATION (group 3) ======================= */
+defCmd('STYLE', ['ST', 'TEXTSTYLE'], 'Text styles (font, width factor, slant)', function* (c) { c.app.showPanel('styles'); }, { transparent: true });
+defCmd('DIMSTYLE', ['D', 'DST', 'DDIM'], 'Dimension styles (arrows, sizes, decimals, scale)', function* (c) { c.app.showPanel('styles'); }, { transparent: true });
+
+defCmd('DIMANGULAR', ['DAN', 'DIMANG'], 'Angular dimension (two lines, an arc, or 3 points)', function* (c) {
+  const d = c.doc;
+  const segOf = (s) => { if (s.e.type === 'line') return s.e; let best = null; for (const pr of E.prims(s.e)) if (pr.kind === 'seg' && (!best || G.primDist(pr, s.pt) < G.primDist(best, s.pt))) best = pr; return best ? { type: 'line', p1: best.a, p2: best.b, id: s.e.id } : null; };
+  const s1 = yield P.ent('Select arc, circle, line, or Enter to specify vertex', { filter: (e) => ['line', 'arc', 'circle', 'pline'].includes(e.type), filterMsg: 'Select a line, polyline segment, arc or circle.' });
+  let base = null, refs = {};
+  if (!s1) {
+    const v = yield P.point('Specify angle vertex'); if (!v) return; const rv = c.app.takeSnapRef();
+    const a = yield P.point('Specify first angle endpoint', { base: v }); if (!a) return; const ra = c.app.takeSnapRef();
+    const b = yield P.point('Specify second angle endpoint', { base: v }); if (!b) return; const rb = c.app.takeSnapRef();
+    base = { c: v, p1: a, p2: b, mode: 'pts' }; refs = { c: rv, p1: ra, p2: rb };
+  } else if (s1.e.type === 'arc') {
+    base = { c: { ...s1.e.c }, p1: G.polar(s1.e.c, s1.e.a1, s1.e.r), p2: G.polar(s1.e.c, s1.e.a2, s1.e.r), mode: 'fixed' };
+  } else if (s1.e.type === 'circle') {
+    const b = yield P.point('Specify second angle endpoint'); if (!b) return;
+    base = { c: { ...s1.e.c }, p1: E.paramAt(s1.e, s1.pt).pt, p2: b, mode: 'pts' };
+  } else {
+    const s2 = yield P.ent('Select second line', { filter: (e) => e.type === 'line' || e.type === 'pline', filterMsg: 'Select another line or polyline segment.' });
+    if (!s2) return;
+    const L1 = segOf(s1), L2 = segOf(s2);
+    if (!L1 || !L2) { c.print('Select straight segments.'); return; }
+    const h = G.segSeg(L1.p1, L1.p2, L2.p1, L2.p2, true, true)[0];
+    if (!h) { c.print('Lines are parallel.'); return; }
+    const v = { x: h.x, y: h.y };
+    const reach = (l, u) => Math.max(G.dot(G.sub(l.p1, v), u), G.dot(G.sub(l.p2, v), u), 0);
+    base = { c: v, l1: L1, l2: L2, mode: 'lines', reach };
+  }
+  let text = '';
+  const mk = (m) => {
+    let p1 = base.p1, p2 = base.p2;
+    if (base.mode === 'lines') {
+      const u1 = G.norm(G.sub(base.l1.p2, base.l1.p1)), u2 = G.norm(G.sub(base.l2.p2, base.l2.p1)), am = G.angle(base.c, m);
+      let best = null;
+      const cands = [];
+      for (const da of [u1, G.mul(u1, -1)]) for (const db of [u2, G.mul(u2, -1)]) { cands.push({ d1: da, l1: base.l1, d2: db, l2: base.l2 }); cands.push({ d1: db, l1: base.l2, d2: da, l2: base.l1 }); }
+      for (const k of cands) {
+        const a1 = Math.atan2(k.d1.y, k.d1.x), sw = G.ccwSweep(a1, Math.atan2(k.d2.y, k.d2.x));
+        if (sw < Math.PI + 1e-9 && G.normAng(am - a1) <= sw) { best = k; break; }
+      }
+      if (!best) best = cands[0];
+      p1 = G.add(base.c, G.mul(best.d1, Math.max(base.reach(best.l1, best.d1), 1e-6)));
+      p2 = G.add(base.c, G.mul(best.d2, Math.max(base.reach(best.l2, best.d2), 1e-6)));
+    } else if (base.mode === 'pts') {
+      const a1 = G.angle(base.c, p1), sw = G.ccwSweep(a1, G.angle(base.c, p2));
+      if (G.normAng(G.angle(base.c, m) - a1) > sw) [p1, p2] = [p2, p1];
+    }
+    return { type: 'dim', kind: 'angular', c: { ...base.c }, p1, p2, pos: m, dimstyle: d.dimStyle, text };
+  };
+  for (;;) {
+    const r = yield P.point('Specify dimension arc line location', { keywords: ['Text'], rubber: false, preview: (m) => [mk(m)] });
+    if (!r) return;
+    if (r.kw === 'Text') { const t = yield P.str('Enter dimension text (<> = measured value)', { def: '<>', spaces: true }); if (t != null) text = t === '<>' ? '' : t; continue; }
+    const e = c.add(mk(r));
+    if (base.mode === 'pts') setAssoc(e, refs);
+    c.print(`Dimension text = ${fmtNum(G.ccwSweep(G.angle(e.c, e.p1), G.angle(e.c, e.p2)) / DEG, E.dstyle(e).adec)}°`);
+    return;
+  }
+});
+
+function* chainDim(c, mode) {
+  const d = c.doc;
+  let base = d.lastDimId ? c.get(d.lastDimId) : null;
+  const okBase = (e) => e && e.type === 'dim' && (e.kind === 'linear' || e.kind === 'aligned');
+  if (!okBase(base)) {
+    const s = yield P.ent(`Select ${mode === 'baseline' ? 'base' : 'continued'} dimension`, { filter: okBase, filterMsg: 'Select a linear or aligned dimension.' });
+    if (!s) return;
+    base = s.e;
+  }
+  let k = 0, prev = base;
+  for (;;) {
+    const u = prev.kind === 'aligned' ? G.norm(G.sub(prev.p2, prev.p1)) : { x: Math.cos(prev.dirAng || 0), y: Math.sin(prev.dirAng || 0) };
+    const n = G.perp(u), ang = Math.atan2(u.y, u.x);
+    const st = E.dstyle(base);
+    const o0 = G.dot(base.pos, n), side = Math.sign(o0 - G.dot(base.p1, n)) || 1;
+    const mk = (q) => {
+      const o = mode === 'baseline' ? o0 + side * (k + 1) * st.dli * st.scale : G.dot(prev.pos, n);
+      const from = mode === 'baseline' ? base.p1 : prev.p2;
+      return { type: 'dim', kind: 'linear', p1: { ...from }, p2: q, pos: G.add(q, G.mul(n, o - G.dot(q, n))), dirAng: ang, dimstyle: base.dimstyle, text: '' };
+    };
+    const r = yield P.point('Specify second extension line origin (Enter to finish)', { keywords: ['Select'], base: mode === 'baseline' ? base.p1 : prev.p2, rubber: false, preview: (m) => [mk(m)] });
+    if (!r) return;
+    if (r.kw === 'Select') {
+      const s = yield P.ent('Select dimension', { filter: okBase, filterMsg: 'Select a linear or aligned dimension.' });
+      if (s) { base = prev = s.e; k = 0; }
+      continue;
+    }
+    const ref = c.app.takeSnapRef();
+    const e = c.add(mk(r));
+    const pRef = mode === 'baseline' ? (base.assoc && base.assoc.p1) : (prev.assoc && prev.assoc.p2);
+    setAssoc(e, { p1: pRef, p2: ref });
+    d.lastDimId = e.id;
+    k++;
+    if (mode === 'continue') prev = e;
+  }
+}
+defCmd('DIMBASELINE', ['DBA', 'DIMBASE'], 'Baseline dimensions from the first extension line of the last dimension', (c) => chainDim(c, 'baseline'));
+defCmd('DIMCONTINUE', ['DCO', 'DIMCONT'], 'Chain of dimensions continuing from the last dimension', (c) => chainDim(c, 'continue'));
+
+defCmd('DIMORDINATE', ['DOR', 'DIMORD'], 'Ordinate dimension (X or Y distance from the origin 0,0)', function* (c) {
+  const d = c.doc;
+  const p1 = yield P.point('Specify feature location'); if (!p1) return;
+  const ref = c.app.takeSnapRef();
+  let axis = null, text = '';
+  const mk = (m) => ({ type: 'dim', kind: 'ordinate', p1, pos: m, axis: axis || (Math.abs(m.x - p1.x) > Math.abs(m.y - p1.y) ? 'y' : 'x'), dimstyle: d.dimStyle, text });
+  for (;;) {
+    const r = yield P.point('Specify leader endpoint', { keywords: ['Xdatum', 'Ydatum', 'Text'], base: p1, rubber: false, preview: (m) => [mk(m)] });
+    if (!r) return;
+    if (r.kw === 'Xdatum') { axis = 'x'; continue; }
+    if (r.kw === 'Ydatum') { axis = 'y'; continue; }
+    if (r.kw === 'Text') { const t = yield P.str('Enter dimension text (<> = measured value)', { def: '<>', spaces: true }); if (t != null) text = t === '<>' ? '' : t; continue; }
+    const e = c.add(mk(r));
+    setAssoc(e, { p1: ref });
+    return;
+  }
+});
+
+defCmd('DIMREASSOCIATE', ['DRE'], 'Re-attach a dimension\'s points to geometry (pick snapped points again)', function* (c) {
+  const s = yield P.ent('Select dimension', { filter: (e) => e.type === 'dim' && ['linear', 'aligned', 'ordinate'].includes(e.kind), filterMsg: 'Select a linear, aligned or ordinate dimension.' });
+  if (!s) return;
+  const e = s.e, refs = {};
+  for (const k of e.kind === 'ordinate' ? ['p1'] : ['p1', 'p2']) {
+    const p = yield P.point(`Specify ${k === 'p1' ? 'first' : 'second'} extension line origin (use an object snap)`);
+    if (!p) return;
+    e[k] = p; refs[k] = c.app.takeSnapRef();
+  }
+  setAssoc(e, refs);
+  c.changed();
+  c.print(Object.keys(e.assoc || {}).length ? 'Dimension is now associative.' : 'No object snaps were used — dimension is not associative.');
+});
+
+/* ---------- tables ---------- */
+function* editCells(c, e, r0, c0) {
+  let r = r0, col = c0;
+  for (;;) {
+    const g = E.tableGeom(e);
+    const at = g.L(g.xs[col] + e.h * 0.6, g.ys[r] + (e.rh[r] - e.h) / 2);
+    let t;
+    try {
+      c.app.tableCell = { id: e.id, r, c: col };
+      t = yield P.text({ at, h: e.h, rot: 0, multiline: false, initial: e.cells[r][col] || '', align: 'left', width: e.cw[col] - e.h, msg: `Cell ${String.fromCharCode(65 + col)}${r + 1} (Tab = next cell, Enter = done)`, tabNext: true });
+    } finally { c.app.tableCell = null; }
+    if (t == null) return;
+    e.cells[r][col] = t;
+    c.changed();
+    if (!c.app.lastEditorTab) return;
+    col++;
+    if (col >= e.cw.length) { col = 0; r++; }
+    if (r >= e.rh.length) {
+      const k = yield P.kw('Add a new row?', ['Yes', 'No'], { def: 'No' });
+      if (!k || (k.kw || k) !== 'Yes') return;
+      e.rh.push(e.rh[e.rh.length - 1]); e.cells.push(e.cw.map(() => ''));
+      c.changed();
+    }
+  }
+}
+defCmd('TABLE', ['TB'], 'Insert a table and type into its cells', function* (c) {
+  const d = c.doc;
+  const cols = yield P.int('Enter number of columns', { def: d.tblCols || 3 }); if (!(cols >= 1 && cols <= 50)) return;
+  const rows = yield P.int('Enter number of rows (including the header row)', { def: d.tblRows || 4 }); if (!(rows >= 1 && rows <= 500)) return;
+  const h = d.textSize;
+  const cw = yield P.dist('Specify column width', { def: d.tblCw || +(h * 16).toFixed(4) }); if (!(cw > 0)) return;
+  const rh = yield P.dist('Specify row height', { def: d.tblRh || +(h * 2.6).toFixed(4) }); if (!(rh > 0)) return;
+  Object.assign(d, { tblCols: cols, tblRows: rows, tblCw: cw, tblRh: rh });
+  const mk = (p) => ({ type: 'table', p, rot: 0, h, style: d.textStyle, cw: Array(cols).fill(cw), rh: Array(rows).fill(rh), cells: Array.from({ length: rows }, () => Array(cols).fill('')) });
+  const p = yield P.point('Specify insertion point (top-left corner)', { preview: (m) => [mk(m)] });
+  if (!p) return;
+  const e = c.add(mk(p));
+  yield* editCells(c, e, 0, 0);
+});
+defCmd('TABLEDIT', ['TABLEEDIT', 'TED'], 'Edit table cells (Tab moves to the next cell)', function* (c, opts) {
+  let e, cell;
+  if (opts && opts.id) { e = c.get(opts.id); cell = E.tableCellAt(e, opts.pt) || { r: 0, c: 0 }; }
+  else {
+    const s = yield P.ent('Select a table cell', { filter: (x) => x.type === 'table', filterMsg: 'Select a table.' });
+    if (!s) return;
+    e = s.e; cell = E.tableCellAt(e, s.pt) || { r: 0, c: 0 };
+  }
+  yield* editCells(c, e, cell.r, cell.c);
+});

@@ -42,7 +42,8 @@ const Render = {
           ctx.beginPath(); ctx.moveTo(op.pts[0].x, op.pts[0].y);
           for (let i = 1; i < op.pts.length; i++) ctx.lineTo(op.pts[i].x, op.pts[i].y);
           if (op.closed) ctx.closePath();
-          ctx.stroke(); break;
+          if (op.lw) { ctx.lineWidth = Math.max(op.lw, opt.lw || 1) / s; ctx.stroke(); ctx.lineWidth = lw; } else ctx.stroke();
+          break;
         case 'circle': ctx.beginPath(); ctx.arc(op.c.x, op.c.y, Math.max(op.r, 0), 0, TAU); ctx.stroke(); break;
         case 'arc': ctx.beginPath(); ctx.arc(op.c.x, op.c.y, Math.max(op.r, 0), op.a1, op.a1 + G.ccwSweep(op.a1, op.a2), false); ctx.stroke(); break;
         case 'ellipse': ctx.beginPath(); ctx.ellipse(op.c.x, op.c.y, Math.max(op.rx, 0), Math.max(op.ry, 0), op.rot, 0, TAU); ctx.stroke(); break;
@@ -64,8 +65,9 @@ const Render = {
     const ctx = st.ctx, s = st.view.scale;
     const px = (op.h / CAP_RATIO) * s;
     if (!op.str) return;
+    const ts = E.tstyle(op.style);
     if (px < 2.5) { // greeked text
-      const w = textWidth(op.str, op.h);
+      const w = textWidth(op.str, op.h, ts);
       const x0 = op.align === 'center' ? -w / 2 : op.align === 'right' ? -w : 0;
       const a = G.add(op.p, G.rotate({ x: x0, y: op.h * 0.4 }, { x: 0, y: 0 }, op.rot || 0));
       const b = G.add(op.p, G.rotate({ x: x0 + w, y: op.h * 0.4 }, { x: 0, y: 0 }, op.rot || 0));
@@ -76,7 +78,9 @@ const Render = {
     ctx.save();
     ctx.setTransform(st.dpr, 0, 0, st.dpr, 0, 0);
     ctx.translate(sp.x, sp.y); ctx.rotate(-(op.rot || 0));
-    ctx.font = `${px}px ${FONT_FAMILY}`; ctx.textAlign = op.align || 'left'; ctx.textBaseline = 'alphabetic';
+    if (ts.oblique) ctx.transform(1, 0, -Math.tan(ts.oblique * DEG), 1, 0, 0);
+    if (ts.width && ts.width !== 1) ctx.scale(ts.width, 1);
+    ctx.font = `${px}px ${fontStack(ts.font)}`; ctx.textAlign = op.align || 'left'; ctx.textBaseline = 'alphabetic';
     ctx.fillStyle = color;
     ctx.fillText(op.str, 0, 0);
     ctx.restore();
@@ -149,7 +153,7 @@ const Render = {
       const st = `fill="none" stroke="${c}" stroke-width="${n(sw)}"${da}`;
       for (const op of E.ops(e, doc)) {
         switch (op.op) {
-          case 'poly': out.push(`<${op.closed ? 'polygon' : 'polyline'} points="${op.pts.map((p) => `${n(p.x)},${n(p.y)}`).join(' ')}" ${st}/>`); break;
+          case 'poly': out.push(`<${op.closed ? 'polygon' : 'polyline'} points="${op.pts.map((p) => `${n(p.x)},${n(p.y)}`).join(' ')}" ${op.lw ? st.replace(/stroke-width="[^"]*"/, `stroke-width="${n(sw * op.lw)}"`) : st}/>`); break;
           case 'fill': out.push(`<polygon points="${op.pts.map((p) => `${n(p.x)},${n(p.y)}`).join(' ')}" fill="${c}"/>`); break;
           case 'circle': out.push(`<circle cx="${n(op.c.x)}" cy="${n(op.c.y)}" r="${n(op.r)}" ${st}/>`); break;
           case 'arc': {
@@ -160,7 +164,8 @@ const Render = {
           case 'ellipse': out.push(`<ellipse cx="${n(op.c.x)}" cy="${n(op.c.y)}" rx="${n(op.rx)}" ry="${n(op.ry)}" transform="rotate(${n(op.rot / DEG)} ${n(op.c.x)} ${n(op.c.y)})" ${st}/>`); break;
           case 'text':
             if (!op.str) break;
-            out.push(`<text transform="translate(${n(op.p.x)} ${n(op.p.y)}) rotate(${n((op.rot || 0) / DEG)}) scale(1 -1)" font-family="Arial, Helvetica, sans-serif" font-size="${n(op.h / CAP_RATIO)}" text-anchor="${{ left: 'start', center: 'middle', right: 'end' }[op.align || 'left']}" fill="${c}" xml:space="preserve">${esc(op.str)}</text>`);
+            { const ts = E.tstyle(op.style);
+            out.push(`<text transform="translate(${n(op.p.x)} ${n(op.p.y)}) rotate(${n((op.rot || 0) / DEG)}) scale(1 -1)${ts.oblique ? ` skewX(${n(-ts.oblique)})` : ''}${ts.width && ts.width !== 1 ? ` scale(${n(ts.width)} 1)` : ''}" font-family="${esc(fontStack(ts.font)).replace(/"/g, "'")}" font-size="${n(op.h / CAP_RATIO)}" text-anchor="${{ left: 'start', center: 'middle', right: 'end' }[op.align || 'left']}" fill="${c}" xml:space="preserve">${esc(op.str)}</text>`); }
             break;
           case 'hatch': {
             const d = op.loops.map((l) => 'M' + l.map((p) => `${n(p.x)} ${n(p.y)}`).join(' L') + ' Z').join(' ');

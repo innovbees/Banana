@@ -16,6 +16,13 @@ function newDoc() {
       { name: 'Hidden', color: '#808080', visible: true, locked: false, linetype: 'Hidden' },
     ],
     blocks: {},
+    textStyles: [{ name: 'Standard', font: 'Arial', width: 1, oblique: 0 }, { name: 'Notes', font: 'Arial Narrow', width: 1, oblique: 0 }, { name: 'Title', font: 'Times New Roman', width: 1, oblique: 0 }],
+    textStyle: 'Standard',
+    dimStyles: [
+      { name: 'Standard', textStyle: 'Standard', txt: 2.5, asz: 2.5, arrow: 'closed', exo: 0.625, exe: 1.25, gap: 0.625, dec: 2, adec: 0, scale: 1, pre: '', suf: '', tad: 'above', dli: 3.75 },
+      { name: 'Architectural', textStyle: 'Standard', txt: 2.5, asz: 2.5, arrow: 'tick', exo: 1.5, exe: 1.5, gap: 0.8, dec: 0, adec: 0, scale: 1, pre: '', suf: '', tad: 'above', dli: 5 },
+    ],
+    dimStyle: 'Standard',
     clayer: '0', ccolor: 'bylayer', textSize: 2.5, dimScale: 1, dimDec: 2,
     filletRad: 0, offsetDist: 1, lastRadius: undefined, revArc: 10,
     hatchPattern: 'ANSI31', hatchScale: 1, hatchAngle: 0,
@@ -79,6 +86,7 @@ const App = {
     return this.index.get(id);
   },
   add(e) {
+    delete e.assoc;
     e.id = this.doc.nextId++;
     if (!e.layer || !this.layer(e.layer)) e.layer = this.doc.clayer;
     if (!e.color) e.color = this.doc.ccolor;
@@ -103,11 +111,11 @@ const App = {
   autosave() {
     try { localStorage.setItem(AUTOSAVE_KEY, JSON.stringify({ doc: this.doc, view: this.view, settings: this.settings })); } catch (err) { /* quota */ }
   },
-  serialize() { return JSON.stringify({ e: this.doc.entities, l: this.doc.layers, n: this.doc.nextId, c: this.doc.clayer, b: this.doc.blocks }); },
+  serialize() { const d = this.doc; return JSON.stringify({ e: d.entities, l: d.layers, n: d.nextId, c: d.clayer, b: d.blocks, ts: d.textStyles, ds: d.dimStyles, t: d.textStyle, dd: d.dimStyle }); },
   captureState() { return this.serialize(); },
   restoreState(s) {
     const o = JSON.parse(s);
-    this.doc.entities = o.e; this.doc.layers = o.l; this.doc.nextId = o.n; this.doc.clayer = o.c; if (o.b) this.doc.blocks = o.b;
+    this.doc.entities = o.e; this.doc.layers = o.l; this.doc.nextId = o.n; this.doc.clayer = o.c; if (o.b) this.doc.blocks = o.b; if (o.ts) { this.doc.textStyles = o.ts; this.doc.dimStyles = o.ds; this.doc.textStyle = o.t; this.doc.dimStyle = o.dd; }
     this.index = null;
     for (const id of [...this.sel]) if (!this.get(id)) this.sel.delete(id);
     this.changed(); this.refreshUI();
@@ -176,6 +184,7 @@ const App = {
     this.cmd = null;
     this.closeEditor();
     this.hidden = null; this.win = null; this.tracked = [];
+    this.reassoc();
     if (cmd.snap && cmd.snap !== this.serialize()) {
       this.undoStack.push(cmd.snap); this.redoStack = [];
       if (this.undoStack.length > 200) this.undoStack.shift();
@@ -207,7 +216,7 @@ const App = {
     this.print(`${this.promptText(pr)} ${text}`, 'echo');
     const v = this.parseInput(pr, text);
     if (v === undefined) { this.print(pr.type === 'point' ? 'Invalid point. Use x,y  @dx,dy  @dist<angle  or a distance.' : 'Invalid input.'); return; }
-    if (pr.type === 'point' && v && typeof v.x === 'number') this.lastPoint = v;
+    if (pr.type === 'point' && v && typeof v.x === 'number') { this.lastPoint = v; this.lastSnapRef = null; }
     this.advance(v);
   },
   matchKeyword(pr, t) {
@@ -379,10 +388,11 @@ const App = {
       near.push(e);
     }
     let best = null, bd = Infinity;
-    const consider = (type, pt) => { const d = G.dist(p, pt); if (d <= tol && d < bd) { bd = d; best = { type, pt }; } };
+    const consider = (type, pt, ref) => { const d = G.dist(p, pt); if (d <= tol && d < bd) { bd = d; best = { type, pt, ref }; } };
     const curves = [];
     for (const e of near) {
-      for (const s of E.snaps(e, this.doc)) if (m[s.type]) consider(s.type, s.pt);
+      const cnt = {};
+      for (const s of E.snaps(e, this.doc)) { const i = (cnt[s.type] = (cnt[s.type] || 0) + 1) - 1; if (m[s.type]) consider(s.type, s.pt, { id: e.id, type: s.type, i }); }
       const prims = E.prims(e);
       if (prims.length && prims.some((pr) => G.primDist(pr, p) <= tol)) curves.push({ e, prims });
     }
@@ -402,6 +412,29 @@ const App = {
     }
     if (!best && m.nea) for (const c of curves) for (const pr of c.prims) consider('nea', G.primClosest(pr, p).pt);
     return best;
+  },
+  takeSnapRef() { const r = this.lastSnapRef; this.lastSnapRef = null; return r || null; },
+  /* Associative dimensions: move their points to follow the snapped geometry. */
+  reassoc() {
+    let n = 0;
+    for (const e of this.doc.entities) {
+      if (e.type !== 'dim' || !e.assoc) continue;
+      for (const [k, ref] of Object.entries(e.assoc)) {
+        if (k === 'circ') {
+          const g = this.get(ref);
+          if (!g || (g.type !== 'circle' && g.type !== 'arc')) { delete e.assoc.circ; continue; }
+          if (!G.same(e.c, g.c, 1e-12) || Math.abs(e.r - g.r) > 1e-12) { const d = G.sub(g.c, e.c); e.pos = G.add(e.pos, d); e.c = { ...g.c }; e.r = g.r; n++; }
+          continue;
+        }
+        const g = this.get(ref.id);
+        const q = g && E.snaps(g, this.doc).filter((x) => x.type === ref.type)[ref.i];
+        if (!q) { delete e.assoc[k]; continue; }
+        if (!G.same(e[k], q.pt, 1e-12)) { e[k] = { ...q.pt }; n++; }
+      }
+      if (!Object.keys(e.assoc).length) delete e.assoc;
+    }
+    if (n) { E.rev++; this.cache.clear(); this.requestRedraw(); }
+    return n;
   },
   /* Object snap tracking: hovering on a snap point for a moment acquires it (again = release). */
   acquire(snap) {
@@ -578,7 +611,7 @@ const App = {
       return;
     }
     const p = this.mouse.pt;
-    if (pr.type === 'point') { this.lastPoint = p; this.print(`${this.promptText(pr)} ${fmtNum(p.x, 4)},${fmtNum(p.y, 4)}`, 'echo'); this.advance(p); return; }
+    if (pr.type === 'point') { this.lastSnapRef = this.mouse.snap && this.mouse.snap.ref ? { ...this.mouse.snap.ref } : null; this.lastPoint = p; this.print(`${this.promptText(pr)} ${fmtNum(p.x, 4)},${fmtNum(p.y, 4)}`, 'echo'); this.advance(p); return; }
     if (pr.type === 'distance' || pr.type === 'angle') {
       const base = pr.base || pr._first;
       if (!base) { pr._first = p; pr.preview = pr.preview || null; this.requestRedraw(); return; }
@@ -606,6 +639,7 @@ const App = {
     const e = this.pick(sx, sy);
     if (!e) return;
     if (['text', 'mtext', 'leader', 'dim'].includes(e.type)) { this.win = null; this.runCommand('TEXTEDIT', { id: e.id }); }
+    else if (e.type === 'table') { this.win = null; this.runCommand('TABLEDIT', { id: e.id, pt: this.toWorld(sx, sy) }); }
     else if (e.type === 'insert' && (e.attribs || []).length) { this.win = null; this.runCommand('ATTEDIT', { id: e.id }); }
     else { this.sel.clear(); this.sel.add(e.id); this.showPanel('props'); this.refreshUI(); }
   },
@@ -748,7 +782,7 @@ const App = {
     ed.style.top = (pr.multiline ? s.y - px * 0.3 : s.y - px * 1.15) + 'px';
     ed.style.transform = pr.align === 'right' ? 'translateX(-100%)' : pr.align === 'center' ? 'translateX(-50%)' : '';
     this._edMinW = pr.width ? Math.max(120, pr.width * this.view.scale) : 0;
-    document.getElementById('edhint').textContent = pr.multiline ? 'Enter = new line · Ctrl+Enter or click outside = OK · Esc = cancel' : 'Enter = OK (empty line ends) · Esc = cancel';
+    document.getElementById('edhint').textContent = pr.tabNext ? 'Tab = next cell · Enter = done · Esc = cancel' : pr.multiline ? 'Enter = new line · Ctrl+Enter or click outside = OK · Esc = cancel' : 'Enter = OK (empty line ends) · Esc = cancel';
     ed.classList.add('open');
     this.sizeEditor();
     setTimeout(() => { ta.focus(); if (pr.initial) ta.select(); }, 0);
@@ -768,11 +802,13 @@ const App = {
     const ta = this.el.edText;
     if (ev.key === 'Escape') { ev.preventDefault(); this.cancel(); this.el.input.focus(); return; }
     if (ev.key === 'Enter' && (ev.ctrlKey || ev.metaKey || !ta.dataset.multiline)) { ev.preventDefault(); this.submitEditor(); }
+    if (ev.key === 'Tab' && this._edPr && this._edPr.tabNext) { ev.preventDefault(); this._edTab = true; this.submitEditor(); }
     ev.stopPropagation();
   },
   submitEditor() {
     if (!this.cmd || this.cmd.prompt.type !== 'textedit') return;
     const v = this.el.edText.value;
+    this.lastEditorTab = !!this._edTab; this._edTab = false;
     this.closeEditor();
     if (v) this.print(`Text: ${v.replace(/\n/g, ' ⏎ ')}`, 'echo');
     this.el.input.focus();
@@ -818,6 +854,7 @@ const App = {
     if (!body || document.body.classList.contains('noside')) return;
     if (this.panel === 'layers') this.buildLayers(body);
     else if (this.panel === 'blocks') this.buildBlocks(body);
+    else if (this.panel === 'styles') this.buildStyles(body);
     else if (this.panel === 'settings') this.buildSettings(body);
     else this.buildProps(body);
   },
@@ -850,7 +887,7 @@ const App = {
     body.appendChild(h('h4', null, ents.length === 1 ? types[0] : `${ents.length} objects (${types.join(', ')})`));
     const tbl = h('div', 'grid2');
     body.appendChild(tbl);
-    const apply = (fn) => { this.pushUndoNow(); ents.forEach(fn); this.changed(); this.refreshUI(); };
+    const apply = (fn) => { this.pushUndoNow(); ents.forEach(fn); this.reassoc(); this.changed(); this.refreshUI(); };
     const row = (label, el) => { tbl.appendChild(h('label', null, label)); tbl.appendChild(el); };
     const layerSel = h('select');
     const common = new Set(ents.map((e) => e.layer)).size === 1 ? ents[0].layer : '';
@@ -866,6 +903,13 @@ const App = {
       if (ro) i.readOnly = true; else i.onchange = () => { const v = parseFloat(i.value); if (!isNaN(v)) apply((e) => set(e, v)); };
       row(label, i);
     };
+    const sel = (label, options, get, set) => {
+      const s2 = h('select');
+      options.forEach((o) => { const op = h('option', null, o); op.value = o; s2.appendChild(op); });
+      s2.value = get(); s2.onchange = () => apply((e) => set(e, s2.value));
+      row(label, s2);
+    };
+    const tNames = this.doc.textStyles.map((t) => t.name), dNames = this.doc.dimStyles.map((t) => t.name);
     const txt = (label, get, set, multi) => {
       const i = h(multi ? 'textarea' : 'input'); i.value = get(); if (multi) i.rows = 3;
       i.onchange = () => apply((e) => set(e, i.value));
@@ -907,6 +951,7 @@ const App = {
         }
         case 'text':
           txt('Contents', () => e.text, (o, v) => (o.text = v));
+          sel('Text style', tNames, () => E.tstyle(e.style).name, (o, v) => (o.style = v));
           num('Height', () => e.h, (o, v) => v > 0 && (o.h = v));
           num('Rotation', () => G.normAng(e.rot || 0) / DEG, (o, v) => (o.rot = v * DEG));
           { const s = h('select'); ['left', 'center', 'right'].forEach((a) => { const o = h('option', null, a); o.value = a; s.appendChild(o); }); s.value = e.align || 'left'; s.onchange = () => apply((o) => (o.align = s.value)); row('Justify', s); }
@@ -914,19 +959,31 @@ const App = {
           break;
         case 'mtext':
           txt('Contents', () => e.text, (o, v) => (o.text = v), true);
+          sel('Text style', tNames, () => E.tstyle(e.style).name, (o, v) => (o.style = v));
           num('Height', () => e.h, (o, v) => v > 0 && (o.h = v));
           num('Width (0=no wrap)', () => e.width || 0, (o, v) => v >= 0 && (o.width = v));
           num('Rotation', () => G.normAng(e.rot || 0) / DEG, (o, v) => (o.rot = v * DEG));
           break;
         case 'leader':
           txt('Note text', () => e.text, (o, v) => (o.text = v), true);
+          sel('Text style', tNames, () => E.tstyle(e.style).name, (o, v) => (o.style = v));
           num('Text height', () => e.h, (o, v) => v > 0 && (o.h = v));
           break;
-        case 'dim':
+        case 'dim': {
           txt('Text override (<> = value)', () => e.text || '', (o, v) => (o.text = v === '<>' ? '' : v));
-          num('Dim scale', () => e.scale || 1, (o, v) => { if (v > 0) { o.scale = v; o.h = 2.5 * v; } });
-          num('Text height', () => e.h, (o, v) => v > 0 && (o.h = v));
+          sel('Dimension style', e.dimstyle ? dNames : ['(legacy)', ...dNames], () => e.dimstyle || '(legacy)', (o, v) => { if (v !== '(legacy)') { o.dimstyle = v; delete o.h; delete o.scale; } });
+          if (!e.dimstyle) { num('Dim scale', () => e.scale || 1, (o, v) => { if (v > 0) { o.scale = v; o.h = 2.5 * v; } }); num('Text height', () => e.h || 2.5, (o, v) => v > 0 && (o.h = v)); }
+          const lab = h('input'); lab.readOnly = true; lab.value = e.assoc && Object.keys(e.assoc).length ? 'Yes — follows geometry' : 'No'; row('Associative', lab);
           break;
+        }
+        case 'table': {
+          sel('Text style', tNames, () => E.tstyle(e.style).name, (o, v) => (o.style = v));
+          num('Text height', () => e.h, (o, v) => v > 0 && (o.h = v));
+          txt('Column widths', () => e.cw.map((v) => +v.toFixed(4)).join(', '), (o, v) => { const a = v.split(/[,; ]+/).map(Number).filter((x) => x > 0); if (a.length) { while (a.length < o.cw.length) a.push(a[a.length - 1]); o.cw = a.slice(0, o.cw.length); } });
+          txt('Row heights', () => e.rh.map((v) => +v.toFixed(4)).join(', '), (o, v) => { const a = v.split(/[,; ]+/).map(Number).filter((x) => x > 0); if (a.length) { while (a.length < o.rh.length) a.push(a[a.length - 1]); o.rh = a.slice(0, o.rh.length); } });
+          const cb = h('input'); cb.type = 'checkbox'; cb.checked = e.header !== false; cb.onchange = () => apply((o) => (o.header = cb.checked)); row('Header row centered', cb);
+          break;
+        }
         case 'revcloud':
           num('Arc length', () => e.arc, (o, v) => v > 0 && (o.arc = v));
           break;
@@ -956,6 +1013,15 @@ const App = {
       num('Height', () => ents[0].h, (o, v) => v > 0 && (o.h = v));
     }
     const acts = h('div', 'actions');
+    if (ents.length === 1 && ents[0].type === 'table') {
+      const t = ents[0];
+      const mkb = (label, fn) => { const b = h('button', null, label); b.onclick = () => apply(() => fn(t)); acts.appendChild(b); };
+      mkb('+ Row', (o) => { o.rh.push(o.rh[o.rh.length - 1]); o.cells.push(o.cw.map(() => '')); });
+      mkb('− Row', (o) => { if (o.rh.length > 1) { o.rh.pop(); o.cells.pop(); } });
+      mkb('+ Column', (o) => { o.cw.push(o.cw[o.cw.length - 1]); o.cells.forEach((r) => r.push('')); });
+      mkb('− Column', (o) => { if (o.cw.length > 1) { o.cw.pop(); o.cells.forEach((r) => r.pop()); } });
+      const ed = h('button', null, 'Edit cells'); ed.onclick = () => this.runCommand('TABLEDIT', { id: t.id, pt: t.p }); acts.appendChild(ed);
+    }
     if (ents.length === 1 && ents[0].type === 'insert') {
       const be = h('button', null, 'Edit block'); be.onclick = () => this.runCommand('BEDIT', { name: ents[0].name }); acts.appendChild(be);
       if ((ents[0].attribs || []).length) { const ae = h('button', null, 'Edit attributes'); ae.onclick = () => this.runCommand('ATTEDIT', { id: ents[0].id }); acts.appendChild(ae); }
@@ -1053,6 +1119,108 @@ const App = {
     body.appendChild(lg);
     body.appendChild(h('div', 'muted', 'Library symbols are drawn in millimetres on layer 0, so they take the layer of the block reference. Use Scale when inserting into drawings in other units.'));
   },
+  buildStyles(body) {
+    body.innerHTML = '';
+    const d = this.doc, h = (tag, cls, txt) => { const x = document.createElement(tag); if (cls) x.className = cls; if (txt != null) x.textContent = txt; return x; };
+    const FONTS = ['Arial', 'Arial Narrow', 'Helvetica', 'Times New Roman', 'Georgia', 'Courier New', 'Consolas', 'Verdana', 'Tahoma', 'Trebuchet MS', 'Calibri', 'Segoe UI', 'Comic Sans MS', 'Impact'];
+    const upd = () => { this.changed(); this.refreshUI(); };
+    // ---- text styles
+    body.appendChild(h('h4', null, 'Text styles'));
+    const tt = h('table', 'layers');
+    tt.innerHTML = '<tr><th>Cur</th><th>Name</th><th>Font</th><th>Width</th><th>Slant°</th><th></th></tr>';
+    for (const st of d.textStyles) {
+      const tr = h('tr'); if (st.name === d.textStyle) tr.className = 'cur';
+      const td = () => { const x = h('td'); tr.appendChild(x); return x; };
+      const cur = h('input'); cur.type = 'radio'; cur.name = 'tstyle'; cur.checked = st.name === d.textStyle; cur.onchange = () => { d.textStyle = st.name; upd(); }; td().appendChild(cur);
+      const nm = h('input'); nm.value = st.name; nm.className = 'lname';
+      nm.onchange = () => {
+        const v = nm.value.trim();
+        if (!v || st.name === 'Standard' || d.textStyles.some((x) => x !== st && x.name === v)) { nm.value = st.name; return; }
+        this.pushUndoNow();
+        const fix = (list) => list.forEach((e) => { if (e.style === st.name) e.style = v; });
+        fix(d.entities); Object.values(d.blocks).forEach((b) => fix(b.ents));
+        d.dimStyles.forEach((ds) => { if (ds.textStyle === st.name) ds.textStyle = v; });
+        if (d.textStyle === st.name) d.textStyle = v;
+        st.name = v; upd();
+      };
+      td().appendChild(nm);
+      const fs = h('select'); [...new Set([st.font, ...FONTS])].forEach((f) => { const o = h('option', null, f); o.value = f; o.style.fontFamily = f; fs.appendChild(o); });
+      fs.value = st.font; fs.onchange = () => { this.pushUndoNow(); st.font = fs.value; upd(); }; td().appendChild(fs);
+      const wf = h('input'); wf.type = 'number'; wf.step = '0.05'; wf.min = '0.1'; wf.value = st.width; wf.style.width = '52px';
+      wf.onchange = () => { const v = +wf.value; if (v > 0) { this.pushUndoNow(); st.width = v; upd(); } }; td().appendChild(wf);
+      const ob = h('input'); ob.type = 'number'; ob.step = '1'; ob.value = st.oblique || 0; ob.style.width = '46px';
+      ob.onchange = () => { const v = +ob.value; if (Math.abs(v) <= 85) { this.pushUndoNow(); st.oblique = v; upd(); } }; td().appendChild(ob);
+      const del = h('button', 'del', '×'); del.title = 'Delete style';
+      del.onclick = () => {
+        if (st.name === 'Standard') { this.print('The Standard text style cannot be deleted.'); return; }
+        this.pushUndoNow();
+        const fix = (list) => list.forEach((e) => { if (e.style === st.name) e.style = 'Standard'; });
+        fix(d.entities); Object.values(d.blocks).forEach((b) => fix(b.ents));
+        d.dimStyles.forEach((ds) => { if (ds.textStyle === st.name) ds.textStyle = 'Standard'; });
+        if (d.textStyle === st.name) d.textStyle = 'Standard';
+        d.textStyles = d.textStyles.filter((x) => x !== st); upd();
+      };
+      td().appendChild(del);
+      tt.appendChild(tr);
+    }
+    body.appendChild(tt);
+    const ta = h('div', 'actions'); const tb = h('button', null, '+ New text style');
+    tb.onclick = () => { let i = 1; while (d.textStyles.some((x) => x.name === `Style${i}`)) i++; this.pushUndoNow(); d.textStyles.push({ name: `Style${i}`, font: 'Arial', width: 1, oblique: 0 }); upd(); };
+    ta.appendChild(tb); body.appendChild(ta);
+    // ---- dimension styles
+    body.appendChild(h('h4', null, 'Dimension styles'));
+    const top = h('div', 'grid2');
+    const pick = h('select'); d.dimStyles.forEach((x) => { const o = h('option', null, x.name); o.value = x.name; pick.appendChild(o); });
+    pick.value = d.dimStyle; pick.onchange = () => { d.dimStyle = pick.value; upd(); };
+    top.append(h('label', null, 'Current style'), pick);
+    body.appendChild(top);
+    const st = d.dimStyles.find((x) => x.name === d.dimStyle) || d.dimStyles[0];
+    const g = h('div', 'grid2');
+    const field = (label, key, type, opts) => {
+      let el;
+      if (type === 'select') { el = h('select'); opts.forEach(([v, l]) => { const o = h('option', null, l); o.value = v; el.appendChild(o); }); el.value = st[key]; }
+      else { el = h('input'); if (type === 'num') { el.type = 'number'; el.step = 'any'; } el.value = st[key] ?? ''; }
+      el.onchange = () => {
+        let v = el.value;
+        if (type === 'num') { v = parseFloat(v); if (isNaN(v) || v < 0) { el.value = st[key]; return; } }
+        if (key === 'name') { v = v.trim(); if (!v || d.dimStyles.some((x) => x !== st && x.name === v)) { el.value = st.name; return; } const old = st.name; d.entities.forEach((e) => { if (e.dimstyle === old) e.dimstyle = v; }); if (d.dimStyle === old) d.dimStyle = v; }
+        this.pushUndoNow(); st[key] = v; upd();
+      };
+      g.append(h('label', null, label), el);
+    };
+    field('Name', 'name', 'text');
+    field('Text style', 'textStyle', 'select', d.textStyles.map((x) => [x.name, x.name]));
+    field('Arrowheads', 'arrow', 'select', [['closed', 'Closed filled'], ['open', 'Open'], ['tick', 'Architectural tick'], ['dot', 'Dot'], ['none', 'None']]);
+    field('Text placement', 'tad', 'select', [['above', 'Above the line'], ['centered', 'Centered in the line']]);
+    field('Overall scale', 'scale', 'num');
+    field('Text height', 'txt', 'num');
+    field('Arrow size', 'asz', 'num');
+    field('Ext. line offset', 'exo', 'num');
+    field('Ext. beyond dim line', 'exe', 'num');
+    field('Text gap', 'gap', 'num');
+    field('Decimals', 'dec', 'num');
+    field('Angle decimals', 'adec', 'num');
+    field('Prefix', 'pre', 'text');
+    field('Suffix (e.g. " mm")', 'suf', 'text');
+    field('Baseline spacing', 'dli', 'num');
+    body.appendChild(g);
+    const da = h('div', 'actions');
+    const nb = h('button', null, '+ New (copy of current)');
+    nb.onclick = () => { let i = 1; while (d.dimStyles.some((x) => x.name === `${st.name} ${i}`)) i++; this.pushUndoNow(); d.dimStyles.push({ ...st, name: `${st.name} ${i}` }); d.dimStyle = `${st.name} ${i}`; upd(); };
+    const db = h('button', null, 'Delete');
+    db.onclick = () => {
+      if (d.dimStyles.length < 2) return;
+      if (d.entities.some((e) => e.dimstyle === st.name) && !confirm(`Dimensions use "${st.name}". They will switch to "${d.dimStyles.find((x) => x !== st).name}". Continue?`)) return;
+      this.pushUndoNow();
+      const other = d.dimStyles.find((x) => x !== st).name;
+      d.entities.forEach((e) => { if (e.dimstyle === st.name) e.dimstyle = other; });
+      d.dimStyles = d.dimStyles.filter((x) => x !== st); d.dimStyle = other; upd();
+    };
+    const ap = h('button', null, 'Apply to selected dims');
+    ap.onclick = () => { const ids = this.selectedIds().filter((id) => this.get(id).type === 'dim'); if (!ids.length) { this.print('Select dimensions first.'); return; } this.pushUndoNow(); ids.forEach((id) => { const e = this.get(id); e.dimstyle = st.name; delete e.h; delete e.scale; }); upd(); };
+    da.append(nb, db, ap); body.appendChild(da);
+    body.appendChild(h('div', 'muted', 'Sizes are on paper; "Overall scale" multiplies them (e.g. 50 for a 1:50 drawing in mm). Changes update every dimension that uses the style.'));
+  },
   buildLayers(body) {
     body.innerHTML = '';
     const d = this.doc;
@@ -1140,8 +1308,9 @@ const App = {
     num('Grid spacing', () => s.gridSize, (v) => v > 0 && (s.gridSize = v));
     num('Snap spacing', () => s.snapSize, (v) => v > 0 && (s.snapSize = v));
     num('Text height', () => d.textSize, (v) => v > 0 && (d.textSize = v));
-    num('Dimension scale', () => d.dimScale, (v) => v > 0 && (d.dimScale = v));
-    num('Dimension decimals', () => d.dimDec, (v) => (d.dimDec = Math.round(Math.min(8, v))));
+    const cds = () => d.dimStyles.find((x) => x.name === d.dimStyle) || d.dimStyles[0];
+    num('Dimension scale', () => cds().scale, (v) => { if (v > 0) { cds().scale = v; this.changed(); } });
+    num('Dimension decimals', () => cds().dec, (v) => { cds().dec = Math.round(Math.min(8, v)); this.changed(); });
     num('Hatch scale', () => d.hatchScale, (v) => v > 0 && (d.hatchScale = v));
     num('Revcloud arc length', () => d.revArc, (v) => v > 0 && (d.revArc = v));
     body.appendChild(tbl);
@@ -1182,7 +1351,8 @@ const App = {
     if (!body.dataset.built) {
       const groups = [
         ['Draw', ['LINE', 'PLINE', 'RECTANG', 'CIRCLE', 'ARC', 'POLYGON', 'ELLIPSE', 'SPLINE', 'HATCH', 'REVCLOUD']],
-        ['Annotate / comments', ['TEXT', 'MTEXT', 'MLEADER', 'TEXTEDIT', 'DIMLINEAR', 'DIMALIGNED', 'DIMRADIUS', 'DIMDIAMETER']],
+        ['Annotate / comments', ['TEXT', 'MTEXT', 'MLEADER', 'TEXTEDIT', 'TABLE', 'TABLEDIT', 'STYLE']],
+        ['Dimensions', ['DIMLINEAR', 'DIMALIGNED', 'DIMANGULAR', 'DIMRADIUS', 'DIMDIAMETER', 'DIMBASELINE', 'DIMCONTINUE', 'DIMORDINATE', 'DIMREASSOCIATE', 'DIMSTYLE', 'DIMSCALE', 'DIMDEC']],
         ['Modify', ['ERASE', 'MOVE', 'COPY', 'ROTATE', 'SCALE', 'MIRROR', 'STRETCH', 'OFFSET', 'TRIM', 'EXTEND', 'FILLET', 'CHAMFER', 'BREAK', 'BREAKATPOINT', 'JOIN', 'LENGTHEN', 'ALIGN', 'PEDIT', 'ARRAY', 'EXPLODE', 'MATCHPROP']],
         ['Blocks', ['BLOCK', 'INSERT', 'ATTDEF', 'ATTEDIT', 'ATTSYNC', 'BEDIT', 'BCLOSE', 'BLOCKSPALETTE', 'PURGE']],
         ['Inquiry & view', ['DIST', 'AREA', 'ID', 'LIST', 'ZOOM', 'PAN', 'REGEN']],
@@ -1237,6 +1407,7 @@ const App = {
         const d = newDoc();
         d.name = base;
         d.blocks = r.blocks || {};
+        for (const t of r.textStyles || []) { const ex = d.textStyles.find((x) => x.name === t.name); if (ex) Object.assign(ex, t); else d.textStyles.push(t); }
         for (const l of r.layers) { const ex = d.layers.find((x) => x.name === l.name); if (ex) Object.assign(ex, l); else d.layers.push(l); }
         const ensureLayers = (list) => { for (const e of list) if (e.layer && !d.layers.find((l) => l.name === e.layer)) d.layers.push({ name: e.layer, color: '#ffffff', visible: true, locked: false, linetype: 'Continuous' }); };
         Object.values(d.blocks).forEach((bk) => ensureLayers(bk.ents));
@@ -1382,6 +1553,14 @@ const App = {
       ctx.fillRect(Math.min(a.x, b.x), Math.min(a.y, b.y), Math.abs(b.x - a.x), Math.abs(b.y - a.y));
       ctx.strokeRect(Math.min(a.x, b.x) + 0.5, Math.min(a.y, b.y) + 0.5, Math.abs(b.x - a.x), Math.abs(b.y - a.y));
       ctx.setLineDash([]);
+    }
+    if (this.tableCell) {
+      const t = this.get(this.tableCell.id);
+      if (t) {
+        const g = E.tableGeom(t), { r, c } = this.tableCell;
+        const q = [g.L(g.xs[c], g.ys[r]), g.L(g.xs[c + 1], g.ys[r]), g.L(g.xs[c + 1], g.ys[r + 1]), g.L(g.xs[c], g.ys[r + 1])].map((p) => this.toScreen(p));
+        ctx.strokeStyle = '#3b8cff'; ctx.lineWidth = 2; ctx.beginPath(); q.forEach((p, i) => (i ? ctx.lineTo(p.x, p.y) : ctx.moveTo(p.x, p.y))); ctx.closePath(); ctx.stroke();
+      }
     }
     this.drawUCS(ctx);
     if (be) {
@@ -1579,8 +1758,8 @@ const RIBBON = [
     ['Utilities', [['DIST', 'Measure', 'dist'], ['AREA', 'Area', 'area'], ['LAYER', 'Layers', 'layers'], ['ZOOM_E', 'Extents', 'zoomext']]],
   ] },
   { tab: 'Annotate', groups: [
-    ['Text & notes', [['TEXT', 'Text', 'text'], ['MTEXT', 'MText', 'mtext'], ['MLEADER', 'Leader note', 'leader'], ['REVCLOUD', 'Rev cloud', 'cloud'], ['TEXTEDIT', 'Edit text', 'text']]],
-    ['Dimensions', [['DIMLINEAR', 'Linear', 'dimlin'], ['DIMALIGNED', 'Aligned', 'dimali'], ['DIMRADIUS', 'Radius', 'dimrad'], ['DIMDIAMETER', 'Diameter', 'dimdia']]],
+    ['Text & notes', [['TEXT', 'Text', 'text'], ['MTEXT', 'MText', 'mtext'], ['MLEADER', 'Leader note', 'leader'], ['REVCLOUD', 'Rev cloud', 'cloud'], ['TABLE', 'Table', 'table'], ['STYLE', 'Text style', 'tstyle']]],
+    ['Dimensions', [['DIMLINEAR', 'Linear', 'dimlin'], ['DIMALIGNED', 'Aligned', 'dimali'], ['DIMANGULAR', 'Angular', 'dimang'], ['DIMRADIUS', 'Radius', 'dimrad'], ['DIMDIAMETER', 'Diameter', 'dimdia'], ['DIMBASELINE', 'Baseline', 'dimbase'], ['DIMCONTINUE', 'Continue', 'dimcont'], ['DIMORDINATE', 'Ordinate', 'dimord'], ['DIMSTYLE', 'Dim style', 'dstyle']]],
   ] },
   { tab: 'Insert', groups: [
     ['Block', [['INSERT', 'Insert', 'insert'], ['BLOCK', 'Create', 'blockmake'], ['BEDIT', 'Edit block', 'blockedit'], ['BCLOSE', 'Close editor', 'check'], ['BLOCKSPALETTE', 'Library', 'library'], ['PURGE', 'Purge', 'erase']]],
@@ -1651,6 +1830,13 @@ const ICONS = {
   align: '<path d="M4 18l6-6M14 6h6v6"/><path d="M4 18h16" stroke-dasharray="2 2"/>',
   area: '<path d="M4 18l3-12 10 2 3 10z"/><path d="M8 14h6" stroke-dasharray="1.5 1.5"/>',
   cmd: '<rect x="4" y="5" width="16" height="14" rx="2"/><path d="M8 10l3 2-3 2M13 15h3"/>',
+  table: '<rect x="3" y="4" width="18" height="16"/><path d="M3 9h18M3 14.5h18M9 4v16M15 4v16"/>',
+  tstyle: '<path d="M4 18L9 5l5 13M6 13h6"/><path d="M15 18h6M18 9v9"/>',
+  dimang: '<path d="M4 20L20 20M4 20L16 6"/><path d="M14 20a10 10 0 0 0-2.8-7"/>',
+  dimbase: '<path d="M4 4v16M12 10v10M20 6v14M4 13h8M4 8h16"/>',
+  dimcont: '<path d="M3 8v12M11 8v12M21 8v12M3 12h18"/><path d="M3 12l2.5-1.5v3zM11 12l-2.5-1.5v3zM11 12l2.5-1.5v3zM21 12l-2.5-1.5v3z" fill="currentColor"/>',
+  dimord: '<path d="M4 20h16M4 20V4"/><path d="M10 20V8h6M16 20v-6h4" stroke-dasharray="2 1.5"/>',
+  dstyle: '<path d="M4 14v6M20 14v6M4 17h16"/><path d="M6 4h12v6H6z"/>',
   insert: '<rect x="9" y="9" width="12" height="12"/><path d="M3 3l9 9M12 6v6H6"/>',
   blockmake: '<rect x="3" y="3" width="8" height="8"/><circle cx="17" cy="7" r="4"/><path d="M3 15h18v6H3z" stroke-dasharray="2 2"/>',
   blockedit: '<rect x="3" y="3" width="12" height="12" stroke-dasharray="2 2"/><path d="M13 21l1-4 7-7 3 3-7 7z"/>',
