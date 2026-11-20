@@ -49,7 +49,7 @@ const App = {
     let restored = false;
     try {
       const s = localStorage.getItem(AUTOSAVE_KEY);
-      if (s) { const o = JSON.parse(s); if (o && o.doc && Array.isArray(o.doc.entities)) { this.doc = Object.assign(newDoc(), o.doc); if (o.view) this.view = o.view; if (o.settings) Object.assign(this.settings, o.settings, { osmodes: Object.assign(this.settings.osmodes, o.settings.osmodes || {}) }); restored = true; } }
+      if (s) { const o = JSON.parse(s); if (o && o.doc && Array.isArray(o.doc.entities) && o.doc.entities.length) { this.doc = Object.assign(newDoc(), o.doc); if (o.view) this.view = o.view; if (o.settings) Object.assign(this.settings, o.settings, { osmodes: Object.assign(this.settings.osmodes, o.settings.osmodes || {}) }); restored = true; } }
     } catch (err) { /* storage unavailable */ }
     if (!restored) this.view = { cx: 210, cy: 148, scale: Math.max(0.5, (this.W - 40) / 440) };
     this.print('BananaCAD — 2D drafting. Type a command (e.g. LINE or L) and press Enter. Press F1 for the command list.');

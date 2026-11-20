@@ -107,7 +107,8 @@ const IO = {
     for (let i = 0; i + 1 < lines.length; i += 2) {
       const c = parseInt(lines[i].trim(), 10);
       if (isNaN(c)) continue;
-      pairs.push([c, lines[i + 1].replace(/\s+$/, '')]);
+      // text values (1, 3) keep leading spaces; numeric/flag values are often space-padded
+      pairs.push([c, c === 1 || c === 3 ? lines[i + 1].replace(/\r$/, '') : lines[i + 1].trim()]);
     }
     const objs = [];
     let section = null, expectName = false, cur = null;
@@ -394,18 +395,54 @@ const IO = {
               if (t.trim() && tpos) out.push({ ...b, type: 'mtext', p: tpos, h, width: 0, rot: 0, text: t });
               break;
             }
+            case 'MLINE': {
+              // vertices (11), miter direction (13), then per element: 74 n, 41×n (offset along miter), 75 n, 42×n
+              const verts = [];
+              let v = null, el = null, want = null;
+              for (const [c, val] of o.g) {
+                const x = parseFloat(val);
+                if (c === 11) { v = { p: { x, y: 0 }, miter: { x: 0, y: 0 }, offs: [] }; verts.push(v); }
+                else if (c === 21 && v) v.p.y = x;
+                else if (c === 13 && v) v.miter.x = x;
+                else if (c === 23 && v) v.miter.y = x;
+                else if (c === 74 && v) { el = []; v.offs.push(el); want = 41; }
+                else if (c === 41 && el && want === 41) { el.push(x); }
+                else if (c === 75) want = null;
+              }
+              const fl = parseInt(get(o, 71, '0'), 10), closed = (fl & 2) !== 0;
+              const nEl = verts.length ? Math.min(...verts.map((q) => q.offs.length)) : 0;
+              const rails = [];
+              for (let k = 0; k < nEl; k++) {
+                const pts = verts.map((q) => G.add(q.p, G.mul(q.miter, q.offs[k][0] || 0)));
+                if (pts.length > 1) { rails.push(pts); out.push(ocs(o, { ...b, type: 'pline', pts, closed })); }
+              }
+              if (!closed && rails.length > 1) {
+                const first = rails[0], last = rails[rails.length - 1];
+                if (!(fl & 4)) out.push(ocs(o, { ...b, type: 'line', p1: first[0], p2: last[0] }));
+                if (!(fl & 8)) out.push(ocs(o, { ...b, type: 'line', p1: first[first.length - 1], p2: last[last.length - 1] }));
+              }
+              if (!rails.length) skip('MLINE');
+              break;
+            }
+            case 'ACAD_TABLE': {
+              const name = (get(o, 2, '') || '').trim();
+              if (name) out.push({ ...b, type: '_insert', name, p: P(o, 10), sx: 1, sy: 1, rot: 0, cols: 1, rows: 1, cs: 0, rs: 0, flip: false });
+              else skip('ACAD_TABLE');
+              break;
+            }
             case 'INSERT': {
               const sx = num(o, 41, 1), sy = num(o, 42, 1);
               out.push({ ...b, type: '_insert', name: (get(o, 2, '') || '').trim(), p: P(o, 10), sx, sy, rot: num(o, 50, 0) * DEG,
                 cols: Math.max(1, num(o, 70, 1)), rows: Math.max(1, num(o, 71, 1)), cs: num(o, 44, 0), rs: num(o, 45, 0), flip: flipped(o) });
               break;
             }
-            case 'DIMENSION': {
+            case 'DIMENSION': case 'ARC_DIMENSION': case 'LARGE_RADIAL_DIMENSION': {
+              if (o.type !== 'DIMENSION' && !get(o, 2)) { skip(o.type); break; }
               const dt = parseInt(get(o, 70, '0'), 10) & 7;
-              out.push({ ...b, type: '_dim', name: (get(o, 2, '') || '').trim(), off: P(o, 12), dt, p10: P(o, 10), p13: P(o, 13), p14: P(o, 14), ang: num(o, 50, 0) * DEG, text: uni(get(o, 1, '')) });
+              out.push({ ...b, type: '_dim', native: o.type === 'DIMENSION', name: (get(o, 2, '') || '').trim(), off: P(o, 12), dt, p10: P(o, 10), p13: P(o, 13), p14: P(o, 14), ang: num(o, 50, 0) * DEG, text: uni(get(o, 1, '')) });
               break;
             }
-            case 'BLOCK': case 'ENDBLK': case 'ATTDEF': case 'POINT': case 'VIEWPORT': break;
+            case 'BLOCK': case 'ENDBLK': case 'ATTDEF': case 'POINT': case 'VIEWPORT': case 'LIGHT': case 'SUN': break;
             default: skip(o.type);
           }
         } catch (err) { skip(o.type + ' (error)'); }
@@ -464,7 +501,7 @@ const IO = {
           if (e.type === '_dim') {
             if (bk && bk.ents.length && depth < 12) { expand(bk.ents, mul(m, [1, 0, 0, 1, e.off.x, e.off.y]), me, depth + 1); continue; }
             const isAligned = e.dt === 1;
-            if (e.dt === 0 || isAligned) emit({ type: 'dim', kind: isAligned ? 'aligned' : 'linear', p1: e.p13, p2: e.p14, pos: e.p10, dirAng: e.ang, h: 2.5, scale: 1, text: e.text, layer: me.layer, color: me.color }, m, null);
+            if (e.native && (e.dt === 0 || isAligned)) emit({ type: 'dim', kind: isAligned ? 'aligned' : 'linear', p1: e.p13, p2: e.p14, pos: e.p10, dirAng: e.ang, h: 2.5, scale: 1, text: e.text, layer: me.layer, color: me.color }, m, null);
             else skip('DIMENSION (no block)');
             continue;
           }
