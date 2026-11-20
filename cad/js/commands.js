@@ -1000,17 +1000,23 @@ defCmd('PASTECLIP', [], 'Paste from clipboard (Ctrl+V)', function* (c) {
 });
 defCmd('SELECTALL', ['ALL'], 'Select all objects (Ctrl+A)', function* (c) { c.app.selectAll(); }, { transparent: true, keepSel: true });
 
-defCmd('NEW', ['QNEW'], 'Start a new drawing', function* (c) {
-  if (c.doc.entities.length) {
-    const k = yield P.kw('Discard the current drawing?', ['Yes', 'No'], { def: 'No' });
-    if (!k || (k.kw || k) !== 'Yes') return;
-  }
-  c.app.newDrawing();
+defCmd('NEW', ['QNEW'], 'Start a new drawing (asks to save changes)', function* (c) {
+  const ok = yield { type: 'wait', msg: 'Save changes?', promise: c.app.confirmDiscard() };
+  if (ok === true) c.app.newDrawing();
 }, { noUndo: true });
-defCmd('OPEN', [], 'Open a drawing (.dwg / .dxf / .bcad)', function* (c) { c.app.openFile(); }, { noUndo: true });
-defCmd('SAVE', ['QSAVE'], 'Save the drawing (DWG drawings save back as DWG)', function* (c) { c.app.saveFile(); }, { transparent: true });
+defCmd('OPEN', [], 'Open a drawing (.dwg / .dxf / .bcad)', function* (c) {
+  const ok = yield { type: 'wait', msg: 'Save changes?', promise: c.app.confirmDiscard() };
+  if (ok === true) c.app.openFile();
+}, { noUndo: true });
+defCmd('SAVE', ['QSAVE'], 'Save the drawing (Ctrl+S) — a new drawing asks for a name and type first', function* (c) {
+  if (!c.doc.everSaved) yield { type: 'wait', msg: 'Save Drawing As', promise: c.app.openSaveAs() };
+  else yield { type: 'wait', msg: 'Saving…', promise: c.app.saveFile() };
+}, { transparent: true });
+defCmd('SAVEAS', [], 'Save Drawing As dialog: file name and type (DWG 2000-2018, DXF, BCAD)', function* (c) {
+  yield { type: 'wait', msg: 'Save Drawing As', promise: c.app.openSaveAs() };
+}, { transparent: true });
 const DWG_YEARS = ['2018', '2013', '2010', '2007', '2004', '2000'];
-defCmd('SAVEAS', ['DWGOUT'], 'Save under a new name / format: DWG (AutoCAD 2000-2018), DXF or BCAD', function* (c, opts) {
+defCmd('-SAVEAS', ['DWGOUT'], 'Save As on the command line: name, format (DWG 2000-2018 / DXF / BCAD)', function* (c, opts) {
   const n = yield P.str('Enter file name', { def: c.doc.name, spaces: true });
   if (!n) return;
   const m = /\.(dwg|dxf|bcad|json)$/i.exec(n.trim());

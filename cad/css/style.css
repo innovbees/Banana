@@ -173,3 +173,17 @@ body.busy, body.busy #viewport { cursor: progress; }
 .mbox.small { width: min(560px, 94vw); }
 .actions button.primary { background: var(--accent); border-color: var(--accent); color: #fff; }
 table.layers .lwsel { width: 52px; }
+
+.brand { cursor: pointer; border-radius: 6px; padding: 2px 6px 2px 2px; }
+.brand:hover { background: var(--bg3); }
+.brand .caret { color: var(--muted); font-size: 10px; margin-left: 2px; }
+#appmenu { position: fixed; display: none; z-index: 60; min-width: 250px; background: #2e353d; border: 1px solid #5a646f; border-radius: 8px; padding: 5px; box-shadow: 0 10px 28px rgba(0,0,0,.5); }
+#appmenu .ai { display: grid; grid-template-columns: 22px 1fr auto; align-items: center; gap: 8px; padding: 6px 10px; border-radius: 5px; cursor: pointer; }
+#appmenu .ai:hover { background: var(--accent); color: #fff; }
+#appmenu .ai svg { width: 17px; height: 17px; fill: none; stroke: currentColor; stroke-width: 1.7; stroke-linecap: round; stroke-linejoin: round; }
+#appmenu .ai kbd { background: transparent; border: 0; color: var(--muted); font-size: 11px; }
+#appmenu .ai:hover kbd { color: #dce8ff; }
+#appmenu .sep { height: 1px; background: var(--line); margin: 4px 2px; }
+.grid2.wide { grid-template-columns: 110px 1fr; }
+.askmsg { font-size: 15px; margin: 14px 0 6px; }
+#docname { max-width: 40vw; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }

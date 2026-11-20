@@ -9,11 +9,12 @@
 <body>
 <div id="app">
   <header id="topbar">
-    <div class="brand"><span class="logo">B</span>BananaCAD</div>
+    <div class="brand" title="Application menu: New, Open, Save, Save As, Export, Plot"><span class="logo">B</span>BananaCAD<span class="caret">▾</span></div>
     <div class="qa">
       <button data-cmd="NEW" data-icon="new" title="New drawing (Ctrl+N)"></button>
       <button data-cmd="OPEN" data-icon="open" title="Open .dwg / .dxf / .bcad (Ctrl+O)"></button>
-      <button data-cmd="SAVE" data-icon="save" title="Save .bcad (Ctrl+S)"></button>
+      <button data-cmd="SAVE" data-icon="save" title="Save (Ctrl+S)"></button>
+      <button data-cmd="SAVEAS" data-icon="saveas" title="Save As… (Ctrl+Shift+S) — choose name and type: DWG 2000–2018, DXF, BCAD"></button>
       <span class="sep"></span>
       <button data-cmd="UNDO" data-icon="undo" title="Undo (Ctrl+Z)"></button>
       <button data-cmd="REDO" data-icon="redo" title="Redo (Ctrl+Y)"></button>
@@ -85,6 +86,11 @@
     <div id="helpbody"></div>
   </div>
 </div>
+<div id="savedlg" class="modal">
+  <div class="mbox small">
+    <div id="savebody"></div>
+  </div>
+</div>
 <div id="plotdlg" class="modal">
   <div class="mbox small">
     <button class="mclose" onclick="document.getElementById('plotdlg').classList.remove('open')">×</button>
@@ -114,6 +120,7 @@
     <tr><td><kbd>F3</kbd> <kbd>F7</kbd> <kbd>F8</kbd> <kbd>F9</kbd></td><td>Osnap · Grid · Ortho (Shift flips) · Snap</td></tr>
     <tr><td><kbd>F10</kbd> <kbd>F11</kbd> <kbd>F12</kbd></td><td>Polar tracking · Object snap tracking (hover a snap point ½ s to acquire it) · Dynamic input</td></tr>
     <tr><td><kbd>Ctrl</kbd>+Z/Y/S/O/N/A/C/X/V/P</td><td>Undo · Redo · Save · Open · New · Select all · Copy · Cut · Paste · Print</td></tr>
+    <tr><td><kbd>Ctrl</kbd>+<kbd>Shift</kbd>+S</td><td>Save As (choose name and type: DWG 2000–2018, DXF, BCAD)</td></tr>
     <tr><td><kbd>↑</kbd> <kbd>↓</kbd> <kbd>Tab</kbd></td><td>Command history / autocomplete</td></tr>
   </table>
   <h3>DWG &amp; DXF files</h3>

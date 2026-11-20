@@ -87,6 +87,7 @@ const App = {
     E.ctxDoc = this.doc;
     this.print('BananaCAD — 2D drafting. Type a command (e.g. LINE or L) and press Enter. Press F1 for the command list.');
     if (restored) this.print(`Restored autosaved drawing "${this.doc.name}" (${this.doc.entities.length} objects).`);
+    this.savedRev = restored ? -1 : this.rev;
     this.showPrompt();
     this.refreshUI();
     this.el.input.focus();
@@ -126,10 +127,25 @@ const App = {
   changed() {
     E.ctxDoc = this.doc; E.rev++;
     this.rev++; this.cache.clear();
+    this.updateTitle();
     this.requestRedraw();
     clearTimeout(this._saveT);
     this._saveT = setTimeout(() => this.autosave(), 600);
     if (!this.cmd) this.refreshProps();
+  },
+  /* Unsaved changes: rev moves on every edit; savedRev is the rev at the last save/open/new. */
+  get dirty() { return this.rev !== this.savedRev; },
+  markSaved() { this.savedRev = this.rev; this.updateTitle(); },
+  fileLabel() {
+    const d = this.doc, f = d.saveFormat || 'bcad';
+    return `${d.name}${d.everSaved ? '.' + f : ''}`;
+  },
+  updateTitle() {
+    if (!this.el || !this.el.title) return;
+    const d = this.doc, f = d.saveFormat || 'bcad';
+    this.el.title.textContent = `${this.fileLabel()}${this.dirty ? ' *' : ''}${d.everSaved && f === 'dwg' && d.dwgVersion ? `  (AutoCAD ${d.dwgVersion})` : ''}`;
+    this.el.title.title = this.dirty ? 'Unsaved changes' : 'All changes saved';
+    document.title = `${this.dirty ? '* ' : ''}${this.fileLabel()} — BananaCAD`;
   },
   autosave() {
     try { localStorage.setItem(AUTOSAVE_KEY, JSON.stringify({ doc: this.doc, view: this.view, settings: this.settings })); } catch (err) { /* quota */ }
@@ -670,6 +686,7 @@ const App = {
     cv.addEventListener('contextmenu', (ev) => { ev.preventDefault(); this.onRight(ev); });
     cv.addEventListener('dblclick', (ev) => this.onDbl(ev));
     window.addEventListener('keydown', (ev) => this.onKey(ev));
+    document.querySelector('#topbar .brand').onclick = () => this.toggleAppMenu();
     window.addEventListener('keyup', (ev) => { if (ev.key === 'Shift') { this.mouse.shift = false; this.updateMouse(); this.requestRedraw(); } });
     this.el.input.addEventListener('input', () => { this.updateAC(); this.updateDyn(); });
     this.el.input.addEventListener('blur', () => setTimeout(() => this.hideAC(), 150));
@@ -692,7 +709,7 @@ const App = {
     this.el.help.addEventListener('mousedown', (ev) => { if (ev.target === this.el.help) this.el.help.classList.remove('open'); });
     document.getElementById('sidetoggle').onclick = () => { document.body.classList.toggle('noside'); this.resize(); };
     document.addEventListener('mousedown', (ev) => { if (!this.el.ctx.contains(ev.target)) this.el.ctx.style.display = 'none'; });
-    window.addEventListener('beforeunload', () => this.autosave());
+    window.addEventListener('beforeunload', (ev) => { this.autosave(); if (this.dirty && this.doc.entities.length) { ev.preventDefault(); ev.returnValue = ''; } });
     vp.addEventListener('dragover', (ev) => { ev.preventDefault(); vp.classList.add('drop'); });
     vp.addEventListener('dragleave', () => vp.classList.remove('drop'));
     vp.addEventListener('drop', (ev) => {
@@ -702,8 +719,7 @@ const App = {
       const item = ev.dataTransfer.items && ev.dataTransfer.items[0];
       const hp = item && item.getAsFileSystemHandle ? item.getAsFileSystemHandle().catch(() => null) : Promise.resolve(null);
       if (this.cmd) this.cancel(true);
-      if (this.doc.entities.length && !confirm(`Open "${f.name}" and replace the current drawing? (Save first if you need it.)`)) return;
-      hp.then((h) => this.openBlob(f, h && h.kind === 'file' ? h : null));
+      this.confirmDiscard().then((ok) => (ok ? hp : false)).then((h) => { if (h !== false) this.openBlob(f, h && h.kind === 'file' ? h : null); });
     });
   },
   resize() {
@@ -869,6 +885,7 @@ const App = {
       const k = ev.key.toLowerCase();
       const map = { z: 'UNDO', y: 'REDO', s: 'SAVE', o: 'OPEN', n: 'NEW', a: 'SELECTALL', c: 'COPYCLIP', v: 'PASTECLIP', x: 'CUTCLIP', p: 'PLOT' };
       if (k === 'z' && ev.shiftKey) { ev.preventDefault(); this.redo(); return; }
+      if (k === 's' && ev.shiftKey) { ev.preventDefault(); if (this.cmd) this.cancel(true); this.runCommand('SAVEAS'); return; }
       if (k === 'a' && ev.shiftKey) { ev.preventDefault(); this.settings.pickGroups = !this.settings.pickGroups; this.print(`<Group selection ${this.settings.pickGroups ? 'on' : 'off'}>`); return; }
       if (map[k] && !(k === 'c' && window.getSelection().toString())) {
         ev.preventDefault();
@@ -1030,9 +1047,9 @@ const App = {
     ls.value = shown;
     const lay = this.layer(shown || this.doc.clayer);
     document.getElementById('layerswatch').style.background = lay ? lay.color : '#fff';
-    this.el.title.textContent = `${this.doc.name}.${this.doc.saveFormat || 'bcad'}${this.doc.saveFormat === 'dwg' && this.doc.dwgVersion ? ` (AutoCAD ${this.doc.dwgVersion})` : ''}`;
+    this.updateTitle();
     this.buildLayoutBar();
-    document.title = `${this.doc.name} — BananaCAD`;
+
     this.refreshProps();
   },
   refreshProps() {
@@ -1643,10 +1660,118 @@ const App = {
   },
 
   /* ===================== files ===================== */
+  /* Ask before throwing away unsaved work. Resolves true to continue, false to stop. */
+  async confirmDiscard() {
+    if (!this.dirty || !this.doc.entities.length && !this.doc.layouts.some((l) => l.ents.length)) return true;
+    const ans = await this.askDialog(`Save changes to ${this.fileLabel()}?`, ['Yes', 'No', 'Cancel']);
+    if (ans === 'Yes') return this.doc.everSaved ? this.saveFile() : this.openSaveAs();
+    return ans === 'No';
+  },
+  askDialog(msg, buttons) {
+    return new Promise((resolve) => {
+      const box = document.getElementById('savedlg'), body = document.getElementById('savebody');
+      body.innerHTML = '';
+      const p = document.createElement('p'); p.className = 'askmsg'; p.textContent = msg; body.appendChild(p);
+      const acts = document.createElement('div'); acts.className = 'actions';
+      const done = (v) => { box.classList.remove('open'); window.removeEventListener('keydown', key, true); resolve(v); };
+      buttons.forEach((b, i) => { const el = document.createElement('button'); el.textContent = b; if (!i) el.className = 'primary'; el.onclick = () => done(b); acts.appendChild(el); });
+      const key = (ev) => { if (ev.key === 'Escape') { ev.preventDefault(); ev.stopPropagation(); done('Cancel'); } else if (ev.key === 'Enter') { ev.preventDefault(); ev.stopPropagation(); done(buttons[0]); } };
+      window.addEventListener('keydown', key, true);
+      body.appendChild(acts); box.classList.add('open');
+      setTimeout(() => acts.firstChild.focus(), 0);
+    });
+  },
+  /* AutoCAD-style "Save Drawing As" dialog. Resolves true when saved. */
+  openSaveAs() {
+    return new Promise((resolve) => {
+      const d = this.doc, box = document.getElementById('savedlg'), body = document.getElementById('savebody');
+      body.innerHTML = '';
+      const h = (tag, cls, txt) => { const x = document.createElement(tag); if (cls) x.className = cls; if (txt != null) x.textContent = txt; return x; };
+      body.appendChild(h('h2', null, 'Save Drawing As'));
+      const g = h('div', 'grid2 wide');
+      const name = h('input'); name.value = d.name; name.spellcheck = false;
+      g.append(h('label', null, 'File name'), name);
+      const TYPES = [
+        ['dwg:2018', 'AutoCAD 2018 Drawing (*.dwg)'], ['dwg:2013', 'AutoCAD 2013/LT2013 Drawing (*.dwg)'], ['dwg:2010', 'AutoCAD 2010/LT2010 Drawing (*.dwg)'],
+        ['dwg:2007', 'AutoCAD 2007/LT2007 Drawing (*.dwg)'], ['dwg:2004', 'AutoCAD 2004/LT2004 Drawing (*.dwg)'], ['dwg:2000', 'AutoCAD 2000/LT2000 Drawing (*.dwg)'],
+        ['dxf', 'AutoCAD R12/LT2 DXF (*.dxf)'], ['bcad', 'BananaCAD Drawing (*.bcad) — keeps layouts & images'],
+      ];
+      const type = h('select');
+      TYPES.forEach(([v, l]) => { const o = h('option', null, l); o.value = v; type.appendChild(o); });
+      const curFmt = d.everSaved ? d.saveFormat || 'bcad' : 'dwg';
+      type.value = curFmt === 'dwg' ? `dwg:${d.dwgVersion || '2018'}` : curFmt;
+      g.append(h('label', null, 'Files of type'), type);
+      body.appendChild(g);
+      const info = h('div', 'muted');
+      info.textContent = window.showSaveFilePicker && this.settings.filePickers !== false
+        ? 'Next, choose the folder to save in. Later, Save (Ctrl+S) writes to the same file.'
+        : 'The file is saved to your Downloads folder.';
+      body.appendChild(info);
+      const acts = h('div', 'actions');
+      const done = (v) => { box.classList.remove('open'); window.removeEventListener('keydown', key, true); resolve(v); };
+      const go = async () => {
+        let n = name.value.trim();
+        const m = /\.(dwg|dxf|bcad|json)$/i.exec(n);
+        let t = type.value;
+        if (m) { n = n.slice(0, -m[0].length); const ext = m[1].toLowerCase(); if (!t.startsWith(ext)) t = ext === 'dwg' ? 'dwg:2018' : ext === 'json' ? 'bcad' : ext; }
+        if (!n || /[\\/:*?"<>|]/.test(n)) { name.focus(); info.textContent = 'Please enter a valid file name (no \\ / : * ? " < > |).'; return; }
+        box.classList.remove('open'); window.removeEventListener('keydown', key, true);
+        const [fmt, ver] = t.split(':');
+        const old = d.name;
+        d.name = n;
+        const ok = await this.saveFile(fmt, { saveAs: true, version: ver });
+        if (!ok) d.name = old;
+        this.updateTitle();
+        resolve(!!ok);
+      };
+      const key = (ev) => {
+        if (ev.key === 'Escape') { ev.preventDefault(); ev.stopPropagation(); done(false); }
+        else if (ev.key === 'Enter' && ev.target.tagName !== 'SELECT') { ev.preventDefault(); ev.stopPropagation(); go(); }
+      };
+      window.addEventListener('keydown', key, true);
+      const b1 = h('button', 'primary', 'Save'); b1.onclick = go;
+      const b2 = h('button', null, 'Cancel'); b2.onclick = () => done(false);
+      acts.append(b1, b2); body.appendChild(acts);
+      box.classList.add('open');
+      setTimeout(() => { name.focus(); name.select(); }, 0);
+    });
+  },
+  /* AutoCAD-style application menu under the logo. */
+  toggleAppMenu() {
+    let m = document.getElementById('appmenu');
+    if (m && m.style.display === 'block') { m.style.display = 'none'; return; }
+    if (!m) {
+      m = document.createElement('div'); m.id = 'appmenu'; document.body.appendChild(m);
+      document.addEventListener('mousedown', (ev) => { if (!m.contains(ev.target) && !ev.target.closest('.brand')) m.style.display = 'none'; });
+    }
+    m.innerHTML = '';
+    const item = (icon, label, keys, fn) => {
+      const d = document.createElement('div'); d.className = 'ai';
+      d.innerHTML = `<svg viewBox="0 0 24 24">${ICONS[icon] || ''}</svg><span></span><kbd></kbd>`;
+      d.children[1].textContent = label; d.children[2].textContent = keys || '';
+      d.onmousedown = (ev) => { ev.preventDefault(); m.style.display = 'none'; fn(); this.el.input.focus(); };
+      m.appendChild(d);
+    };
+    const sep = () => { const d = document.createElement('div'); d.className = 'sep'; m.appendChild(d); };
+    item('new', 'New', 'Ctrl+N', () => this.runCommand('NEW'));
+    item('open', 'Open…', 'Ctrl+O', () => this.runCommand('OPEN'));
+    item('save', 'Save', 'Ctrl+S', () => this.runCommand('SAVE'));
+    item('saveas', 'Save As…', 'Ctrl+Shift+S', () => this.runCommand('SAVEAS'));
+    sep();
+    item('export', 'Export DWG copy…', '', () => this.runCommand('EXPORT', { format: 'DWG' }));
+    item('export', 'Export DXF', '', () => this.runCommand('EXPORT', { format: 'DXF' }));
+    item('export', 'Export SVG', '', () => this.runCommand('EXPORT', { format: 'SVG' }));
+    item('export', 'Export PNG', '', () => this.runCommand('EXPORT', { format: 'PNG' }));
+    item('print', 'Plot / PDF…', 'Ctrl+P', () => this.runCommand('PLOT'));
+    sep();
+    item('help', 'Help & commands', 'F1', () => this.showHelp());
+    const r = document.querySelector('#topbar .brand').getBoundingClientRect();
+    m.style.left = r.left + 'px'; m.style.top = r.bottom + 4 + 'px'; m.style.display = 'block';
+  },
   newDrawing() {
     this.doc = newDoc(); this.sel.clear(); this.blockEdit = null; this.activeVp = null; this.spaceViews = {}; this.fileHandle = null; this.undoStack = []; this.redoStack = []; this.index = null;
     this.view = { cx: 210, cy: 148, scale: Math.max(0.5, (this.W - 40) / 440) };
-    this.changed(); this.refreshUI(); this.print('New drawing.');
+    this.changed(); this.refreshUI(); this.markSaved(); this.print('New drawing.');
   },
   /* Save as BCAD / DWG / DXF. Writes back to the opened file when the browser allows it
    * (File System Access API in Chrome/Edge), otherwise asks for a location or downloads. */
@@ -1691,6 +1816,7 @@ const App = {
       } catch (err) { if (err && err.name === 'AbortError') { this.print('Save cancelled.'); return false; } }
     }
     if (!where) { IO.download(name, bytes, mime); where = `"${name}" in your downloads`; }
+    if (!opts.export) { d.everSaved = true; this.markSaved(); }
     this.print(`Saved ${where}${fmt === 'dwg' ? ` as AutoCAD ${d.dwgVersion || opts.version || '2018'} DWG` : ''}.`);
     if (report) {
       const sk = Object.entries(report.skipped), ex = Object.entries(report.exploded);
@@ -1759,7 +1885,8 @@ const App = {
       }
       this.fileHandle = meta.handle || null;
       this.sel.clear(); this.undoStack = []; this.redoStack = []; this.index = null; this.blockEdit = null; this.activeVp = null; this.spaceViews = {};
-      this.changed(); this.refreshUI(); this.zoomExtents();
+      this.doc.everSaved = true;
+      this.changed(); this.refreshUI(); this.zoomExtents(); this.markSaved();
       if (this.doc.saveFormat === 'dwg') this.print(`Ctrl+S saves back as DWG${this.fileHandle ? ' to the same file' : ''}. Use SAVEAS for another version or format.`);
     } catch (err) { console.error(err); this.print('Could not open file: ' + err.message); }
   },
@@ -2183,6 +2310,7 @@ const ICONS = {
   new: '<path d="M6 3h9l4 4v14H6z"/><path d="M15 3v4h4"/>',
   open: '<path d="M3 6h6l2 2h10v12H3z"/>',
   save: '<path d="M5 3h11l3 3v15H5z"/><path d="M8 3v5h8M8 21v-7h8v7"/>',
+  saveas: '<path d="M5 3h11l3 3v6M5 3v18h7M8 3v5h8"/><path d="M13 21l1-3.5 6-6 2.5 2.5-6 6z"/>',
   export: '<path d="M12 15V3M7 8l5-5 5 5M5 21h14"/>',
   print: '<path d="M6 9V3h12v6M6 18H3v-9h18v9h-3M6 14h12v7H6z"/>',
   undo: '<path d="M9 14L4 9l5-5"/><path d="M4 9h10a6 6 0 0 1 0 12h-3"/>',

@@ -81,7 +81,12 @@ Dimensions are **associative**: if you pick their points with object snaps, they
   - **Not saved to DWG:** layout sheets and images. Keep a `.bcad` copy if you need those.
   - **Library:** DWG writing uses acad-ts (MIT, about 1.2 MB), which loads the first time you save a DWG.
 - **Opening DXF:** The importer handles lines, polylines (including arc segments), circles, arcs, ellipses, splines, text, MTEXT, attributes, hatches, leaders and multileader notes. Blocks stay blocks, including nested, scaled, rotated, mirrored and arrayed ones, and keep their attributes. Dimensions come in as single objects. Layers keep their colour, linetype and on/off state, and text styles keep their fonts. Paper-space layouts, xrefs, images and 3D objects are skipped, and the command line tells you what was left out.
-- **Saving:** Save / Open use the native `.bcad` format, which is JSON. Your work is also autosaved in the browser.
+- **Save and Save As:** these work like AutoCAD's.
+  - **Buttons:** **Save** and **Save As** are in the top toolbar and in the **application menu**, which opens when you click the BananaCAD logo.
+  - **Save (Ctrl+S):** writes the file you are working on. For a drawing that has never been saved, it opens the **Save Drawing As** dialog first.
+  - **Save As (Ctrl+Shift+S):** asks for a file name and a **Files of type** choice: AutoCAD 2018, 2013, 2010, 2007, 2004 or 2000 drawing (`.dwg`), DXF, or BananaCAD (`.bcad`, which also keeps layouts and images).
+  - **Unsaved changes:** the title shows `*` when there are unsaved changes. New, Open and closing the tab ask "Save changes to …?" first.
+  - **Autosave:** your work is also autosaved in the browser.
 - **DXF:** Export DXF writes AutoCAD R12 ASCII DXF of the model, with blocks, attributes, layers and text styles. Use it for programs that don't read DWG.
 - **PLOT** writes a PDF to scale. **Export SVG / PNG** writes the model. All of them print on white, and white and very light colours come out black.
 
