@@ -57,23 +57,67 @@ defCmd('LINE', ['L'], 'Draw straight line segments', function* (c) {
   }
 });
 
-defCmd('PLINE', ['PL'], 'Draw a polyline (connected segments as one object)', function* (c) {
+/* Tangent direction at the end of the last polyline segment. */
+function plEndDir(pts, bs) {
+  const n = pts.length;
+  if (n < 2) return { x: 1, y: 0 };
+  const a = pts[n - 2], b = pts[n - 1], bu = bs[n - 2] || 0;
+  const ch = G.norm(G.sub(b, a));
+  return Math.abs(bu) > 1e-9 ? G.rotate(ch, { x: 0, y: 0 }, 2 * Math.atan(bu)) : ch;
+}
+/* Bulge of the tangent arc that leaves p in direction dir and ends at q. */
+function tangentBulge(p, dir, q) {
+  const v = G.sub(q, p);
+  if (G.len(v) < 1e-12) return 0;
+  const al = Math.atan2(G.cross(dir, v), G.dot(dir, v));
+  return Math.tan(al / 2);
+}
+
+defCmd('PLINE', ['PL'], 'Polyline: straight and arc segments as one object', function* (c) {
   const p0 = yield P.point('Specify start point');
   if (!p0) return;
-  const pts = [p0];
-  let closed = false;
+  const pts = [p0], bs = [];
+  let closed = false, arc = false;
+  const curve = (m) => (arc ? tangentBulge(pts[pts.length - 1], plEndDir(pts, bs), m) : 0);
   try {
     for (;;) {
       const last = pts[pts.length - 1];
-      const kws = pts.length >= 3 ? ['Close', 'Undo'] : pts.length >= 2 ? ['Undo'] : [];
-      const r = yield P.point('Specify next point', { keywords: kws, base: last, preview: (m) => [{ type: 'pline', pts: [...pts, m], closed: false }] });
+      const kws = [arc ? 'Line' : 'Arc'];
+      if (pts.length >= 2) kws.push('Close');
+      if (pts.length >= 2) kws.push('Undo');
+      const r = yield P.point(arc ? 'Specify endpoint of arc' : 'Specify next point', { keywords: kws, base: last, rubber: !arc,
+        preview: (m) => [{ type: 'pline', pts: [...pts, m], b: [...bs, curve(m), 0], closed: false }] });
       if (!r) return;
-      if (r.kw === 'Undo') { if (pts.length > 1) pts.pop(); continue; }
-      if (r.kw === 'Close') { closed = true; return; }
-      pts.push(r);
+      if (r.kw === 'Arc') { arc = true; continue; }
+      if (r.kw === 'Line') { arc = false; continue; }
+      if (r.kw === 'Undo') { if (pts.length > 1) { pts.pop(); bs.pop(); } continue; }
+      if (r.kw === 'Close') { bs.push(curve(pts[0])); closed = true; return; }
+      bs.push(curve(r)); pts.push(r);
     }
   } finally {
-    if (pts.length >= 2) c.add({ type: 'pline', pts, closed });
+    if (pts.length >= 2) {
+      const b = closed ? bs : [...bs, 0];
+      c.add({ type: 'pline', pts, b: b.some((x) => x) ? b : undefined, closed });
+    }
+  }
+});
+
+defCmd('SPLINE', ['SPL'], 'Smooth curve through the points you pick', function* (c) {
+  const p0 = yield P.point('Specify first point');
+  if (!p0) return;
+  const fit = [p0];
+  let closed = false;
+  try {
+    for (;;) {
+      const kws = fit.length >= 3 ? ['Close', 'Undo'] : fit.length >= 2 ? ['Undo'] : [];
+      const r = yield P.point('Enter next point', { keywords: kws, base: fit[fit.length - 1], rubber: false, preview: (m) => [{ type: 'spline', fit: [...fit, m], closed: false }] });
+      if (!r) return;
+      if (r.kw === 'Undo') { if (fit.length > 1) fit.pop(); continue; }
+      if (r.kw === 'Close') { closed = true; return; }
+      fit.push(r);
+    }
+  } finally {
+    if (fit.length >= 2) c.add(fit.length === 2 ? { type: 'line', p1: fit[0], p2: fit[1] } : { type: 'spline', fit, closed });
   }
 });
 
@@ -200,6 +244,79 @@ defCmd('ELLIPSE', ['EL'], 'Draw an ellipse', function* (c) {
   c.add(mk(d));
 });
 
+/* Region detection: the smallest face of the planar graph formed by all visible
+ * geometry that contains p (lines, arcs, polylines… need not be closed shapes). */
+function findRegion(c, p) {
+  const segs = [];
+  for (const e of c.app.visibleEntities()) {
+    if (['hatch', 'text', 'mtext', 'dim', 'leader'].includes(e.type)) continue;
+    for (const pr of E.prims(e)) {
+      if (pr.kind === 'seg') { if (pr.len > 1e-12) segs.push([pr.a, pr.b]); continue; }
+      const n = Math.max(8, Math.ceil(pr.sweep / (4 * DEG)));
+      let prev = G.polar(pr.c, pr.a1, pr.r);
+      for (let k = 1; k <= n; k++) { const q = G.polar(pr.c, pr.a1 + (pr.sweep * k) / n, pr.r); segs.push([prev, q]); prev = q; }
+    }
+  }
+  if (!segs.length || segs.length > 60000) return null;
+  let minx = Infinity, miny = Infinity, maxx = -Infinity, maxy = -Infinity;
+  for (const [a, b] of segs) for (const q of [a, b]) { minx = Math.min(minx, q.x); miny = Math.min(miny, q.y); maxx = Math.max(maxx, q.x); maxy = Math.max(maxy, q.y); }
+  const diag = Math.hypot(maxx - minx, maxy - miny) || 1;
+  // spatial grid for intersection tests
+  const cell = Math.max(diag / Math.sqrt(segs.length) * 2, 1e-9), grid = new Map();
+  const ts = segs.map(() => [0, 1]);
+  segs.forEach(([a, b], i) => {
+    const x0 = Math.floor(Math.min(a.x, b.x) / cell), x1 = Math.floor(Math.max(a.x, b.x) / cell), y0 = Math.floor(Math.min(a.y, b.y) / cell), y1 = Math.floor(Math.max(a.y, b.y) / cell);
+    for (let x = x0; x <= x1; x++) for (let y = y0; y <= y1; y++) { const k = x + ',' + y; let l = grid.get(k); if (!l) grid.set(k, (l = [])); l.push(i); }
+  });
+  const tested = new Set();
+  for (const list of grid.values()) for (let u = 0; u < list.length; u++) for (let v = u + 1; v < list.length; v++) {
+    const i = Math.min(list[u], list[v]), j = Math.max(list[u], list[v]), key = i * 1e6 + j;
+    if (tested.has(key)) continue;
+    tested.add(key);
+    const [a, b] = segs[i], [cc, dd] = segs[j];
+    for (const h of G.segSeg(a, b, cc, dd)) { ts[i].push(G.clamp(h.t, 0, 1)); ts[j].push(G.clamp(h.u, 0, 1)); }
+  }
+  const q = diag * 1e-8;
+  const verts = new Map(), pos = [];
+  const vid = (pt) => { const k = Math.round(pt.x / q) + ',' + Math.round(pt.y / q); let id = verts.get(k); if (id === undefined) { id = pos.length; verts.set(k, id); pos.push(pt); } return id; };
+  const adj = new Map(), edges = new Set();
+  const link = (u, v) => { if (u === v) return; const k = u < v ? u + ':' + v : v + ':' + u; if (edges.has(k)) return; edges.add(k); for (const [x, y] of [[u, v], [v, u]]) { let l = adj.get(x); if (!l) adj.set(x, (l = [])); l.push(y); } };
+  segs.forEach(([a, b], i) => {
+    const t = [...new Set(ts[i])].sort((x, y) => x - y);
+    let prev = vid(G.lerp(a, b, t[0]));
+    for (let k = 1; k < t.length; k++) { const cur = vid(G.lerp(a, b, t[k])); link(prev, cur); prev = cur; }
+  });
+  for (const [v, l] of adj) l.sort((x, y) => G.angle(pos[v], pos[x]) - G.angle(pos[v], pos[y]));
+  // first edge hit by a ray from p towards +x
+  let best = null, bx = Infinity;
+  for (const k of edges) {
+    const [u, v] = k.split(':').map(Number), a = pos[u], b = pos[v];
+    if ((a.y > p.y) === (b.y > p.y)) continue;
+    const x = a.x + ((p.y - a.y) * (b.x - a.x)) / (b.y - a.y);
+    if (x > p.x && x < bx) { bx = x; best = [u, v]; }
+  }
+  if (!best) return null;
+  let [u, v] = best;
+  if (G.cross(G.sub(pos[v], pos[u]), G.sub(p, pos[u])) < 0) [u, v] = [v, u];
+  const startU = u, startV = v, loop = [];
+  for (let steps = 0; steps < 200000; steps++) {
+    loop.push(pos[u]);
+    const l = adj.get(v), back = l.indexOf(u);
+    const w = l[(back - 1 + l.length) % l.length]; // next edge clockwise from the one we came in on
+    u = v; v = w;
+    if (u === startU && v === startV) break;
+  }
+  if (loop.length < 3 || G.polyArea(loop) <= 0 || !G.pointInPoly(p, loop)) return null;
+  const loops = [loop];
+  const area = G.polyArea(loop);
+  for (const e of c.app.visibleEntities()) {
+    if (e.type === 'hatch') continue;
+    const l = E.loop(e);
+    if (l && Math.abs(G.polyArea(l)) < area * 0.999 && !G.pointInPoly(p, l) && l.every((pt) => G.pointInPoly(pt, loop))) loops.push(l);
+  }
+  return loops;
+}
+
 function findBoundary(c, p) {
   const cands = [];
   for (const e of c.app.visibleEntities()) {
@@ -235,8 +352,8 @@ defCmd('HATCH', ['H', 'BH', 'BHATCH'], 'Fill a closed area with a hatch pattern'
       const s = yield P.ent('Select closed object', { filter: (e) => !!E.loop(e), filterMsg: 'Object must be a closed polyline, circle, ellipse or cloud.' });
       if (!s) continue;
       loops = [E.loop(s.e)];
-    } else loops = findBoundary(c, r);
-    if (!loops) { c.print('No closed boundary found. Boundaries must be closed polylines, rectangles, polygons, circles or ellipses.'); continue; }
+    } else loops = findRegion(c, r) || findBoundary(c, r);
+    if (!loops) { c.print('No closed boundary found around that point. Make sure the area is fully enclosed (lines must meet or cross).'); continue; }
     c.add({ type: 'hatch', loops, pattern: d.hatchPattern, scale: d.hatchScale, angle: d.hatchAngle });
     const pat = HATCH_PATTERNS[d.hatchPattern];
     if (pat && G.hatchSegments(loops, 0, pat[0].sp * d.hatchScale, 3000) === null) c.print('Note: pattern is very dense at this scale — increase the hatch Scale.');
@@ -553,6 +670,7 @@ function extendEntity(c, e, pick) {
     const pts = e.type === 'line' ? [e.p1, e.p2] : e.pts;
     const L = E.length(e), sp = E.paramAt(e, pick).s;
     const atEnd = sp > L / 2;
+    if (e.type === 'pline' && e.b && Math.abs(e.b[atEnd ? e.pts.length - 2 : 0] || 0) > 1e-9) { c.print('The end segment is an arc; only straight ends can be extended.'); return false; }
     const tip = atEnd ? pts[pts.length - 1] : pts[0], prev = atEnd ? pts[pts.length - 2] : pts[1];
     const dir = G.norm(G.sub(tip, prev));
     let best = Infinity;
@@ -883,3 +1001,289 @@ defCmd('EXPORT', ['EXP', 'DXFOUT', 'SVGOUT', 'PNGOUT'], 'Export to DXF (AutoCAD)
 }, { transparent: true });
 defCmd('PLOT', ['PRINT'], 'Print the drawing (fit to page)', function* (c) { c.app.plot(); }, { transparent: true });
 defCmd('HELP', ['?', 'COMMANDS'], 'Show the command reference (F1)', function* (c) { c.app.showHelp(); }, { transparent: true });
+
+/* ======================= MORE MODIFY (group 1) ======================= */
+const inR = (p, r) => p.x >= r.minx && p.x <= r.maxx && p.y >= r.miny && p.y <= r.maxy;
+const rectOf = (a, b) => ({ minx: Math.min(a.x, b.x), maxx: Math.max(a.x, b.x), miny: Math.min(a.y, b.y), maxy: Math.max(a.y, b.y) });
+
+function stretchEnt(e, d, r, doc) {
+  const mv = (p) => (inR(p, r) ? G.add(p, d) : p);
+  if (E.inRect(e, r, false, doc)) { E.transform(e, XF.move(d)); return; }
+  switch (e.type) {
+    case 'line': e.p1 = mv(e.p1); e.p2 = mv(e.p2); break;
+    case 'pline': case 'leader': case 'revcloud': e.pts = e.pts.map(mv); break;
+    case 'spline': e.fit = e.fit.map(mv); break;
+    case 'hatch': e.loops = e.loops.map((l) => l.map(mv)); break;
+    case 'dim': for (const k of ['p1', 'p2', 'pos']) if (e[k]) e[k] = mv(e[k]); break;
+    case 'arc': {
+      const g = E.grips(e), s0 = inR(g[0], r), s2 = inR(g[2], r);
+      if (s0 || s2) { const k = G.arc3(s0 ? G.add(g[0], d) : g[0], g[1], s2 ? G.add(g[2], d) : g[2]); if (k) Object.assign(e, k); }
+      break;
+    }
+    case 'circle': case 'ellipse': if (inR(e.c, r)) E.transform(e, XF.move(d)); break;
+    default: if (e.p && inR(e.p, r)) E.transform(e, XF.move(d));
+  }
+}
+
+defCmd('STRETCH', ['S'], 'Stretch: move the vertices inside a crossing window', function* (c) {
+  c.print('Select objects to stretch with a crossing window: vertices inside the window move, objects fully inside move entirely.');
+  const a = yield P.point('Specify first corner'); if (!a) return;
+  const b = yield P.point('Specify opposite corner', { base: a, rubber: false, preview: (m) => [{ type: 'pline', pts: rectPts(a, m), closed: true, color: '#5fe07f' }] });
+  if (!b) return;
+  const r = rectOf(a, b);
+  const ids = c.app.selectableEntities().filter((e) => E.inRect(e, r, true, c.doc)).map((e) => e.id);
+  if (!ids.length) { c.print('No objects found.'); return; }
+  c.print(`${ids.length} found`);
+  c.app.sel = new Set(ids); c.usedSel = true;
+  const base = yield P.point('Specify base point'); if (!base) return;
+  const ghostS = (m) => ids.map((id) => { const t = E.clone(c.get(id)); stretchEnt(t, G.sub(m, base), r, c.doc); return t; });
+  const to = yield P.point('Specify second point', { base, preview: ghostS });
+  if (!to) return;
+  ids.forEach((id) => stretchEnt(c.get(id), G.sub(to, base), r, c.doc));
+  c.changed();
+});
+
+function breakEnt(c, e, p1, p2) {
+  const L = E.length(e), eps = Math.max(1e-9, L * 1e-9);
+  const s1 = E.paramAt(e, p1).s, s2 = E.paramAt(e, p2).s;
+  const pieces = [];
+  if (E.isClosed(e)) {
+    if (Math.abs(s1 - s2) < eps) { c.print('A closed object needs two different break points.'); return false; }
+    pieces.push(E.sub(e, s2, s1));
+  } else {
+    const lo = Math.min(s1, s2), hi = Math.max(s1, s2);
+    if (hi - lo < eps) { if (lo > eps && lo < L - eps) pieces.push(E.sub(e, 0, lo), E.sub(e, lo, L)); else { c.print('Break point is at an end of the object.'); return false; } }
+    else { if (lo > eps) pieces.push(E.sub(e, 0, lo)); if (hi < L - eps) pieces.push(E.sub(e, hi, L)); }
+  }
+  c.remove(e.id);
+  pieces.filter(Boolean).forEach((p) => c.add(p));
+  return true;
+}
+defCmd('BREAK', ['BR'], 'Break an object between two points (or at one point with @)', function* (c) {
+  const s = yield P.ent('Select object', { filter: E.isCurve, filterMsg: 'Select a line, arc, circle or polyline.' });
+  if (!s) return;
+  let p1 = s.pt;
+  let p2 = yield P.point('Specify second break point (@ = break at first point)', { keywords: ['First'], base: p1, rubber: false });
+  if (!p2) return;
+  if (p2.kw === 'First') {
+    p1 = yield P.point('Specify first break point'); if (!p1) return;
+    p2 = yield P.point('Specify second break point (@ = same point)', { base: p1, rubber: false }); if (!p2) return;
+  }
+  breakEnt(c, s.e, E.paramAt(s.e, p1).pt, E.paramAt(s.e, p2).pt);
+});
+defCmd('BREAKATPOINT', ['BRP'], 'Split an object into two at a point', function* (c) {
+  const s = yield P.ent('Select object', { filter: (e) => E.isCurve(e) && !E.isClosed(e), filterMsg: 'Select a line, arc or open polyline.' });
+  if (!s) return;
+  const p = yield P.point('Specify break point'); if (!p) return;
+  const q = E.paramAt(s.e, p).pt;
+  breakEnt(c, s.e, q, q);
+});
+
+/* --- path helpers for JOIN / PEDIT --- */
+function pathOf(e) {
+  if (e.type === 'line') return { pts: [e.p1, e.p2], b: [0] };
+  if (e.type === 'arc') { const sw = G.ccwSweep(e.a1, e.a2); return { pts: [G.polar(e.c, e.a1, e.r), G.polar(e.c, e.a2, e.r)], b: [Math.tan(sw / 4)] }; }
+  if (e.type === 'pline' && !e.closed) return { pts: e.pts.slice(), b: e.pts.slice(0, -1).map((_, i) => (e.b && e.b[i]) || 0) };
+  return null;
+}
+const revPath = (p) => ({ pts: p.pts.slice().reverse(), b: p.b.slice().reverse().map((x) => -x) });
+function joinPaths(paths, tol) {
+  const items = paths.slice(), chains = [];
+  while (items.length) {
+    let ch = { pts: items[0].pts.slice(), b: items[0].b.slice(), ids: [items[0].id] };
+    items.shift();
+    for (let changed = true; changed;) {
+      changed = false;
+      for (let i = 0; i < items.length; i++) {
+        const it = items[i], S = ch.pts[0], En = ch.pts[ch.pts.length - 1];
+        const near = (a, b) => G.dist(a, b) <= tol;
+        let add = null, front = false;
+        if (near(En, it.pts[0])) add = it; else if (near(En, it.pts[it.pts.length - 1])) add = revPath(it);
+        else if (near(S, it.pts[it.pts.length - 1])) { add = it; front = true; } else if (near(S, it.pts[0])) { add = revPath(it); front = true; }
+        if (!add) continue;
+        if (front) ch = { pts: [...add.pts.slice(0, -1), ...ch.pts], b: [...add.b, ...ch.b], ids: [...ch.ids, it.id] };
+        else ch = { pts: [...ch.pts, ...add.pts.slice(1)], b: [...ch.b, ...add.b], ids: [...ch.ids, it.id] };
+        items.splice(i, 1); changed = true; break;
+      }
+    }
+    chains.push(ch);
+  }
+  return chains.map((ch) => {
+    let closed = false;
+    if (ch.pts.length > 2 && G.dist(ch.pts[0], ch.pts[ch.pts.length - 1]) <= tol) { ch.pts.pop(); closed = true; }
+    const b = closed ? ch.b : [...ch.b, 0];
+    return { ids: ch.ids, ent: { type: 'pline', pts: ch.pts, b: b.some((x) => Math.abs(x) > 1e-12) ? b : undefined, closed } };
+  });
+}
+const joinTol = (c) => { const x = Render.extents(c.doc); return x ? Math.max(1e-6, Math.hypot(x.maxx - x.minx, x.maxy - x.miny) * 1e-7) : 1e-6; };
+
+defCmd('JOIN', ['J'], 'Join touching lines, arcs and polylines into one polyline', function* (c) {
+  const ids = yield* getSel(c, 'Select objects to join');
+  const paths = ids.map((id) => { const p = pathOf(c.get(id)); return p ? { ...p, id } : null; }).filter(Boolean);
+  if (paths.length < 2) { c.print('Select at least two lines, arcs or open polylines whose ends touch.'); return; }
+  let n = 0;
+  for (const ch of joinPaths(paths, joinTol(c))) {
+    if (ch.ids.length < 2) continue;
+    const src = c.get(ch.ids[0]);
+    let ent = ch.ent;
+    // collinear straight lines become a single line
+    if (!ent.closed && !ent.b && ent.pts.length > 2 && ent.pts.every((p) => Math.abs(G.cross(G.sub(ent.pts[ent.pts.length - 1], ent.pts[0]), G.sub(p, ent.pts[0]))) < 1e-9 * G.dist(ent.pts[0], ent.pts[ent.pts.length - 1]) ** 2))
+      ent = { type: 'line', p1: ent.pts[0], p2: ent.pts[ent.pts.length - 1] };
+    ch.ids.forEach((id) => c.remove(id));
+    c.add({ ...ent, layer: src.layer, color: src.color });
+    n += ch.ids.length;
+  }
+  c.print(n ? `${n} objects joined.` : 'Nothing joined: the ends of the objects do not touch.');
+}, { sel: true });
+
+function cornerSides(l1, pick1, l2, pick2) {
+  const h = G.segSeg(l1.p1, l1.p2, l2.p1, l2.p2, true, true)[0];
+  if (!h) return null;
+  const P0 = { x: h.x, y: h.y };
+  const side = (l, pick) => {
+    const pp = G.lerp(l.p1, l.p2, G.projectT(pick, l.p1, l.p2));
+    let u = G.sub(pp, P0);
+    if (G.len(u) < 1e-9) u = G.sub(G.dist(l.p1, P0) > G.dist(l.p2, P0) ? l.p1 : l.p2, P0);
+    u = G.norm(u);
+    return { u, far: G.dot(G.sub(l.p1, P0), u) >= G.dot(G.sub(l.p2, P0), u) ? l.p1 : l.p2 };
+  };
+  return { P0, s1: side(l1, pick1), s2: side(l2, pick2) };
+}
+
+defCmd('CHAMFER', ['CHA'], 'Bevel the corner between two lines', function* (c) {
+  const d = c.doc;
+  if (d.chamA == null) { d.chamA = 0; d.chamB = 0; }
+  let first;
+  for (;;) {
+    c.print(`Current chamfer: Dist1 = ${fmtNum(d.chamA, 4)}, Dist2 = ${fmtNum(d.chamB, 4)}`);
+    first = yield P.ent('Select first line', { keywords: ['Distance'], filter: (e) => e.type === 'line', filterMsg: 'CHAMFER works on lines (explode polylines first).' });
+    if (!first) return;
+    if (first.kw === 'Distance') {
+      const a = yield P.dist('Specify first chamfer distance', { def: d.chamA }); if (a == null || a < 0) continue;
+      const b = yield P.dist('Specify second chamfer distance', { def: a }); if (b == null || b < 0) continue;
+      d.chamA = a; d.chamB = b; continue;
+    }
+    break;
+  }
+  const second = yield P.ent('Select second line', { filter: (e) => e.type === 'line' && e.id !== first.e.id, filterMsg: 'Select a different line.' });
+  if (!second) return;
+  const k = cornerSides(first.e, first.pt, second.e, second.pt);
+  if (!k) { c.print('Lines are parallel.'); return; }
+  const { P0, s1, s2 } = k;
+  if (d.chamA > G.dist(P0, s1.far) + 1e-9 || d.chamB > G.dist(P0, s2.far) + 1e-9) { c.print('Distance is too large.'); return; }
+  const T1 = G.add(P0, G.mul(s1.u, d.chamA)), T2 = G.add(P0, G.mul(s2.u, d.chamB));
+  first.e.p1 = s1.far; first.e.p2 = T1; second.e.p1 = s2.far; second.e.p2 = T2;
+  if (G.dist(T1, T2) > 1e-9) c.add({ type: 'line', p1: T1, p2: T2, layer: first.e.layer });
+  c.changed();
+});
+
+function lengthenEnt(c, e, pick, deltaFn) {
+  const L = E.length(e), atEnd = E.paramAt(e, pick).s > L / 2;
+  const delta = deltaFn(L);
+  if (!isFinite(delta)) return;
+  if (L + delta <= 1e-9) { c.print('That would make the object zero length.'); return; }
+  if (e.type === 'line') {
+    const u = G.norm(G.sub(e.p2, e.p1));
+    if (atEnd) e.p2 = G.add(e.p2, G.mul(u, delta)); else e.p1 = G.sub(e.p1, G.mul(u, delta));
+  } else if (e.type === 'arc') {
+    const da = delta / e.r;
+    if (G.ccwSweep(e.a1, e.a2) + da >= TAU) { c.print('Arc would close on itself.'); return; }
+    if (atEnd) e.a2 += da; else e.a1 -= da;
+  } else if (e.type === 'pline') {
+    const n = e.pts.length, i = atEnd ? n - 2 : 0;
+    if (e.b && Math.abs(e.b[i] || 0) > 1e-9) { c.print('The end segment is an arc; LENGTHEN works on straight polyline ends.'); return; }
+    const a = atEnd ? e.pts[n - 2] : e.pts[1], b = atEnd ? e.pts[n - 1] : e.pts[0];
+    const u = G.norm(G.sub(b, a));
+    if (atEnd) e.pts[n - 1] = G.add(b, G.mul(u, delta)); else e.pts[0] = G.add(b, G.mul(u, delta));
+  }
+  c.changed();
+}
+defCmd('LENGTHEN', ['LEN'], 'Change the length of lines, arcs and open polylines', function* (c) {
+  const d = c.doc;
+  let mode = d.lenMode || 'DElta';
+  const okE = (e) => ['line', 'arc'].includes(e.type) || (e.type === 'pline' && !e.closed);
+  for (;;) {
+    const r = yield P.ent(`Select an object to measure (current mode: ${mode})`, { keywords: ['DElta', 'Percent', 'Total', 'DYnamic'] });
+    if (!r) return;
+    if (r.kw) {
+      mode = r.kw;
+      if (mode === 'DElta') { const v = yield P.num('Enter delta length (negative shortens)', { def: d.lenDelta || 0 }); if (v == null) continue; d.lenDelta = v; }
+      if (mode === 'Percent') { const v = yield P.num('Enter percentage length', { def: d.lenPct || 100 }); if (!(v > 0)) continue; d.lenPct = v; }
+      if (mode === 'Total') { const v = yield P.dist('Specify total length', { def: d.lenTotal || 1 }); if (!(v > 0)) continue; d.lenTotal = v; }
+      d.lenMode = mode;
+      break;
+    }
+    c.print(`Current length: ${fmtNum(E.length(r.e) || 0, 4)}`);
+  }
+  for (;;) {
+    const s = yield P.ent('Select an object to change near the end to lengthen (Enter to exit)', { filter: okE, filterMsg: 'Select a line, arc or open polyline.' });
+    if (!s) return;
+    if (mode === 'DYnamic') {
+      const L = E.length(s.e), atEnd = E.paramAt(s.e, s.pt).s > L / 2;
+      const endPt = atEnd ? E.pointAt(s.e, L) : E.pointAt(s.e, 0);
+      const before = E.pointAt(s.e, atEnd ? L * 0.999 : L * 0.001);
+      const u = G.norm(G.sub(endPt, before));
+      const p = yield P.point('Specify new end point', { base: endPt, preview: (m) => { const t = E.clone(s.e); lengthenEnt({ print() {}, changed() {} }, t, s.pt, () => G.dot(G.sub(m, endPt), u)); return [t]; } });
+      if (!p) return;
+      lengthenEnt(c, s.e, s.pt, () => G.dot(G.sub(p, endPt), u));
+      continue;
+    }
+    lengthenEnt(c, s.e, s.pt, (L) => (mode === 'DElta' ? d.lenDelta : mode === 'Percent' ? (L * d.lenPct) / 100 - L : d.lenTotal - L));
+  }
+});
+
+defCmd('ALIGN', ['AL'], 'Move + rotate (+ scale) objects so two source points match two destination points', function* (c) {
+  const ids = yield* getSel(c); if (!ids.length) return;
+  const s1 = yield P.point('Specify first source point'); if (!s1) return;
+  const d1 = yield P.point('Specify first destination point', { base: s1 }); if (!d1) return;
+  const s2 = yield P.point('Specify second source point (Enter = just move)');
+  if (!s2) { const xf = XF.move(G.sub(d1, s1)); ids.forEach((id) => E.transform(c.get(id), xf)); c.changed(); return; }
+  const d2 = yield P.point('Specify second destination point', { base: d1 }); if (!d2) return;
+  const k = yield P.kw('Scale objects based on alignment points?', ['Yes', 'No'], { def: 'No' });
+  if (k == null) return;
+  const f = (k.kw || k) === 'Yes' && G.dist(s1, s2) > 1e-12 ? G.dist(d1, d2) / G.dist(s1, s2) : 1;
+  const ang = G.angle(d1, d2) - G.angle(s1, s2);
+  const m = M2.mul([Math.cos(ang) * f, Math.sin(ang) * f, -Math.sin(ang) * f, Math.cos(ang) * f, d1.x, d1.y], [1, 0, 0, 1, -s1.x, -s1.y]);
+  const xf = XF.matrix(m);
+  ids.forEach((id) => E.transform(c.get(id), xf));
+  c.changed();
+}, { sel: true });
+
+defCmd('PEDIT', ['PE'], 'Edit polylines: close/open, join, decurve, reverse; convert lines/arcs', function* (c) {
+  const s = yield P.ent('Select polyline', { filter: (e) => ['pline', 'line', 'arc'].includes(e.type), filterMsg: 'Select a polyline, line or arc.' });
+  if (!s) return;
+  let e = s.e;
+  if (e.type !== 'pline') {
+    const k = yield P.kw('Object selected is not a polyline. Do you want to turn it into one?', ['Yes', 'No'], { def: 'Yes' });
+    if (!k || (k.kw || k) !== 'Yes') return;
+    const p = pathOf(e);
+    c.remove(e.id);
+    e = c.add({ type: 'pline', pts: p.pts, b: p.b.some((x) => x) ? [...p.b, 0] : undefined, closed: false, layer: s.e.layer, color: s.e.color });
+  }
+  const hist = [];
+  for (;;) {
+    c.app.sel = new Set([e.id]);
+    const r = yield P.kw('Enter an option', [e.closed ? 'Open' : 'Close', 'Join', 'Decurve', 'Reverse', 'Undo']);
+    if (r == null) { c.app.sel = new Set(); return; }
+    const k = r.kw || r;
+    if (k === 'Undo') { const h = hist.pop(); if (h) { Object.keys(e).forEach((q) => delete e[q]); Object.assign(e, h); c.changed(); } continue; }
+    hist.push(E.clone(e));
+    if (k === 'Close') { e.closed = true; if (e.b) e.b[e.pts.length - 1] = 0; }
+    if (k === 'Open') e.closed = false;
+    if (k === 'Decurve') delete e.b;
+    if (k === 'Reverse') { const n = e.pts.length; e.pts.reverse(); if (e.b) { const segs = e.closed ? n : n - 1; const old = e.b.slice(0, segs); const nb = old.slice().reverse().map((x) => -x); if (e.closed) { nb.push(nb.shift()); } e.b = [...nb, ...(e.closed ? [] : [0])]; } }
+    if (k === 'Join') {
+      if (e.closed) { c.print('Cannot join to a closed polyline.'); hist.pop(); continue; }
+      c.app.sel = new Set();
+      const ids = yield { type: 'select', msg: 'Select objects to join' };
+      const paths = [{ ...pathOf(e), id: e.id }, ...(ids || []).filter((id) => id !== e.id).map((id) => { const p = pathOf(c.get(id)); return p ? { ...p, id } : null; }).filter(Boolean)];
+      const ch = joinPaths(paths, joinTol(c)).find((q) => q.ids.includes(e.id));
+      if (ch && ch.ids.length > 1) {
+        ch.ids.filter((id) => id !== e.id).forEach((id) => c.remove(id));
+        e.pts = ch.ent.pts; e.b = ch.ent.b; e.closed = ch.ent.closed;
+        c.print(`${ch.ids.length - 1} segments added to polyline.`);
+      } else c.print('Nothing joined: ends do not touch.');
+    }
+    c.changed();
+  }
+});

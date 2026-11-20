@@ -71,6 +71,59 @@ function ellipsePts(e, n = 96) {
   return pts;
 }
 
+/* Polyline segments as primitives (straight or arc, from bulges). */
+function plPrims(e) {
+  const pts = e.pts, n = pts.length, cnt = e.closed ? n : n - 1, out = [];
+  let off = 0;
+  for (let i = 0; i < cnt; i++) {
+    const a = pts[i], b = pts[(i + 1) % n], bu = (e.b && e.b[i]) || 0;
+    const pr = Math.abs(bu) > 1e-9 && G.dist(a, b) > 1e-12 ? G.bulgePrim(a, b, bu, off) : G.seg(a, b, off);
+    pr.i = i; out.push(pr); off += pr.len;
+  }
+  return out;
+}
+const hasBulges = (e) => !!(e.b && e.b.some((x) => Math.abs(x) > 1e-9));
+/* Polyline as a point list (arcs tessellated). */
+function plPoints(e) {
+  if (!hasBulges(e)) return e.pts;
+  const out = [];
+  for (const p of plPrims(e)) {
+    out.push(e.pts[p.i]);
+    if (p.kind === 'arc') {
+      const n = Math.max(2, Math.ceil(p.sweep / (3 * DEG)));
+      for (let k = 1; k < n; k++) out.push(G.polar(p.c, p.a1 + (p.rev ? p.sweep * (1 - k / n) : (p.sweep * k) / n), p.r));
+    }
+  }
+  if (!e.closed) out.push(e.pts[e.pts.length - 1]);
+  return out;
+}
+const primMid = (pr) => (pr.kind === 'seg' ? G.mid(pr.a, pr.b) : G.polar(pr.c, pr.a1 + pr.sweep / 2, pr.r));
+/* Centripetal Catmull-Rom curve through the fit points of a spline. */
+function splinePts(e) {
+  const P = e.fit, n = P.length;
+  if (n < 3) return P.slice();
+  const get = (i) => {
+    if (e.closed) return P[((i % n) + n) % n];
+    if (i < 0) return G.sub(G.mul(P[0], 2), P[1]);
+    if (i > n - 1) return G.sub(G.mul(P[n - 1], 2), P[n - 2]);
+    return P[i];
+  };
+  const out = [], cnt = e.closed ? n : n - 1, steps = 16;
+  const L = (p, q, t0, t1, t) => (t1 - t0 < 1e-12 ? p : G.add(G.mul(p, (t1 - t) / (t1 - t0)), G.mul(q, (t - t0) / (t1 - t0))));
+  for (let i = 0; i < cnt; i++) {
+    const p0 = get(i - 1), p1 = get(i), p2 = get(i + 1), p3 = get(i + 2);
+    const t0 = 0, t1 = t0 + Math.sqrt(G.dist(p0, p1)) + 1e-9, t2 = t1 + Math.sqrt(G.dist(p1, p2)) + 1e-9, t3 = t2 + Math.sqrt(G.dist(p2, p3)) + 1e-9;
+    for (let k = 0; k < steps; k++) {
+      const t = t1 + ((t2 - t1) * k) / steps;
+      const A1 = L(p0, p1, t0, t1, t), A2 = L(p1, p2, t1, t2, t), A3 = L(p2, p3, t2, t3, t);
+      const B1 = L(A1, A2, t0, t2, t), B2 = L(A2, A3, t1, t3, t);
+      out.push(L(B1, B2, t1, t2, t));
+    }
+  }
+  if (!e.closed) out.push(P[n - 1]);
+  return out;
+}
+
 function revcloudPts(pts, arcLen) {
   const out = [];
   if (pts.length < 3 || !(arcLen > 0)) return pts.slice();
@@ -179,7 +232,8 @@ E.ops = (e, doc) => {
   const dec = doc ? doc.dimDec : 2;
   switch (e.type) {
     case 'line': return [{ op: 'poly', pts: [e.p1, e.p2] }];
-    case 'pline': return [{ op: 'poly', pts: e.pts, closed: !!e.closed }];
+    case 'pline': return [{ op: 'poly', pts: plPoints(e), closed: !!e.closed }];
+    case 'spline': return [{ op: 'poly', pts: splinePts(e), closed: !!e.closed }];
     case 'circle': return [{ op: 'circle', c: e.c, r: e.r }];
     case 'arc': return [{ op: 'arc', c: e.c, r: e.r, a1: e.a1, a2: e.a2 }];
     case 'ellipse': return [{ op: 'ellipse', c: e.c, rx: G.len(e.maj), ry: G.len(e.maj) * e.ratio, rot: Math.atan2(e.maj.y, e.maj.x) }];
@@ -223,15 +277,16 @@ function segsOf(pts, closed) {
 /* Outline items used for picking, bounding boxes and crossing selection. */
 E.outline = (e, doc) => {
   const out = [];
+  const addAll = (arr) => { for (const x of arr) out.push(x); };
   for (const op of E.ops(e, doc)) {
     switch (op.op) {
-      case 'poly': out.push(...segsOf(op.pts, op.closed)); break;
-      case 'fill': out.push(...segsOf(op.pts, true)); break;
+      case 'poly': addAll(segsOf(op.pts, op.closed)); break;
+      case 'fill': addAll(segsOf(op.pts, true)); break;
       case 'circle': out.push(G.arcPrim(op.c, op.r, 0, TAU)); break;
       case 'arc': out.push(G.arcPrim(op.c, op.r, op.a1, G.ccwSweep(op.a1, op.a2))); break;
-      case 'ellipse': out.push(...segsOf(ellipsePts(e), true)); break;
-      case 'text': { const b = E.textBox(op); out.push({ kind: 'box', pts: b }, ...segsOf(b, true)); break; }
-      case 'hatch': out.push({ kind: 'region', loops: op.loops }); for (const l of op.loops) out.push(...segsOf(l, true)); break;
+      case 'ellipse': addAll(segsOf(ellipsePts(e), true)); break;
+      case 'text': { const b = E.textBox(op); out.push({ kind: 'box', pts: b }); addAll(segsOf(b, true)); break; }
+      case 'hatch': out.push({ kind: 'region', loops: op.loops }); for (const l of op.loops) addAll(segsOf(l, true)); break;
     }
   }
   return out;
@@ -241,7 +296,8 @@ E.outline = (e, doc) => {
 E.prims = (e) => {
   switch (e.type) {
     case 'line': return [G.seg(e.p1, e.p2, 0)];
-    case 'pline': return segsOf(e.pts, e.closed);
+    case 'pline': return plPrims(e);
+    case 'spline': return segsOf(splinePts(e), e.closed);
     case 'circle': return [G.arcPrim(e.c, e.r, 0, TAU)];
     case 'arc': return [G.arcPrim(e.c, e.r, e.a1, G.ccwSweep(e.a1, e.a2))];
     case 'ellipse': return segsOf(ellipsePts(e), true);
@@ -298,7 +354,8 @@ E.snaps = (e, doc) => {
   const add = (type, pt) => s.push({ type, pt });
   switch (e.type) {
     case 'line': add('end', e.p1); add('end', e.p2); add('mid', G.mid(e.p1, e.p2)); break;
-    case 'pline': e.pts.forEach((p) => add('end', p)); for (const sg of E.prims(e)) add('mid', G.mid(sg.a, sg.b)); break;
+    case 'pline': e.pts.forEach((p) => add('end', p)); for (const pr of plPrims(e)) { add('mid', primMid(pr)); if (pr.kind === 'arc') add('cen', pr.c); } break;
+    case 'spline': if (e.fit.length) { add('end', e.fit[0]); add('end', e.fit[e.fit.length - 1]); } e.fit.forEach((p) => add('node', p)); break;
     case 'circle': add('cen', e.c); for (let k = 0; k < 4; k++) add('quad', G.polar(e.c, k * Math.PI / 2, e.r)); break;
     case 'arc': {
       const sw = G.ccwSweep(e.a1, e.a2);
@@ -321,7 +378,9 @@ E.snaps = (e, doc) => {
 E.grips = (e) => {
   switch (e.type) {
     case 'line': return [e.p1, G.mid(e.p1, e.p2), e.p2];
-    case 'pline': case 'leader': case 'revcloud': return e.pts.slice();
+    case 'pline': return [...e.pts, ...plPrims(e).map(primMid)];
+    case 'spline': return e.fit.slice();
+    case 'leader': case 'revcloud': return e.pts.slice();
     case 'circle': return [e.c, ...[0, 1, 2, 3].map((k) => G.polar(e.c, k * Math.PI / 2, e.r))];
     case 'arc': { const sw = G.ccwSweep(e.a1, e.a2); return [G.polar(e.c, e.a1, e.r), G.polar(e.c, e.a1 + sw / 2, e.r), G.polar(e.c, e.a2, e.r), e.c]; }
     case 'ellipse': { const mn = G.mul(G.perp(e.maj), e.ratio); return [e.c, G.add(e.c, e.maj), G.sub(e.c, e.maj), G.add(e.c, mn), G.sub(e.c, mn)]; }
@@ -337,7 +396,21 @@ E.setGrip = (e, i, p) => {
       if (i === 0) e.p1 = p; else if (i === 2) e.p2 = p;
       else { const d = G.sub(p, G.mid(e.p1, e.p2)); e.p1 = G.add(e.p1, d); e.p2 = G.add(e.p2, d); }
       break;
-    case 'pline': case 'leader': case 'revcloud': e.pts[i] = p; break;
+    case 'pline': {
+      const n = e.pts.length;
+      if (i < n) { e.pts[i] = p; break; }
+      const j = i - n, a = e.pts[j], b = e.pts[(j + 1) % n], bu = (e.b && e.b[j]) || 0;
+      if (Math.abs(bu) > 1e-9) { // arc segment: make it pass through the dragged point
+        if (!e.b) e.b = e.pts.map(() => 0);
+        e.b[j] = G.bulge3(a, p, b);
+      } else { // straight segment: move it parallel
+        const d = G.sub(p, G.mid(a, b));
+        e.pts[j] = G.add(a, d); e.pts[(j + 1) % n] = G.add(b, d);
+      }
+      break;
+    }
+    case 'spline': e.fit[i] = p; break;
+    case 'leader': case 'revcloud': e.pts[i] = p; break;
     case 'circle': if (i === 0) e.c = p; else e.r = Math.max(1e-9, G.dist(e.c, p)); break;
     case 'arc': {
       const g = E.grips(e);
@@ -375,7 +448,8 @@ E.transform = (e, xf) => {
   const angOf = (a) => { const v = xf.v({ x: Math.cos(a), y: Math.sin(a) }); return Math.atan2(v.y, v.x); };
   switch (e.type) {
     case 'line': e.p1 = P(e.p1); e.p2 = P(e.p2); break;
-    case 'pline': case 'revcloud': e.pts = e.pts.map(P); if (e.type === 'revcloud') e.arc *= s; break;
+    case 'pline': case 'revcloud': e.pts = e.pts.map(P); if (e.type === 'revcloud') e.arc *= s; if (e.b && xf.mirror) e.b = e.b.map((x) => -x); break;
+    case 'spline': e.fit = e.fit.map(P); break;
     case 'leader': e.pts = e.pts.map(P); e.h *= s; break;
     case 'circle': e.c = P(e.c); e.r *= s; break;
     case 'arc': {
@@ -425,13 +499,19 @@ E.sub = (e, s0, s1) => {
   if (e.type === 'arc') return { ...base, type: 'arc', c: { ...e.c }, r: e.r, a1: e.a1 + s0 / e.r, a2: e.a1 + s1 / e.r };
   if (e.type === 'circle') return { ...base, type: 'arc', c: { ...e.c }, r: e.r, a1: s0 / e.r, a2: s1 / e.r };
   if (e.type === 'pline') {
-    const prims = E.prims(e), L = prims.reduce((a, p) => a + p.len, 0);
+    const prims = E.prims(e), L = prims.reduce((acc, p) => acc + p.len, 0);
     if (e.closed && s1 <= s0) s1 += L;
-    const pts = [E.pointAt(e, s0)];
+    const pts = [], b = [];
     const loops = e.closed ? 2 : 1;
-    for (let k = 0; k < loops; k++) for (const pr of prims) { const v = k * L + pr.off + pr.len; if (v > s0 + 1e-9 && v < s1 - 1e-9) pts.push({ ...pr.b }); }
-    pts.push(E.pointAt(e, s1));
-    return { ...base, type: 'pline', pts, closed: false };
+    for (let k = 0; k < loops; k++) for (const pr of prims) {
+      const st = k * L + pr.off, en = st + pr.len, lo = Math.max(s0, st), hi = Math.min(s1, en);
+      if (hi - lo <= 1e-9) continue;
+      const pa = G.primPointAt(pr, lo - k * L);
+      if (!pts.length || !G.same(pts[pts.length - 1], pa, 1e-9)) { pts.push(pa); b.push(0); }
+      b[b.length - 1] = pr.kind === 'arc' ? (pr.rev ? -1 : 1) * Math.tan((hi - lo) / pr.r / 4) : 0;
+      pts.push(G.primPointAt(pr, hi - k * L)); b.push(0);
+    }
+    return { ...base, type: 'pline', pts, b, closed: false };
   }
   return null;
 };
@@ -452,17 +532,38 @@ E.offset = (e, d, side) => {
     out.r = r; return out;
   }
   if (e.type === 'pline') {
-    const segs = E.prims(e);
-    if (!segs.length) return null;
-    let near = segs[0], nd = Infinity;
-    for (const s of segs) { const dd = G.distToSeg(side, s.a, s.b); if (dd < nd) { nd = dd; near = s; } }
-    const sg = G.cross(G.sub(near.b, near.a), G.sub(side, near.a)) >= 0 ? 1 : -1;
-    const off = segs.map((s) => { const n = G.mul(G.perp(G.norm(G.sub(s.b, s.a))), d * sg); return [G.add(s.a, n), G.add(s.b, n)]; });
-    const join = (A, B) => { const h = G.segSeg(A[0], A[1], B[0], B[1], true, true); return h.length ? { x: h[0].x, y: h[0].y } : A[1]; };
-    const pts = [];
-    if (e.closed) for (let i = 0; i < off.length; i++) pts.push(join(off[(i - 1 + off.length) % off.length], off[i]));
-    else { pts.push(off[0][0]); for (let i = 1; i < off.length; i++) pts.push(join(off[i - 1], off[i])); pts.push(off[off.length - 1][1]); }
-    out.pts = pts; return out;
+    const prims = E.prims(e), n = e.pts.length;
+    if (!prims.length) return null;
+    let near = prims[0], nd = Infinity;
+    for (const pr of prims) { const dd = G.primDist(pr, side); if (dd < nd) { nd = dd; near = pr; } }
+    const cp = G.primClosest(near, side).pt;
+    let tan;
+    if (near.kind === 'seg') tan = G.sub(near.b, near.a);
+    else { tan = G.perp(G.sub(cp, near.c)); if (near.rev) tan = G.mul(tan, -1); }
+    const sg = G.cross(tan, G.sub(side, cp)) >= 0 ? 1 : -1; // +1 = left of travel
+    const P = [];
+    for (const pr of prims) {
+      const a = e.pts[pr.i], b = e.pts[(pr.i + 1) % n], bu = (e.b && e.b[pr.i]) || 0;
+      if (pr.kind === 'seg') { const nn = G.mul(G.perp(G.norm(G.sub(b, a))), d * sg); P.push({ a: G.add(a, nn), b: G.add(b, nn), bu: 0 }); continue; }
+      const rr = bu > 0 ? pr.r - d * sg : pr.r + d * sg;
+      if (rr <= 1e-9) return null;
+      const f = rr / pr.r;
+      P.push({ a: G.add(pr.c, G.mul(G.sub(a, pr.c), f)), b: G.add(pr.c, G.mul(G.sub(b, pr.c), f)), bu });
+    }
+    const m = P.length, joins = e.closed ? m : m - 1;
+    for (let i = 0; i < joins; i++) {
+      const A = P[i], B = P[(i + 1) % m];
+      if (A.bu === 0 && B.bu === 0) { const h = G.segSeg(A.a, A.b, B.a, B.b, true, true)[0]; if (h) { A.b = { x: h.x, y: h.y }; B.a = { x: h.x, y: h.y }; } }
+    }
+    const segs = [];
+    P.forEach((p, i) => {
+      segs.push(p);
+      const nx = i + 1 < m ? P[i + 1] : e.closed ? P[0] : null;
+      if (nx && !G.same(p.b, nx.a, 1e-9)) segs.push({ a: p.b, b: nx.a, bu: 0 });
+    });
+    out.pts = segs.map((q) => q.a); out.b = segs.map((q) => q.bu);
+    if (!e.closed) { out.pts.push(segs[segs.length - 1].b); out.b.push(0); }
+    return out;
   }
   if (e.type === 'ellipse') {
     // approximate: offset along normal by tessellation into a closed polyline
@@ -477,10 +578,12 @@ E.offset = (e, d, side) => {
 /* Closed boundary polygon for hatch / area. */
 E.loop = (e) => {
   if (e.type === 'pline') {
-    if (e.closed && e.pts.length > 2) return e.pts.slice();
-    if (e.pts.length > 3 && G.same(e.pts[0], e.pts[e.pts.length - 1], 1e-6)) return e.pts.slice(0, -1);
+    const pts = plPoints(e);
+    if (e.closed && pts.length > 2) return pts.slice();
+    if (pts.length > 3 && G.same(pts[0], pts[pts.length - 1], 1e-6)) return pts.slice(0, -1);
     return null;
   }
+  if (e.type === 'spline') { const pts = splinePts(e); return e.closed && pts.length > 2 ? pts : null; }
   if (e.type === 'circle') { const n = 128, out = []; for (let i = 0; i < n; i++) out.push(G.polar(e.c, (i / n) * TAU, e.r)); return out; }
   if (e.type === 'ellipse') return ellipsePts(e, 128);
   if (e.type === 'revcloud') return revcloudPts(e.pts, e.arc);
@@ -496,7 +599,8 @@ E.area = (e) => {
 /* Explode compound entities into simple ones. */
 E.explode = (e, doc) => {
   const base = { layer: e.layer, color: e.color };
-  if (e.type === 'pline') return E.prims(e).map((s) => ({ ...base, type: 'line', p1: { ...s.a }, p2: { ...s.b } }));
+  if (e.type === 'pline') return E.prims(e).map((s) => (s.kind === 'seg' ? { ...base, type: 'line', p1: { ...s.a }, p2: { ...s.b } } : { ...base, type: 'arc', c: { ...s.c }, r: s.r, a1: s.a1, a2: s.a1 + s.sweep }));
+  if (e.type === 'spline') return [{ ...base, type: 'pline', pts: splinePts(e), closed: !!e.closed }];
   if (e.type === 'mtext') return E.ops(e, doc).map((op) => ({ ...base, type: 'text', p: op.p, h: op.h, rot: op.rot, text: op.str, align: 'left' }));
   if (['dim', 'leader', 'revcloud'].includes(e.type)) {
     const out = [];
@@ -512,7 +616,7 @@ E.explode = (e, doc) => {
   return null;
 };
 
-E.label = (t) => ({ line: 'Line', pline: 'Polyline', circle: 'Circle', arc: 'Arc', ellipse: 'Ellipse', text: 'Text', mtext: 'MText', leader: 'Leader', dim: 'Dimension', revcloud: 'Revision cloud', hatch: 'Hatch' }[t] || t);
+E.label = (t) => ({ line: 'Line', pline: 'Polyline', spline: 'Spline', circle: 'Circle', arc: 'Arc', ellipse: 'Ellipse', text: 'Text', mtext: 'MText', leader: 'Leader', dim: 'Dimension', revcloud: 'Revision cloud', hatch: 'Hatch' }[t] || t);
 
 E.describe = (e, doc) => {
   const f = (v) => fmtNum(v, 4), P = (p) => `X=${f(p.x)}  Y=${f(p.y)}`;

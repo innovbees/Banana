@@ -48,6 +48,30 @@ G.arcTheta = (pr, p) => {
 };
 G.onArc = (pr, theta, eps = 1e-9) => pr.sweep >= TAU - 1e-9 || theta <= pr.sweep + eps || theta >= TAU - eps;
 
+/* Param along a parent curve for angle th (from a1) on an arc prim; rev = traversed clockwise. */
+G.arcS = (pr, th) => (pr.rev ? pr.off + pr.len - th * pr.r : pr.off + th * pr.r);
+/* Arc primitive for a polyline segment p1->p2 with bulge b (tan(sweep/4), + = counter-clockwise). */
+G.bulgeGeom = (p1, p2, b) => {
+  const th = 4 * Math.atan(b), d = G.dist(p1, p2);
+  const r = (d * (1 + b * b)) / (4 * Math.abs(b));
+  const u = G.norm(G.sub(p2, p1));
+  const c = G.add(G.mid(p1, p2), G.mul(G.perp(u), (d * (1 - b * b)) / (4 * b)));
+  return { c, r, th };
+};
+G.bulgePrim = (p1, p2, b, off = 0) => {
+  const { c, r, th } = G.bulgeGeom(p1, p2, b);
+  if (th > 0) return { kind: 'arc', c, r, a1: G.angle(c, p1), sweep: th, off, len: r * th };
+  return { kind: 'arc', c, r, a1: G.angle(c, p2), sweep: -th, off, len: -r * th, rev: true };
+};
+/* Bulge of the arc from p1 through pm to p2 (0 if collinear). */
+G.bulge3 = (p1, pm, p2) => {
+  const k = G.arc3(p1, pm, p2);
+  if (!k || !isFinite(k.r)) return 0;
+  const ccw = G.cross(G.sub(pm, p1), G.sub(p2, pm)) > 0;
+  const sw = ccw ? G.ccwSweep(G.angle(k.c, p1), G.angle(k.c, p2)) : G.ccwSweep(G.angle(k.c, p2), G.angle(k.c, p1));
+  return (ccw ? 1 : -1) * Math.tan(sw / 4);
+};
+
 G.primClosest = (pr, p) => {
   if (pr.kind === 'seg') {
     const t = G.clamp(G.projectT(p, pr.a, pr.b), 0, 1);
@@ -59,13 +83,13 @@ G.primClosest = (pr, p) => {
     const e1 = G.polar(pr.c, pr.a1, pr.r), e2 = G.polar(pr.c, pr.a1 + pr.sweep, pr.r);
     th = G.dist(p, e1) < G.dist(p, e2) ? 0 : pr.sweep;
   } else if (th > pr.sweep) th = 0;
-  return { pt: G.polar(pr.c, pr.a1 + th, pr.r), s: pr.off + th * pr.r };
+  return { pt: G.polar(pr.c, pr.a1 + th, pr.r), s: G.arcS(pr, th) };
 };
 G.primDist = (pr, p) => G.dist(p, G.primClosest(pr, p).pt);
 G.primPointAt = (pr, s) => {
   const l = s - pr.off;
   if (pr.kind === 'seg') return G.lerp(pr.a, pr.b, pr.len ? l / pr.len : 0);
-  return G.polar(pr.c, pr.a1 + l / pr.r, pr.r);
+  return G.polar(pr.c, pr.a1 + (pr.rev ? pr.len - l : l) / pr.r, pr.r);
 };
 
 /* ---------- raw intersections ---------- */
@@ -120,7 +144,7 @@ G.primIntersect = (p, q) => {
       if (h.t < -1e-9 || h.t > 1 + 1e-9) continue;
       const th = G.arcTheta(q, h);
       if (!G.onArc(q, th)) continue;
-      out.push({ x: h.x, y: h.y, sp: p.off + G.clamp(h.t, 0, 1) * p.len, sq: q.off + (th > q.sweep ? 0 : th) * q.r });
+      out.push({ x: h.x, y: h.y, sp: p.off + G.clamp(h.t, 0, 1) * p.len, sq: G.arcS(q, th > q.sweep ? 0 : th) });
     }
   } else if (p.kind === 'arc' && q.kind === 'seg') {
     for (const h of G.primIntersect(q, p)) out.push({ x: h.x, y: h.y, sp: h.sq, sq: h.sp });
@@ -128,7 +152,7 @@ G.primIntersect = (p, q) => {
     for (const h of G.circleCircle(p.c, p.r, q.c, q.r)) {
       const t1 = G.arcTheta(p, h), t2 = G.arcTheta(q, h);
       if (!G.onArc(p, t1) || !G.onArc(q, t2)) continue;
-      out.push({ x: h.x, y: h.y, sp: p.off + (t1 > p.sweep ? 0 : t1) * p.r, sq: q.off + (t2 > q.sweep ? 0 : t2) * q.r });
+      out.push({ x: h.x, y: h.y, sp: G.arcS(p, t1 > p.sweep ? 0 : t1), sq: G.arcS(q, t2 > q.sweep ? 0 : t2) });
     }
   }
   return out;
@@ -213,4 +237,19 @@ const XF = {
     const refl = (q) => { const d = G.dot(q, u); return { x: 2 * d * u.x - q.x, y: 2 * d * u.y - q.y }; };
     return { p: (q) => G.add(a, refl(G.sub(q, a))), v: refl, s: 1, rot: 2 * Math.atan2(u.y, u.x), mirror: true };
   },
+  /* General affine [a,b,c,d,e,f]: (x,y) -> (a x + c y + e, b x + d y + f). */
+  matrix: (m) => {
+    const det = m[0] * m[3] - m[1] * m[2];
+    return { p: (q) => ({ x: m[0] * q.x + m[2] * q.y + m[4], y: m[1] * q.x + m[3] * q.y + m[5] }), v: (q) => ({ x: m[0] * q.x + m[2] * q.y, y: m[1] * q.x + m[3] * q.y }),
+      s: Math.sqrt(Math.abs(det)), rot: Math.atan2(m[1], m[0]), mirror: det < 0, m };
+  },
+};
+const M2 = {
+  mul: (A, B) => [A[0] * B[0] + A[2] * B[1], A[1] * B[0] + A[3] * B[1], A[0] * B[2] + A[2] * B[3], A[1] * B[2] + A[3] * B[3], A[0] * B[4] + A[2] * B[5] + A[4], A[1] * B[4] + A[3] * B[5] + A[5]],
+  inv: (m) => { const d = m[0] * m[3] - m[1] * m[2]; return [m[3] / d, -m[1] / d, -m[2] / d, m[0] / d, (m[2] * m[5] - m[3] * m[4]) / d, (m[1] * m[4] - m[0] * m[5]) / d]; },
+  insert: (p, sx, sy, rot, base = { x: 0, y: 0 }) => {
+    const c = Math.cos(rot), s = Math.sin(rot);
+    return M2.mul([c, s, -s, c, p.x, p.y], [sx, 0, 0, sy, -base.x * sx, -base.y * sy]);
+  },
+  ID: [1, 0, 0, 1, 0, 0],
 };

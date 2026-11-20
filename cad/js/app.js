@@ -3,7 +3,7 @@
 const AUTOSAVE_KEY = 'bananacad.autosave.v1';
 const OSNAP_MODES = [
   ['end', 'Endpoint'], ['mid', 'Midpoint'], ['cen', 'Center'], ['quad', 'Quadrant'],
-  ['int', 'Intersection'], ['perp', 'Perpendicular'], ['ins', 'Insertion'], ['nea', 'Nearest'],
+  ['int', 'Intersection'], ['perp', 'Perpendicular'], ['ins', 'Insertion'], ['node', 'Node'], ['nea', 'Nearest'],
 ];
 
 function newDoc() {
@@ -24,8 +24,9 @@ function newDoc() {
 const App = {
   doc: newDoc(),
   view: { cx: 210, cy: 148, scale: 3 },
-  settings: { grid: true, snap: false, ortho: false, osnap: true, dyn: true, gridSize: 10, snapSize: 5, leaderMulti: false,
-    osmodes: { end: true, mid: true, cen: true, quad: true, int: true, perp: true, ins: true, nea: false } },
+  settings: { grid: true, snap: false, ortho: false, osnap: true, dyn: true, polar: true, otrack: true, polarInc: 45, gridSize: 10, snapSize: 5, leaderMulti: false,
+    osmodes: { end: true, mid: true, cen: true, quad: true, int: true, perp: true, ins: true, node: true, nea: false } },
+  tracked: [],
   sel: new Set(),
   undoStack: [], redoStack: [],
   cmd: null, lastCmd: null, lastPoint: null,
@@ -159,7 +160,7 @@ const App = {
     if (!cmd) return;
     this.cmd = null;
     this.closeEditor();
-    this.hidden = null; this.win = null;
+    this.hidden = null; this.win = null; this.tracked = [];
     if (cmd.snap && cmd.snap !== this.serialize()) {
       this.undoStack.push(cmd.snap); this.redoStack = [];
       if (this.undoStack.length > 200) this.undoStack.shift();
@@ -386,6 +387,44 @@ const App = {
     if (!best && m.nea) for (const c of curves) for (const pr of c.prims) consider('nea', G.primClosest(pr, p).pt);
     return best;
   },
+  /* Object snap tracking: hovering on a snap point for a moment acquires it (again = release). */
+  acquire(snap) {
+    if (!this.settings.otrack || !snap || snap.type === 'nea') { this._acq = null; return; }
+    const now = Date.now();
+    if (this._acq && G.same(this._acq.pt, snap.pt, 1e-9)) {
+      if (!this._acq.done && now - this._acq.t > 400) {
+        this._acq.done = true;
+        const i = this.tracked.findIndex((q) => G.same(q, snap.pt, 1e-9));
+        if (i >= 0) this.tracked.splice(i, 1); else { this.tracked.push({ ...snap.pt }); if (this.tracked.length > 7) this.tracked.shift(); }
+      }
+    } else {
+      this._acq = { pt: { ...snap.pt }, t: now, done: false };
+      clearTimeout(this._acqT);
+      this._acqT = setTimeout(() => { this.updateMouse(); this.requestRedraw(); }, 450);
+    }
+  },
+  /* Polar tracking from the base point and alignment lines through acquired points. */
+  trackPoint(p, base) {
+    const st = this.settings, tol = 10 / this.view.scale, lines = [];
+    if (st.polar && base && G.dist(p, base) > 6 / this.view.scale) {
+      const inc = (st.polarInc || 45) * DEG, k = Math.round(Math.atan2(p.y - base.y, p.x - base.x) / inc) * inc;
+      lines.push({ o: base, u: { x: Math.cos(k), y: Math.sin(k) }, ray: true, label: 'Polar', ang: k });
+    }
+    if (st.otrack) for (const a of this.tracked) { lines.push({ o: a, u: { x: 1, y: 0 }, label: 'Track' }); lines.push({ o: a, u: { x: 0, y: 1 }, label: 'Track' }); }
+    const near = lines.map((l) => { const d = G.sub(p, l.o); return { ...l, t: G.dot(d, l.u), perp: Math.abs(G.cross(l.u, d)) }; })
+      .filter((l) => l.perp <= tol && (!l.ray || l.t > 0));
+    if (!near.length) return null;
+    let bestI = null;
+    for (let i = 0; i < near.length; i++) for (let j = i + 1; j < near.length; j++) {
+      const a = near[i], b = near[j];
+      if (Math.abs(G.cross(a.u, b.u)) < 1e-9) continue;
+      const h = G.segSeg(a.o, G.add(a.o, a.u), b.o, G.add(b.o, b.u), true, true)[0];
+      if (h && G.dist(h, p) <= tol * 1.5 && (!bestI || G.dist(h, p) < bestI.d)) bestI = { pt: { x: h.x, y: h.y }, lines: [a, b], label: 'Intersection', d: G.dist(h, p) };
+    }
+    if (bestI) return bestI;
+    const l = near.sort((a, b) => a.perp - b.perp)[0];
+    return { pt: G.add(l.o, G.mul(l.u, l.t)), lines: [l], label: l.label };
+  },
   wantsPoint(pr) { return pr && ['point', 'distance', 'angle'].includes(pr.type) && !pr.pickbox; },
   updateMouse() {
     const ms = this.mouse;
@@ -395,12 +434,15 @@ const App = {
     if (this.wantsPoint(pr)) {
       const base = pr.base || pr._first;
       if (this.settings.osnap && ms.over) ms.snap = this.findOsnap(ms.sx, ms.sy, base);
+      this.acquire(ms.snap);
+      ms.track = null;
       if (ms.snap) p = ms.snap.pt;
       else {
         if (this.settings.snap) { const g = this.settings.snapSize; p = { x: Math.round(p.x / g) * g, y: Math.round(p.y / g) * g }; }
         if (base && (this.settings.ortho !== ms.shift)) p = Math.abs(p.x - base.x) >= Math.abs(p.y - base.y) ? { x: p.x, y: base.y } : { x: base.x, y: p.y };
+        else if (ms.over) { const t = this.trackPoint(ms.world, base); if (t) { p = t.pt; ms.track = t; } }
       }
-    }
+    } else ms.track = null;
     ms.pt = p;
     this.hover = null;
     if (ms.over && !this.drag && (!this.cmd || (pr && (pr.type === 'select' || pr.type === 'entity')))) {
@@ -586,7 +628,7 @@ const App = {
     const other = tgt !== inp && (tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT' || (tgt && tgt.isContentEditable));
     if (other) { if (ev.key === 'Escape') tgt.blur(); return; }
     if (ev.key === 'Shift') { this.mouse.shift = true; this.updateMouse(); this.requestRedraw(); return; }
-    const fkeys = { F1: () => this.showHelp(), F2: () => this.expandHistory(), F3: () => this.toggle('osnap'), F7: () => this.toggle('grid'), F8: () => this.toggle('ortho'), F9: () => this.toggle('snap'), F12: () => this.toggle('dyn') };
+    const fkeys = { F1: () => this.showHelp(), F2: () => this.expandHistory(), F3: () => this.toggle('osnap'), F7: () => this.toggle('grid'), F8: () => this.toggle('ortho'), F9: () => this.toggle('snap'), F10: () => this.toggle('polar'), F11: () => this.toggle('otrack'), F12: () => this.toggle('dyn') };
     if (fkeys[ev.key]) { ev.preventDefault(); fkeys[ev.key](); return; }
     if (this.el.help.classList.contains('open')) { if (ev.key === 'Escape') this.el.help.classList.remove('open'); return; }
     if (ev.ctrlKey || ev.metaKey) {
@@ -724,7 +766,10 @@ const App = {
   /* ===================== toggles & panels ===================== */
   toggle(k) {
     this.settings[k] = !this.settings[k];
-    const names = { grid: 'Grid', snap: 'Snap', ortho: 'Ortho', osnap: 'Osnap', dyn: 'Dynamic input' };
+    if (k === 'ortho' && this.settings.ortho) this.settings.polar = false;
+    if (k === 'polar' && this.settings.polar) this.settings.ortho = false;
+    if (k === 'otrack' && !this.settings.otrack) this.tracked = [];
+    const names = { grid: 'Grid', snap: 'Snap', ortho: 'Ortho', osnap: 'Osnap', dyn: 'Dynamic input', polar: 'Polar tracking', otrack: 'Object snap tracking', lwt: 'Lineweight display' };
     this.print(`<${names[k]} ${this.settings[k] ? 'on' : 'off'}>`);
     this.refreshUI(); this.updateMouse(); this.requestRedraw(); this.autosave();
   },
@@ -977,6 +1022,11 @@ const App = {
       i.onchange = () => { const v = parseFloat(i.value); if (!isNaN(v) && v >= 0) { set(v); this.requestRedraw(); this.autosave(); } };
       tbl.append(l, i);
     };
+    { const l = document.createElement('label'); l.textContent = 'Polar angle step';
+      const sl = document.createElement('select');
+      [90, 45, 30, 22.5, 15, 10, 5].forEach((v) => { const o = document.createElement('option'); o.value = v; o.textContent = v + '°'; sl.appendChild(o); });
+      sl.value = s.polarInc; sl.onchange = () => { s.polarInc = +sl.value; this.autosave(); };
+      tbl.append(l, sl); }
     num('Grid spacing', () => s.gridSize, (v) => v > 0 && (s.gridSize = v));
     num('Snap spacing', () => s.snapSize, (v) => v > 0 && (s.snapSize = v));
     num('Text height', () => d.textSize, (v) => v > 0 && (d.textSize = v));
@@ -1021,9 +1071,9 @@ const App = {
     const body = document.getElementById('helpbody');
     if (!body.dataset.built) {
       const groups = [
-        ['Draw', ['LINE', 'PLINE', 'RECTANG', 'CIRCLE', 'ARC', 'POLYGON', 'ELLIPSE', 'HATCH', 'REVCLOUD']],
+        ['Draw', ['LINE', 'PLINE', 'RECTANG', 'CIRCLE', 'ARC', 'POLYGON', 'ELLIPSE', 'SPLINE', 'HATCH', 'REVCLOUD']],
         ['Annotate / comments', ['TEXT', 'MTEXT', 'MLEADER', 'TEXTEDIT', 'DIMLINEAR', 'DIMALIGNED', 'DIMRADIUS', 'DIMDIAMETER']],
-        ['Modify', ['ERASE', 'MOVE', 'COPY', 'ROTATE', 'SCALE', 'MIRROR', 'OFFSET', 'TRIM', 'EXTEND', 'FILLET', 'ARRAY', 'EXPLODE', 'MATCHPROP']],
+        ['Modify', ['ERASE', 'MOVE', 'COPY', 'ROTATE', 'SCALE', 'MIRROR', 'STRETCH', 'OFFSET', 'TRIM', 'EXTEND', 'FILLET', 'CHAMFER', 'BREAK', 'BREAKATPOINT', 'JOIN', 'LENGTHEN', 'ALIGN', 'PEDIT', 'ARRAY', 'EXPLODE', 'MATCHPROP']],
         ['Inquiry & view', ['DIST', 'AREA', 'ID', 'LIST', 'ZOOM', 'PAN', 'REGEN']],
         ['Settings', ['LAYER', '-LAYER', 'COLOR', 'TEXTSIZE', 'DIMSCALE', 'DIMDEC', 'GRID', 'SNAP', 'ORTHO', 'OSNAP']],
         ['File & edit', ['NEW', 'OPEN', 'SAVE', 'SAVEAS', 'EXPORT', 'PLOT', 'UNDO', 'REDO', 'COPYCLIP', 'CUTCLIP', 'PASTECLIP', 'SELECTALL', 'HELP']],
@@ -1177,9 +1227,33 @@ const App = {
       ctx.setLineDash([]);
     }
     this.drawUCS(ctx);
-    // osnap marker
+    // tracking
     const ms = this.mouse;
     this.el.tip.style.display = 'none';
+    if (this.cmd && this.tracked.length) {
+      ctx.strokeStyle = '#4cd964'; ctx.lineWidth = 1.5;
+      for (const a of this.tracked) { const s = this.toScreen(a); ctx.beginPath(); ctx.moveTo(s.x - 5, s.y); ctx.lineTo(s.x + 5, s.y); ctx.moveTo(s.x, s.y - 5); ctx.lineTo(s.x, s.y + 5); ctx.stroke(); }
+    }
+    if (ms.track && ms.over) {
+      ctx.strokeStyle = 'rgba(76,217,100,0.9)'; ctx.lineWidth = 1; ctx.setLineDash([3, 4]);
+      const big = (this.W + this.H) * 2;
+      for (const l of ms.track.lines) {
+        const o = this.toScreen(l.o), u = { x: l.u.x, y: -l.u.y };
+        ctx.beginPath();
+        if (l.ray) { ctx.moveTo(o.x, o.y); ctx.lineTo(o.x + u.x * big, o.y + u.y * big); }
+        else { ctx.moveTo(o.x - u.x * big, o.y - u.y * big); ctx.lineTo(o.x + u.x * big, o.y + u.y * big); }
+        ctx.stroke();
+      }
+      ctx.setLineDash([]);
+      const s = this.toScreen(ms.track.pt);
+      ctx.strokeStyle = '#4cd964'; ctx.beginPath(); ctx.moveTo(s.x - 5, s.y - 5); ctx.lineTo(s.x + 5, s.y + 5); ctx.moveTo(s.x + 5, s.y - 5); ctx.lineTo(s.x - 5, s.y + 5); ctx.stroke();
+      const pr2 = this.cmd && this.cmd.prompt, b0 = pr2 && (pr2.base || pr2._first);
+      let label = ms.track.label;
+      if (b0) label += `: ${fmtNum(G.dist(b0, ms.track.pt), 4)} < ${fmtNum(G.normAng(G.angle(b0, ms.track.pt)) / DEG, 2)}°`;
+      this.el.tip.textContent = label; this.el.tip.style.display = 'block';
+      this.el.tip.style.left = s.x + 14 + 'px'; this.el.tip.style.top = s.y - 34 + 'px';
+    }
+    // osnap marker
     if (ms.snap && ms.over) {
       const s = this.toScreen(ms.snap.pt);
       ctx.strokeStyle = '#ffd400'; ctx.lineWidth = 2;
@@ -1193,10 +1267,11 @@ const App = {
         case 'int': ctx.moveTo(s.x - r, s.y - r); ctx.lineTo(s.x + r, s.y + r); ctx.moveTo(s.x + r, s.y - r); ctx.lineTo(s.x - r, s.y + r); break;
         case 'perp': ctx.moveTo(s.x - r, s.y - r); ctx.lineTo(s.x - r, s.y + r); ctx.lineTo(s.x + r, s.y + r); ctx.moveTo(s.x - r, s.y); ctx.lineTo(s.x, s.y); ctx.lineTo(s.x, s.y + r); break;
         case 'ins': ctx.rect(s.x - r, s.y - r, 2 * r, 2 * r); ctx.moveTo(s.x - r, s.y); ctx.lineTo(s.x + r, s.y); break;
+        case 'node': ctx.arc(s.x, s.y, r, 0, TAU); ctx.moveTo(s.x - r * 0.7, s.y - r * 0.7); ctx.lineTo(s.x + r * 0.7, s.y + r * 0.7); ctx.moveTo(s.x + r * 0.7, s.y - r * 0.7); ctx.lineTo(s.x - r * 0.7, s.y + r * 0.7); break;
         case 'nea': ctx.moveTo(s.x - r, s.y - r); ctx.lineTo(s.x + r, s.y - r); ctx.lineTo(s.x - r, s.y + r); ctx.lineTo(s.x + r, s.y + r); ctx.closePath(); break;
       }
       ctx.stroke();
-      const label = { end: 'Endpoint', mid: 'Midpoint', cen: 'Center', quad: 'Quadrant', int: 'Intersection', perp: 'Perpendicular', ins: 'Insertion', nea: 'Nearest' }[ms.snap.type];
+      const label = { end: 'Endpoint', mid: 'Midpoint', cen: 'Center', quad: 'Quadrant', int: 'Intersection', perp: 'Perpendicular', ins: 'Insertion', node: 'Node', nea: 'Nearest' }[ms.snap.type];
       this.el.tip.textContent = label;
       this.el.tip.style.display = 'block';
       this.el.tip.style.left = s.x + 12 + 'px'; this.el.tip.style.top = s.y - 30 + 'px';
@@ -1250,29 +1325,43 @@ const App = {
 
   /* ===================== ribbon ===================== */
   buildRibbon() {
-    const groups = [
-      ['Draw', [['LINE', 'Line', 'line'], ['PLINE', 'Polyline', 'pline'], ['CIRCLE', 'Circle', 'circle'], ['ARC', 'Arc', 'arc'], ['RECTANG', 'Rectangle', 'rect'], ['POLYGON', 'Polygon', 'polygon'], ['ELLIPSE', 'Ellipse', 'ellipse'], ['HATCH', 'Hatch', 'hatch']]],
-      ['Annotate', [['TEXT', 'Text', 'text'], ['MTEXT', 'MText', 'mtext'], ['MLEADER', 'Leader note', 'leader'], ['REVCLOUD', 'Rev cloud', 'cloud'], ['DIMLINEAR', 'Linear', 'dimlin'], ['DIMALIGNED', 'Aligned', 'dimali'], ['DIMRADIUS', 'Radius', 'dimrad'], ['DIMDIAMETER', 'Diameter', 'dimdia']]],
-      ['Modify', [['MOVE', 'Move', 'move'], ['COPY', 'Copy', 'copy'], ['ROTATE', 'Rotate', 'rotate'], ['SCALE', 'Scale', 'scale'], ['MIRROR', 'Mirror', 'mirror'], ['OFFSET', 'Offset', 'offset'], ['TRIM', 'Trim', 'trim'], ['EXTEND', 'Extend', 'extend'], ['FILLET', 'Fillet', 'fillet'], ['ARRAY', 'Array', 'array'], ['EXPLODE', 'Explode', 'explode'], ['ERASE', 'Erase', 'erase'], ['MATCHPROP', 'Match', 'match']]],
-      ['View & tools', [['ZOOM_E', 'Extents', 'zoomext'], ['ZOOM', 'Window', 'zoomwin'], ['PAN', 'Pan', 'pan'], ['DIST', 'Measure', 'dist'], ['LAYER', 'Layers', 'layers']]],
-    ];
     const rb = document.getElementById('ribbon');
-    for (const [g, btns] of groups) {
-      const grp = document.createElement('div'); grp.className = 'rgroup';
-      const row = document.createElement('div'); row.className = 'rbtns';
-      for (const [cmd, label, icon] of btns) {
-        const b = document.createElement('button');
-        b.className = 'rbtn';
-        const d = Commands.lookup(cmd);
-        b.title = d ? `${d.name}${d.aliases.length ? ' (' + d.aliases.slice(0, 2).join(', ') + ')' : ''} — ${d.desc}` : 'Zoom extents';
-        b.innerHTML = `<svg viewBox="0 0 24 24">${ICONS[icon] || ''}</svg><span>${label}</span>`;
-        b.onmousedown = (ev) => ev.preventDefault();
-        b.onclick = () => { if (cmd === 'ZOOM_E') this.zoomExtents(); else this.runCommand(cmd); this.el.input.focus(); };
-        row.appendChild(b);
+    rb.innerHTML = '';
+    const tabs = document.createElement('div'); tabs.className = 'rtabs';
+    const body = document.createElement('div'); body.className = 'rbody';
+    rb.append(tabs, body);
+    let current = null;
+    try { current = localStorage.getItem('bananacad.ribbonTab'); } catch (err) { /* ignore */ }
+    if (!RIBBON.some((t) => t.tab === current)) current = RIBBON[0].tab;
+    const show = (name) => {
+      tabs.querySelectorAll('button').forEach((b) => b.classList.toggle('on', b.textContent === name));
+      body.innerHTML = '';
+      const tab = RIBBON.find((t) => t.tab === name);
+      for (const [g, btns] of tab.groups) {
+        const grp = document.createElement('div'); grp.className = 'rgroup';
+        const row = document.createElement('div'); row.className = 'rbtns';
+        for (const [cmd, label, icon] of btns) {
+          const b = document.createElement('button');
+          b.className = 'rbtn';
+          const d = Commands.lookup(cmd);
+          b.title = d ? `${d.name}${d.aliases.length ? ' (' + d.aliases.slice(0, 2).join(', ') + ')' : ''} — ${d.desc}` : label;
+          b.innerHTML = `<svg viewBox="0 0 24 24">${ICONS[icon] || ICONS.cmd}</svg><span>${label}</span>`;
+          b.onmousedown = (ev) => ev.preventDefault();
+          b.onclick = () => { if (cmd === 'ZOOM_E') this.zoomExtents(); else this.runCommand(cmd); this.el.input.focus(); };
+          row.appendChild(b);
+        }
+        const t = document.createElement('div'); t.className = 'rtitle'; t.textContent = g;
+        grp.append(row, t); body.appendChild(grp);
       }
-      const t = document.createElement('div'); t.className = 'rtitle'; t.textContent = g;
-      grp.append(row, t); rb.appendChild(grp);
+      try { localStorage.setItem('bananacad.ribbonTab', name); } catch (err) { /* ignore */ }
+    };
+    for (const t of RIBBON) {
+      const b = document.createElement('button'); b.textContent = t.tab;
+      b.onmousedown = (ev) => ev.preventDefault();
+      b.onclick = () => show(t.tab);
+      tabs.appendChild(b);
     }
+    show(current);
     document.querySelectorAll('[data-cmd]').forEach((b) => {
       b.onmousedown = (ev) => ev.preventDefault();
       b.onclick = () => { const c = b.dataset.cmd; if (c.startsWith('EXPORT:')) this.runCommand('EXPORT', { format: c.slice(7) }); else this.runCommand(c); this.el.input.focus(); };
@@ -1318,6 +1407,30 @@ const GRIP_CMD = {
   },
 };
 
+/* Ribbon layout: tabs -> groups -> [command, label, icon]. */
+const RIBBON = [
+  { tab: 'Home', groups: [
+    ['Draw', [['LINE', 'Line', 'line'], ['PLINE', 'Polyline', 'pline'], ['CIRCLE', 'Circle', 'circle'], ['ARC', 'Arc', 'arc'], ['RECTANG', 'Rectangle', 'rect'], ['POLYGON', 'Polygon', 'polygon'], ['ELLIPSE', 'Ellipse', 'ellipse'], ['SPLINE', 'Spline', 'spline'], ['HATCH', 'Hatch', 'hatch'], ['REVCLOUD', 'Rev cloud', 'cloud']]],
+    ['Modify', [['MOVE', 'Move', 'move'], ['COPY', 'Copy', 'copy'], ['ROTATE', 'Rotate', 'rotate'], ['SCALE', 'Scale', 'scale'], ['MIRROR', 'Mirror', 'mirror'], ['STRETCH', 'Stretch', 'stretch'], ['OFFSET', 'Offset', 'offset'], ['TRIM', 'Trim', 'trim'], ['EXTEND', 'Extend', 'extend'], ['FILLET', 'Fillet', 'fillet'], ['CHAMFER', 'Chamfer', 'chamfer'], ['BREAK', 'Break', 'break'], ['JOIN', 'Join', 'join'], ['LENGTHEN', 'Lengthen', 'lengthen'], ['ALIGN', 'Align', 'align'], ['ARRAY', 'Array', 'array'], ['PEDIT', 'Edit pline', 'pline'], ['EXPLODE', 'Explode', 'explode'], ['ERASE', 'Erase', 'erase'], ['MATCHPROP', 'Match', 'match']]],
+    ['Utilities', [['DIST', 'Measure', 'dist'], ['AREA', 'Area', 'area'], ['LAYER', 'Layers', 'layers'], ['ZOOM_E', 'Extents', 'zoomext']]],
+  ] },
+  { tab: 'Annotate', groups: [
+    ['Text & notes', [['TEXT', 'Text', 'text'], ['MTEXT', 'MText', 'mtext'], ['MLEADER', 'Leader note', 'leader'], ['REVCLOUD', 'Rev cloud', 'cloud'], ['TEXTEDIT', 'Edit text', 'text']]],
+    ['Dimensions', [['DIMLINEAR', 'Linear', 'dimlin'], ['DIMALIGNED', 'Aligned', 'dimali'], ['DIMRADIUS', 'Radius', 'dimrad'], ['DIMDIAMETER', 'Diameter', 'dimdia']]],
+  ] },
+  { tab: 'Insert', groups: [] },
+  { tab: 'Layout', groups: [] },
+  { tab: 'View', groups: [
+    ['Navigate', [['ZOOM_E', 'Extents', 'zoomext'], ['ZOOM', 'Window', 'zoomwin'], ['PAN', 'Pan', 'pan'], ['REGEN', 'Regen', 'rotate']]],
+    ['Palettes', [['LAYER', 'Layers', 'layers'], ['OSNAP', 'Settings', 'cmd'], ['HELP', 'Help', 'help']]],
+  ] },
+];
+const ribbonAdd = (tab, group, btns) => {
+  const t = RIBBON.find((x) => x.tab === tab);
+  const g = t.groups.find((x) => x[0] === group);
+  if (g) g[1].push(...btns); else t.groups.push([group, btns]);
+};
+
 /* ---------- small inline icons (24x24, stroke=currentColor) ---------- */
 const ICONS = {
   line: '<path d="M4 20L20 4"/><circle cx="4" cy="20" r="1.6"/><circle cx="20" cy="4" r="1.6"/>',
@@ -1361,6 +1474,15 @@ const ICONS = {
   print: '<path d="M6 9V3h12v6M6 18H3v-9h18v9h-3M6 14h12v7H6z"/>',
   undo: '<path d="M9 14L4 9l5-5"/><path d="M4 9h10a6 6 0 0 1 0 12h-3"/>',
   redo: '<path d="M15 14l5-5-5-5"/><path d="M20 9H10a6 6 0 0 0 0 12h3"/>',
+  spline: '<path d="M3 17c3-9 6-9 9-3s6 6 9-6"/><circle cx="3" cy="17" r="1.3"/><circle cx="21" cy="8" r="1.3"/>',
+  stretch: '<rect x="3" y="8" width="9" height="9" stroke-dasharray="2 2"/><path d="M8 8h13v9H8M17 12.5h5M19.5 10l2.5 2.5-2.5 2.5"/>',
+  chamfer: '<path d="M4 20V10l6-6h10"/>',
+  break: '<path d="M3 12h6M15 12h6"/><path d="M9 9v6M15 9v6" stroke-dasharray="1.5 1.5"/>',
+  join: '<path d="M3 16l6-8M15 8l6 8"/><path d="M9 8h6"/><circle cx="9" cy="8" r="1.5"/><circle cx="15" cy="8" r="1.5"/>',
+  lengthen: '<path d="M3 12h12"/><path d="M15 12h6" stroke-dasharray="2 2"/><path d="M18 9l3 3-3 3"/>',
+  align: '<path d="M4 18l6-6M14 6h6v6"/><path d="M4 18h16" stroke-dasharray="2 2"/>',
+  area: '<path d="M4 18l3-12 10 2 3 10z"/><path d="M8 14h6" stroke-dasharray="1.5 1.5"/>',
+  cmd: '<rect x="4" y="5" width="16" height="14" rx="2"/><path d="M8 10l3 2-3 2M13 15h3"/>',
   help: '<circle cx="12" cy="12" r="9"/><path d="M9.5 9a2.5 2.5 0 1 1 3.5 2.3c-.6.3-1 .9-1 1.7V14M12 17v.5"/>',
 };
 

@@ -65,6 +65,12 @@ const IO = {
     };
     for (const e of doc.entities) {
       if (e.type === 'ellipse') { poly(e, E.loop(e), true); continue; }
+      if (e.type === 'pline' && e.b && e.b.some((x) => x)) {
+        head('POLYLINE', e); w(66, 1); P({ x: 0, y: 0 }); w(70, e.closed ? 1 : 0);
+        e.pts.forEach((p, i) => { w(0, 'VERTEX'); w(8, e.layer); P(p); if (e.b[i]) w(42, e.b[i]); });
+        w(0, 'SEQEND'); w(8, e.layer);
+        continue;
+      }
       for (const op of E.ops(e, doc)) {
         switch (op.op) {
           case 'poly': poly(e, op.pts, op.closed); break;
@@ -221,7 +227,7 @@ const IO = {
               const nk = parseInt(seek(95), 10) || 0, nc = parseInt(seek(96), 10) || 0;
               const knots = []; for (let q = 0; q < nk; q++) knots.push(f(40));
               const ctrl = []; for (let q = 0; q < nc; q++) ctrl.push({ x: f(10), y: f(20) });
-              pts.push(...bspline(deg, knots, ctrl));
+              for (const q of bspline(deg, knots, ctrl)) pts.push(q);
             } else break;
           }
         }
@@ -264,9 +270,8 @@ const IO = {
                 else if (c === 42 && v) v.b = parseFloat(val);
               }
               const closed = (parseInt(get(o, 70, '0'), 10) & 1) === 1;
-              const pts = [];
-              verts.forEach((p, i) => { pts.push({ x: p.x, y: p.y }); const q = verts[i + 1] || (closed ? verts[0] : null); if (q) bulgePts(p, q, p.b, pts); });
-              if (pts.length > 1) out.push(ocs(o, { ...b, type: 'pline', pts, closed }));
+              const pts = verts.map((p) => ({ x: p.x, y: p.y })), bs = verts.map((p) => p.b || 0);
+              if (pts.length > 1) out.push(ocs(o, { ...b, type: 'pline', pts, b: bs.some((x) => x) ? bs : undefined, closed }));
               break;
             }
             case 'POLYLINE': {
@@ -280,10 +285,10 @@ const IO = {
               break;
             case 'SEQEND':
               if (polyline && !polyline.skip) {
-                const pts = [], src = polyline.pts;
-                src.forEach((p, i) => { pts.push(p); const q = src[i + 1] || (polyline.closed ? src[0] : null); if (q) bulgePts(p, q, polyline.bulges[i], pts); });
+                const pts = polyline.pts, bs = polyline.bulges;
                 const flip = polyline.flip;
-                delete polyline.bulges; delete polyline.flip; polyline.pts = pts;
+                delete polyline.bulges; delete polyline.flip;
+                if (bs.some((x) => x)) polyline.b = bs;
                 if (pts.length > 1) out.push(flip ? E.transform(polyline, mxf(FLIP)) : polyline);
               }
               polyline = null;

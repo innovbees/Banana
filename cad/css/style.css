@@ -29,7 +29,12 @@ button { font: inherit; color: inherit; }
 .docname { color: var(--muted); font-size: 12px; }
 
 /* ribbon */
-#ribbon { display: flex; gap: 0; background: var(--bg2); border-bottom: 1px solid var(--line); overflow-x: auto; scrollbar-width: thin; }
+#ribbon { background: var(--bg2); border-bottom: 1px solid var(--line); }
+.rtabs { display: flex; gap: 2px; padding: 2px 8px 0; background: #262c33; border-bottom: 1px solid var(--line); }
+.rtabs button { background: transparent; border: 0; border-bottom: 2px solid transparent; padding: 5px 14px 4px; cursor: pointer; color: var(--muted); font-size: 12px; }
+.rtabs button.on { color: #fff; border-bottom-color: var(--accent); background: var(--bg2); }
+.rtabs button:hover { color: #fff; }
+.rbody { display: flex; overflow-x: auto; scrollbar-width: thin; min-height: 116px; }
 .rgroup { flex: none; display: flex; flex-direction: column; border-right: 1px solid var(--line); padding: 4px 6px 2px; }
 .rbtns { display: grid; grid-template-rows: repeat(2, auto); grid-auto-flow: column; gap: 1px; }
 .rtitle { text-align: center; font-size: 10.5px; color: var(--muted); text-transform: uppercase; letter-spacing: .6px; padding-top: 2px; }
