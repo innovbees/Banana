@@ -34,13 +34,13 @@ for x0 in (BX0 - 20 - 450, BX1 + 20):
     rect(x0, HB, x0 + 450, HB + 450, 'I-FURN'); text(x0 + 225, HB + 225, 'NS 450x450', 50, 'I-FURN'); msp.add_circle((x0 + 225, HB + 345), 85, dxfattribs={'layer': 'E-LITE'})
 msp.add_line((700, 80), (3300, 80), dxfattribs={'layer': 'I-CURTAIN'}); text(2000, 170, 'CURTAIN TRACK FIXED TO CEILING (OPERABLE BEHIND BED)', 40, 'I-CURTAIN')
 # artwork north wall, mirror unit east wall, lounge NW
-rect(1100, RL - 40, 2900, RL, 'I-ART'); text(2000, RL - 170, 'ARTWORK 1800 x 900, CENTRE 1450 AFF', 50, 'I-ART')
+rect(0, RL - 3700, 40, RL - 1900, 'I-ART'); text(130, RL - 2800, 'ARTWORK 1800 x 900, CENTRE 1450 AFF', 50, 'I-ART', rot=90)
 rect(3650, RL - 2200, 4000, RL - 1200, 'I-JOIN-MIRROR'); rect(3970, RL - 2150, 4000, RL - 1250, 'I-JOIN-MIRROR')
 text(3800, RL - 1700, 'MIRROR 900x1900 ON FLOOR DRAWER 1000x350', 45, 'I-JOIN-MIRROR', rot=90)
 cx, cy, a = 500, RL - 550, math.radians(40)
 msp.add_lwpolyline([(cx + x * math.cos(a) - y * math.sin(a), cy + x * math.sin(a) + y * math.cos(a)) for x, y in [(-360, -360), (360, -360), (360, 360), (-360, 360)]], close=True, dxfattribs={'layer': 'I-FURN'})
 text(cx, cy, 'CHAIR', 45, 'I-FURN'); msp.add_circle((420, RL - 1300), 200, dxfattribs={'layer': 'I-FURN'}); text(420, RL - 1300, 'TABLE', 40, 'I-FURN')
-for x, z, lab in [(600, 1000, 'D1'), (2000, 1100, 'D2'), (3300, 1700, 'M1'), (480, 3300, 'D3'), (3520, 3300, 'D4'), (3620, 550, 'P1'), (1600, 750, 'A1'), (2400, 750, 'A2')]:
+for x, z, lab in [(600, 1000, 'D1'), (2000, 1000, 'D2'), (3300, 1700, 'M1'), (3520, 3300, 'D3'), (3620, 550, 'P1'), (700, 2400, 'A1'), (700, 3200, 'A2')]:
     y = RL - z; msp.add_circle((x, y), 45, dxfattribs={'layer': 'E-LITE'}); text(x + 70, y, lab, 45, 'E-LITE', al=TA.MIDDLE_LEFT)
 # dimensions
 dh(0, RW, RL + T, RL + 650); dv(0, RL, -T, -650)

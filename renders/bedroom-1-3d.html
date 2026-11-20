@@ -174,14 +174,14 @@ for(const [x0,x1] of NSX){
   cyl(ex1-0.12,0.64,NSZ0+0.32,0.025,0.02,0.08,mat('#f1f1ef',0.4)); cyl(ex1-0.12,0.72,NSZ0+0.32,0.004,0.004,0.1,mat('#5d7a4c',0.8),6);
   box(wx0+0.1,wx0+0.35,0.56,0.57,NSZ0+0.1,NSZ0+0.32,brass); cyl(wx1-0.12,0.62,NSZ0+0.2,0.05,0.05,0.04,brass).rotation.z=Math.PI/2; }
 
-// ---------- Artwork on the NORTH wall, centred on the bed (bed faces north) ----------
-{ const AW=1.8, AH=0.9, AB=1.0, XC=2.0;
+// ---------- Artwork on the WEST wall (centre 2.8 m from the north wall) ----------
+{ const AW=1.8, AH=0.9, AB=1.0, ZC=2.8;
   const art=canvasTex(900,450,(g,w,h)=>{ g.fillStyle=PAL.art[0]; g.fillRect(0,0,w,h); const r=rnd(41);
     const blobs=[[PAL.art[1],0.35,0.3,0.42],[PAL.art[2],0.62,0.55,0.34],[PAL.art[3],0.3,0.72,0.16],[PAL.art[4],0.7,0.2,0.1],[PAL.art[5],0.5,0.5,0.25],[PAL.art[6],0.25,0.45,0.2]];
     for(const [c,x,y,rr] of blobs){ for(let i=0;i<60;i++){ g.globalAlpha=0.05+r()*0.06; g.fillStyle=c; g.beginPath(); g.ellipse(x*w+(r()-0.5)*w*0.15,y*h+(r()-0.5)*h*0.15,rr*w*(0.6+r()*0.5),rr*h*(0.4+r()*0.4),r()*3,0,7); g.fill(); } }
     g.globalAlpha=0.6; g.strokeStyle=PAL.art[4]; g.lineWidth=3; g.beginPath(); g.moveTo(w*0.18,h*0.62); g.bezierCurveTo(w*0.4,h*0.5,w*0.55,h*0.75,w*0.82,h*0.58); g.stroke(); g.globalAlpha=1; });
-  box(XC-AW/2-0.02,XC+AW/2+0.02,AB-0.02,AB+AH+0.02,0,0.045,brass);
-  const pl=new THREE.Mesh(new THREE.PlaneGeometry(AW,AH),mat('#ffffff',0.9,0,{map:art})); pl.position.set(XC,AB+AH/2,0.052); pl.receiveShadow=true; scene.add(pl);
+  box(0,0.045,AB-0.02,AB+AH+0.02,ZC-AW/2-0.02,ZC+AW/2+0.02,brass);
+  const pl=new THREE.Mesh(new THREE.PlaneGeometry(AW,AH),mat('#ffffff',0.9,0,{map:art})); pl.position.set(0.052,AB+AH/2,ZC); pl.rotation.y=Math.PI/2; pl.receiveShadow=true; scene.add(pl);
 }
 
 // ---------- Lounge chair, table and floor lamp in the NORTH-WEST corner ----------
@@ -223,8 +223,8 @@ const fill2=new THREE.PointLight('#ffe9cc',1.2,8,1.8); fill2.position.set(0.8,2.
 // ---------- Recessed ceiling lighting (timber ceiling), see plans/bedroom-1-lighting.png ----------
 const TIME=P.get('time')||'morning'; const EVE=TIME==='evening';
 const trimM=mat('#2b2622',0.5,0.4), lensM=mat('#fffaf0',0.3,0,{emissive:'#ffd59a',emissiveIntensity:EVE?2.2:0.02});
-const DLS=[[0.6,1.0],[2.0,1.1],[0.48,3.3],[3.52,3.3],[3.62,0.55],[4.65,2.85]];
-const GIMB=[[1.6,0.75,[1.6,1.45,0]],[2.4,0.75,[2.4,1.45,0]],[3.3,1.7,[4.0,1.2,1.7]]];
+const DLS=[[0.6,1.0],[2.0,1.0],[3.52,3.3],[3.62,0.55],[4.65,2.85]];
+const GIMB=[[0.7,2.4,[0,1.45,2.4]],[0.7,3.2,[0,1.45,3.2]],[3.3,1.7,[4.0,1.2,1.7]]];
 for(const [x,z] of DLS){ cyl(x,CH-0.004,z,0.045,0.045,0.008,trimM,24).castShadow=false; cyl(x,CH-0.009,z,0.033,0.033,0.004,lensM,24).castShadow=false; }
 for(const [x,z] of GIMB){ cyl(x,CH-0.004,z,0.045,0.045,0.008,trimM,24).castShadow=false; cyl(x,CH-0.012,z,0.03,0.03,0.008,lensM,24).castShadow=false; }
 box(0.7,3.3,CH-0.004,CH,RL-0.24,RL-0.21,mat('#d8d4cc',0.4,0.5),false);                 // S1 curtain-wash channel, flush

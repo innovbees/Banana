@@ -66,8 +66,8 @@ t(X(2.0), Y(FOOT + 1.05) + 32, 'head to the SOUTH (window)', 11, GREEN, 'middle'
 for x0, x1 in NS:
     r(x0, NS_Z0, x1, NS_Z1, WAL_L, WAL, 1.5); t(X((x0 + x1) / 2), Y((NS_Z0 + NS_Z1) / 2) + 4, 'NS', 10.5, WAL, 'middle', '700')
     circ((x0 + x1) / 2, (NS_Z0 + NS_Z1) / 2 - 0.12, 6, '#fffdf6', '#b08d57', 1.5)
-# artwork on north wall, centred on bed (bed now faces north)
-r(1.1, 0, 2.9, 0.04, '#c77d5a', '#b08d57', 1.2); t(X(2.0), Y(0.17), 'ARTWORK 1800 × 900 on north wall, centred on bed', 10.5, '#8a4f33', 'middle', '700')
+# artwork on the west wall, between the reading corner and the west nightstand
+r(0, 1.9, 0.04, 3.7, '#c77d5a', '#b08d57', 1.2); t(X(0.14), Y(2.8), 'ARTWORK 1800 × 900 (centre 1450 AFF)', 10.5, '#8a4f33', 'middle', '700', rot=-90)
 # mirror + floor drawer: east wall between door and robe walkway (faces west)
 r(3.65, 1.2, 4.0, 2.2, WAL_L, WAL, 1.5); r(3.97, 1.25, 4.0, 2.15, MIR, '#b08d57', 1.2)
 t(X(3.8), Y(1.7), 'MIRROR + DRAWER', 9.5, WAL, 'middle', '700', rot=-90)
@@ -77,7 +77,7 @@ t(X(0.5), Y(0.55) + 4, 'CHAIR', 10, INK, 'middle', '700')
 circ(0.42, 1.3, 0.2 * S, STONE, '#a89886', 1.2); t(X(0.42), Y(1.3) + 4, 'table', 9.5, QUIET, 'middle')
 circ(0.12, 0.12, 7, '#b08d57', '#7a6234', 1)
 # ceiling lights (none over the bed)
-for (x, z, lab) in [(0.6, 1.0, 'D1'), (2.0, 1.1, 'D2'), (3.3, 1.7, 'M1'), (0.48, 3.3, 'D3'), (3.52, 3.3, 'D4'), (3.62, 0.55, 'P1'), (1.6, 0.75, 'A1'), (2.4, 0.75, 'A2')]:
+for (x, z, lab) in [(0.6, 1.0, 'D1'), (2.0, 1.0, 'D2'), (3.3, 1.7, 'M1'), (3.52, 3.3, 'D3'), (3.62, 0.55, 'P1'), (0.7, 2.4, 'A1'), (0.7, 3.2, 'A2')]:
     circ(x, z, 5, '#fff6d6', LIGHT, 1.4); t(X(x) + 8, Y(z) + 4, lab, 9.5, '#7a5a00', 'start', '700')
 
 # dimensions
@@ -90,6 +90,7 @@ dimv(1.2, HB_Z1, RL, f'{round(GAP*1000)} gap', 14, ACC, 11)
 dimh(NS[1][0], NS[1][1], NS_Z0 - 0.08, '450', -5, QUIET, 10)
 dimh(0.85, 3.15, 5.08, 'window 2300 (centred, sill 560)', 14, BLUE, 10.5)
 dimv(3.55, 1.2, 2.2, '1000', -6, QUIET, 10)
+dimv(0.3, 1.9, 3.7, 'art 1800', 14, '#8a4f33', 10)
 
 # legend + notes
 t(X(RW + 1.7), Y(-0.45), '', 1)
@@ -107,7 +108,8 @@ notes = [('LAYOUT B - HEAD TO THE WINDOW', GREEN, '700'),
          ('Walnut headboard wall removed', INK, '400'),
          ('Mirror + drawer moved to east wall', INK, '400'),
          ('Lounge chair moved to NW corner', INK, '400'),
-         ('Artwork moved to north wall', INK, '400'),
+         ('Artwork on west wall, centre 2.8 m from north wall', INK, '400'),
+         ('A1-A2 art lights 700 off the west wall', INK, '400'),
          ('Head to south = Vastu-preferred', GREEN, '400')]
 b.append(f'<rect x="{nx-12}" y="{ny-22}" width="330" height="{len(notes)*20+18}" rx="8" fill="#ffffff" stroke="#bfb6aa"/>')
 for i, (n, c, w) in enumerate(notes):
