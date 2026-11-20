@@ -18,6 +18,7 @@
       <button data-cmd="UNDO" data-icon="undo" title="Undo (Ctrl+Z)"></button>
       <button data-cmd="REDO" data-icon="redo" title="Redo (Ctrl+Y)"></button>
       <span class="sep"></span>
+      <button data-cmd="EXPORT:DWG" data-icon="export" title="Export a DWG copy (AutoCAD 2018 format; SAVEAS for other versions)">DWG</button>
       <button data-cmd="EXPORT:DXF" data-icon="export" title="Export DXF for AutoCAD">DXF</button>
       <button data-cmd="EXPORT:SVG" data-icon="export" title="Export SVG">SVG</button>
       <button data-cmd="EXPORT:PNG" data-icon="export" title="Export PNG image">PNG</button>
@@ -116,9 +117,10 @@
     <tr><td><kbd>↑</kbd> <kbd>↓</kbd> <kbd>Tab</kbd></td><td>Command history / autocomplete</td></tr>
   </table>
   <h3>DWG &amp; DXF files</h3>
+  <p><b>Create and edit DWG:</b> open a <code>.dwg</code>, edit it, and press <kbd>Ctrl+S</kbd> — it is saved back as DWG (in Chrome/Edge straight into the same file,
+  otherwise you choose where / it downloads). New drawings: <code>SAVEAS</code> → DWG and pick AutoCAD 2018, 2013, 2010, 2007, 2004 or 2000 format.</p>
   <p><b>Open</b> (Ctrl+O) reads AutoCAD <code>.dwg</code> (R13–2018+) and <code>.dxf</code> files — or drag a file onto the drawing area.
-  Blocks, dimensions, hatches and notes are converted to ordinary objects. To send a drawing back to AutoCAD use <b>DXF</b> export
-  (AutoCAD opens DXF directly and can save it as DWG).</p>
+  Blocks, dimensions, hatches and notes come in as editable objects.</p>
   <h3>Layouts &amp; plotting</h3>
   <p>The tabs under the drawing switch between <b>Model</b> and <b>layout sheets</b>. A layout is a paper sheet (A4–A0, Letter…, in mm) holding
   <b>viewports</b> that show the model at an exact scale (select a viewport border to set 1:50, 1:100…), plus title blocks and notes.
@@ -137,6 +139,7 @@
 <script src="js/io.js"></script>
 <script src="js/library.js"></script>
 <script src="js/plot.js"></script>
+<script src="js/dwgout.js"></script>
 <script src="js/commands.js"></script>
 <script src="js/app.js"></script>
 </body>

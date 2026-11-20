@@ -1008,16 +1008,24 @@ defCmd('NEW', ['QNEW'], 'Start a new drawing', function* (c) {
   c.app.newDrawing();
 }, { noUndo: true });
 defCmd('OPEN', [], 'Open a drawing (.dwg / .dxf / .bcad)', function* (c) { c.app.openFile(); }, { noUndo: true });
-defCmd('SAVE', ['QSAVE'], 'Save the drawing (.bcad)', function* (c) { c.app.saveFile(); }, { transparent: true });
-defCmd('SAVEAS', [], 'Save the drawing under a new name', function* (c) {
+defCmd('SAVE', ['QSAVE'], 'Save the drawing (DWG drawings save back as DWG)', function* (c) { c.app.saveFile(); }, { transparent: true });
+const DWG_YEARS = ['2018', '2013', '2010', '2007', '2004', '2000'];
+defCmd('SAVEAS', ['DWGOUT'], 'Save under a new name / format: DWG (AutoCAD 2000-2018), DXF or BCAD', function* (c, opts) {
   const n = yield P.str('Enter file name', { def: c.doc.name, spaces: true });
   if (!n) return;
-  c.doc.name = n.replace(/\.(bcad|json)$/i, ''); c.app.saveFile(); c.app.refreshUI();
+  const m = /\.(dwg|dxf|bcad|json)$/i.exec(n.trim());
+  let fmt = m ? m[1].toUpperCase().replace('JSON', 'BCAD') : null;
+  if (!fmt) { const r = yield P.kw('File format', ['DWG', 'DXF', 'BCAD'], { def: (c.doc.saveFormat || (opts && opts.dwg ? 'dwg' : 'bcad')).toUpperCase() }); if (r == null) return; fmt = r.kw || r; }
+  let version;
+  if (fmt === 'DWG') { const r = yield P.kw('AutoCAD version', DWG_YEARS, { def: c.doc.dwgVersion || '2018' }); if (r == null) return; version = r.kw || r; }
+  c.doc.name = n.trim().replace(/\.(dwg|dxf|bcad|json)$/i, '');
+  c.app.saveFile(fmt.toLowerCase(), { saveAs: true, version });
 }, { transparent: true });
-defCmd('EXPORT', ['EXP', 'DXFOUT', 'SVGOUT', 'PNGOUT'], 'Export to DXF (AutoCAD), SVG or PNG', function* (c, opts) {
-  let k = opts && opts.format;
-  if (!k) { const r = yield P.kw('Export format', ['DXF', 'SVG', 'PNG'], { def: 'DXF' }); if (r == null) return; k = r.kw || r; }
-  c.app.exportAs(k);
+defCmd('EXPORT', ['EXP', 'DXFOUT', 'SVGOUT', 'PNGOUT'], 'Export a copy: DWG, DXF, SVG or PNG', function* (c, opts) {
+  let k = opts && opts.format, version;
+  if (!k) { const r = yield P.kw('Export format', ['DWG', 'DXF', 'SVG', 'PNG'], { def: 'DWG' }); if (r == null) return; k = r.kw || r; }
+  if (String(k).toUpperCase() === 'DWG' && !(opts && opts.format)) { const r = yield P.kw('AutoCAD version', DWG_YEARS, { def: c.doc.dwgVersion || '2018' }); if (r == null) return; version = r.kw || r; }
+  c.app.exportAs(k, version);
 }, { transparent: true });
 defCmd('PLOT', ['PRINT', 'EXPORTPDF'], 'Plot to PDF: model at a scale, or a layout sheet', function* (c) { Plot.open(c.app); }, { transparent: true });
 defCmd('HELP', ['?', 'COMMANDS'], 'Show the command reference (F1)', function* (c) { c.app.showHelp(); }, { transparent: true });

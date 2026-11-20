@@ -254,7 +254,7 @@ const App = {
     this.advance(v);
   },
   matchKeyword(pr, t) {
-    if (!pr.keywords || !pr.keywords.length || !/[a-z]/i.test(t)) return null;
+    if (!pr.keywords || !pr.keywords.length || (!/[a-z]/i.test(t) && pr.type !== 'kw')) return null;
     const lt = t.toLowerCase();
     const exact = pr.keywords.find((k) => k.toLowerCase() === lt);
     if (exact) return exact;
@@ -699,9 +699,11 @@ const App = {
       ev.preventDefault(); vp.classList.remove('drop');
       const f = ev.dataTransfer.files && ev.dataTransfer.files[0];
       if (!f) return;
+      const item = ev.dataTransfer.items && ev.dataTransfer.items[0];
+      const hp = item && item.getAsFileSystemHandle ? item.getAsFileSystemHandle().catch(() => null) : Promise.resolve(null);
       if (this.cmd) this.cancel(true);
       if (this.doc.entities.length && !confirm(`Open "${f.name}" and replace the current drawing? (Save first if you need it.)`)) return;
-      this.openBlob(f);
+      hp.then((h) => this.openBlob(f, h && h.kind === 'file' ? h : null));
     });
   },
   resize() {
@@ -1028,7 +1030,7 @@ const App = {
     ls.value = shown;
     const lay = this.layer(shown || this.doc.clayer);
     document.getElementById('layerswatch').style.background = lay ? lay.color : '#fff';
-    this.el.title.textContent = this.doc.name;
+    this.el.title.textContent = `${this.doc.name}.${this.doc.saveFormat || 'bcad'}${this.doc.saveFormat === 'dwg' && this.doc.dwgVersion ? ` (AutoCAD ${this.doc.dwgVersion})` : ''}`;
     this.buildLayoutBar();
     document.title = `${this.doc.name} — BananaCAD`;
     this.refreshProps();
@@ -1568,6 +1570,10 @@ const App = {
       [['mm', 'Millimetres'], ['cm', 'Centimetres'], ['m', 'Metres'], ['in', 'Inches'], ['ft', 'Feet']].forEach(([v, t]) => { const o = document.createElement('option'); o.value = v; o.textContent = t; us.appendChild(o); });
       us.value = d.units || 'mm'; us.onchange = () => { d.units = us.value; this.autosave(); };
       tbl.append(l, us); }
+    { const l = document.createElement('label'); l.textContent = 'Save back to opened file';
+      const cb = document.createElement('input'); cb.type = 'checkbox'; cb.checked = s.filePickers !== false; cb.title = 'Chrome/Edge: Ctrl+S writes to the file you opened, and Save asks where to save. Off = always download.';
+      cb.onchange = () => { s.filePickers = cb.checked; this.autosave(); };
+      tbl.append(l, cb); }
     num('Grid spacing', () => s.gridSize, (v) => v > 0 && (s.gridSize = v));
     num('Snap spacing', () => s.snapSize, (v) => v > 0 && (s.snapSize = v));
     num('Text height', () => d.textSize, (v) => v > 0 && (d.textSize = v));
@@ -1638,33 +1644,89 @@ const App = {
 
   /* ===================== files ===================== */
   newDrawing() {
-    this.doc = newDoc(); this.sel.clear(); this.blockEdit = null; this.activeVp = null; this.spaceViews = {}; this.undoStack = []; this.redoStack = []; this.index = null;
+    this.doc = newDoc(); this.sel.clear(); this.blockEdit = null; this.activeVp = null; this.spaceViews = {}; this.fileHandle = null; this.undoStack = []; this.redoStack = []; this.index = null;
     this.view = { cx: 210, cy: 148, scale: Math.max(0.5, (this.W - 40) / 440) };
     this.changed(); this.refreshUI(); this.print('New drawing.');
   },
-  saveFile() {
-    const data = JSON.stringify({ app: 'BananaCAD', version: 1, doc: this.doc }, null, 1);
-    IO.download(`${this.doc.name}.bcad`, data, 'application/json');
-    this.print(`Saved "${this.doc.name}.bcad" to your downloads.`);
+  /* Save as BCAD / DWG / DXF. Writes back to the opened file when the browser allows it
+   * (File System Access API in Chrome/Edge), otherwise asks for a location or downloads. */
+  async saveFile(fmt, opts = {}) {
+    const d = this.doc;
+    fmt = (fmt || d.saveFormat || 'bcad').toLowerCase();
+    let bytes, report = null;
+    try {
+      if (fmt === 'dwg') {
+        const ver = opts.version || d.dwgVersion || '2018';
+        this.print(`Writing AutoCAD ${ver} DWG…${globalThis.AcadTs ? '' : ' (loading the DWG writer)'}`);
+        document.body.classList.add('busy');
+        const r = await DwgOut.toDWG(d, ver);
+        bytes = r.bytes; report = r.report;
+        if (!opts.export) { d.saveFormat = 'dwg'; d.dwgVersion = ver; }
+      } else if (fmt === 'dxf') {
+        bytes = IO.toDXF(d);
+        if (!opts.export) d.saveFormat = 'dxf';
+      } else {
+        bytes = JSON.stringify({ app: 'BananaCAD', version: 1, doc: d }, null, 1);
+        fmt = 'bcad';
+        if (!opts.export) d.saveFormat = 'bcad';
+      }
+    } catch (err) {
+      console.error(err);
+      this.print(`Could not write ${fmt.toUpperCase()}: ${err && err.message ? err.message : err}`);
+      return false;
+    } finally { document.body.classList.remove('busy'); }
+    const name = `${d.name}.${fmt}`, mime = fmt === 'bcad' ? 'application/json' : 'application/octet-stream';
+    const writeTo = async (h) => { const w = await h.createWritable(); await w.write(typeof bytes === 'string' ? new Blob([bytes]) : bytes); await w.close(); };
+    let where = null;
+    const pickers = this.settings.filePickers !== false;
+    if (pickers && !opts.saveAs && !opts.export && this.fileHandle && this.fileHandle.name.toLowerCase().endsWith('.' + fmt)) {
+      try { await writeTo(this.fileHandle); where = `"${this.fileHandle.name}" (original file)`; } catch (err) { this.print(`Could not write to the original file (${err.message}); choose where to save.`); }
+    }
+    if (!where && pickers && window.showSaveFilePicker) {
+      try {
+        const h = await window.showSaveFilePicker({ suggestedName: name, types: [{ description: fmt.toUpperCase() + ' drawing', accept: { [mime]: ['.' + fmt] } }] });
+        await writeTo(h);
+        if (!opts.export) { this.fileHandle = h; d.name = h.name.replace(/\.[^.]+$/, ''); }
+        where = `"${h.name}"`;
+      } catch (err) { if (err && err.name === 'AbortError') { this.print('Save cancelled.'); return false; } }
+    }
+    if (!where) { IO.download(name, bytes, mime); where = `"${name}" in your downloads`; }
+    this.print(`Saved ${where}${fmt === 'dwg' ? ` as AutoCAD ${d.dwgVersion || opts.version || '2018'} DWG` : ''}.`);
+    if (report) {
+      const sk = Object.entries(report.skipped), ex = Object.entries(report.exploded);
+      if (ex.length) this.print(`Written as simple objects: ${ex.map(([k, v]) => `${k}×${v}`).join(', ')}`);
+      if (sk.length) this.print(`Not written to DWG: ${sk.map(([k, v]) => `${k}×${v}`).join(', ')}`);
+    }
+    this.refreshUI();
+    return true;
   },
-  openFile() { this.el.file.value = ''; this.el.file.click(); },
+  async openFile() {
+    if (this.settings.filePickers !== false && window.showOpenFilePicker) {
+      try {
+        const [h] = await window.showOpenFilePicker({ types: [{ description: 'Drawings (DWG, DXF, BCAD)', accept: { 'application/octet-stream': ['.dwg', '.dxf', '.bcad', '.json'] } }] });
+        this.openBlob(await h.getFile(), h);
+        return;
+      } catch (err) { if (err && err.name === 'AbortError') return; }
+    }
+    this.el.file.value = ''; this.el.file.click();
+  },
   onFile() { const f = this.el.file.files[0]; if (f) this.openBlob(f); },
-  openBlob(f) {
+  openBlob(f, handle = null) {
     if (/\.dwg$/i.test(f.name)) {
       this.print(`Reading DWG "${f.name}"…${IO._dwg ? '' : ' (loading the DWG reader the first time takes a few seconds)'}`);
       document.body.classList.add('busy');
       f.arrayBuffer()
         .then((buf) => IO.dwgToDXF(buf))
-        .then((dxf) => this.loadText(f.name.replace(/\.dwg$/i, '.dxf'), dxf))
+        .then((dxf) => this.loadText(f.name.replace(/\.dwg$/i, '.dxf'), dxf, { format: 'dwg', handle }))
         .catch((err) => { console.error(err); this.print('Could not open DWG: ' + (err && err.message ? err.message : err)); })
         .finally(() => document.body.classList.remove('busy'));
       return;
     }
     const rd = new FileReader();
-    rd.onload = () => this.loadText(f.name, String(rd.result));
+    rd.onload = () => this.loadText(f.name, String(rd.result), { handle });
     rd.readAsText(f);
   },
-  loadText(name, text) {
+  loadText(name, text, meta = {}) {
     try {
       const base = name.replace(/\.[^.]+$/, '');
       if (/\.dxf$/i.test(name) || /^\s*0\s*\r?\n\s*SECTION/.test(text)) {
@@ -1677,8 +1739,11 @@ const App = {
         const ensureLayers = (list) => { for (const e of list) if (e.layer && !d.layers.find((l) => l.name === e.layer)) d.layers.push({ name: e.layer, color: '#ffffff', visible: true, locked: false, linetype: 'Continuous' }); };
         Object.values(d.blocks).forEach((bk) => ensureLayers(bk.ents));
         for (const e of r.entities) { if (!d.layers.find((l) => l.name === e.layer)) d.layers.push({ name: e.layer, color: '#ffffff', visible: true, locked: false, linetype: 'Continuous' }); e.id = d.nextId++; d.entities.push(e); }
+        const av = /\$ACADVER\s*\r?\n\s*1\s*\r?\n\s*(AC\d{4})/.exec(text.slice(0, 4000));
+        d.saveFormat = meta.format || 'dxf';
+        if (d.saveFormat === 'dwg') d.dwgVersion = (av && DwgOut.VERSION_NAMES[av[1]]) || '2018';
         this.doc = d;
-        this.print(`Imported ${r.entities.length} objects and ${r.layers.length} layers from "${name}".`);
+        this.print(`Imported ${r.entities.length} objects and ${r.layers.length} layers from "${name}"${d.dwgVersion ? ` (AutoCAD ${d.dwgVersion} format)` : ''}.`);
         const sk = Object.entries(r.skipped);
         if (sk.length) this.print(`Not imported: ${sk.map(([k, v]) => `${k}×${v}`).join(', ')}`);
       } else {
@@ -1689,10 +1754,13 @@ const App = {
         this.doc._space = -1;
         this.doc.blocks = this.doc.blocks || {};
         this.doc.name = this.doc.name || base;
+        this.doc.saveFormat = 'bcad';
         this.print(`Opened "${name}" (${this.doc.entities.length} objects).`);
       }
+      this.fileHandle = meta.handle || null;
       this.sel.clear(); this.undoStack = []; this.redoStack = []; this.index = null; this.blockEdit = null; this.activeVp = null; this.spaceViews = {};
       this.changed(); this.refreshUI(); this.zoomExtents();
+      if (this.doc.saveFormat === 'dwg') this.print(`Ctrl+S saves back as DWG${this.fileHandle ? ' to the same file' : ''}. Use SAVEAS for another version or format.`);
     } catch (err) { console.error(err); this.print('Could not open file: ' + err.message); }
   },
   /* Read a drawing file (DWG/DXF/BCAD) into {fileName, entities, blocks, layers}. */
@@ -1731,8 +1799,9 @@ const App = {
     this.changed();
     return name;
   },
-  exportAs(k) {
+  exportAs(k, version) {
     k = String(k).toUpperCase();
+    if (k === 'DWG') { this.saveFile('dwg', { export: true, version: version || this.doc.dwgVersion || '2018' }); return; }
     if (k === 'DXF') { IO.download(`${this.doc.name}.dxf`, IO.toDXF(this.doc), 'application/dxf'); this.print(`Exported "${this.doc.name}.dxf" (AutoCAD R12 DXF).`); }
     else if (k === 'SVG') { IO.download(`${this.doc.name}.svg`, Render.toSVG(this.doc), 'image/svg+xml'); this.print(`Exported "${this.doc.name}.svg".`); }
     else if (k === 'PNG') { this.renderPNG().toBlob((b) => { IO.download(`${this.doc.name}.png`, b); this.print(`Exported "${this.doc.name}.png".`); }); }

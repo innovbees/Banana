@@ -68,17 +68,24 @@ Dimensions are **associative**: if you pick their points with object snaps, they
 **Inquiry:** `DIST DI`, `AREA AA`, `ID`, `LIST LI`
 **View:** `ZOOM Z` (Extents/Window/Previous/nX), `PAN P`, `REGEN RE`
 **Settings:** `LAYER LA` (layer manager), `-LAYER` (Make/Set/ON/OFF/Color/Lock), `COLOR`, `TEXTSIZE`, `DIMSCALE`, `DIMDEC`, `GRID`, `SNAP`, `ORTHO`, `OSNAP`
-**File/edit:** `NEW`, `OPEN`, `SAVE`, `SAVEAS`, `EXPORT` (DXF/SVG/PNG), `PLOT` (PDF), `UNDO U`, `REDO`, Ctrl+C/X/V, Ctrl+A, `HELP` (F1)
+**File/edit:** `NEW`, `OPEN`, `SAVE`, `SAVEAS` (DWG 2000–2018 / DXF / BCAD), `EXPORT` (DWG/DXF/SVG/PNG), `PLOT` (PDF), `UNDO U`, `REDO`, Ctrl+C/X/V, Ctrl+A, `HELP` (F1)
 
 ## Files
 
 - **Opening DWG:** Open (Ctrl+O), or drag a `.dwg` file onto the drawing area. BananaCAD reads AutoCAD DWG files using LibreDWG, which runs inside your browser, so files are never uploaded. LibreDWG supports most versions from R13 to 2018 and later. The DWG reader is about 3.4 MB and loads the first time you open a DWG.
+- **Creating and editing DWG:**
+  - **Saving an opened DWG:** open a `.dwg`, edit it and press **Ctrl+S**. It is saved back as DWG in the same AutoCAD version. In Chrome or Edge it writes straight into the same file after asking for permission once. In other browsers you choose a location, or it downloads.
+  - **New drawings:** use `SAVEAS` with the DWG format and choose AutoCAD **2018, 2013, 2010, 2007, 2004 or 2000**. The **DWG** button in the top bar exports a copy.
+  - **What is written:** objects are written as native AutoCAD objects: lines, arcs, circles, ellipses, polylines with arc segments, TEXT, MTEXT, hatches (solid and patterns, with islands), **real dimensions**, blocks with attributes, layers (colour, linetype, lineweight, on/off, plot), and text and dimension styles.
+  - **Saved as simpler objects:** splines become polylines, and leaders become a polyline, an arrow and MTEXT. Tables are split into lines and text.
+  - **Not saved to DWG:** layout sheets and images. Keep a `.bcad` copy if you need those.
+  - **Library:** DWG writing uses acad-ts (MIT, about 1.2 MB), which loads the first time you save a DWG.
 - **Opening DXF:** The importer handles lines, polylines (including arc segments), circles, arcs, ellipses, splines, text, MTEXT, attributes, hatches, leaders and multileader notes. Blocks stay blocks, including nested, scaled, rotated, mirrored and arrayed ones, and keep their attributes. Dimensions come in as single objects. Layers keep their colour, linetype and on/off state, and text styles keep their fonts. Paper-space layouts, xrefs, images and 3D objects are skipped, and the command line tells you what was left out.
 - **Saving:** Save / Open use the native `.bcad` format, which is JSON. Your work is also autosaved in the browser.
-- **Sending a drawing back to AutoCAD:** Export DXF writes AutoCAD R12 ASCII DXF of the model, with blocks, attributes, layers and text styles. AutoCAD, LibreCAD, DraftSight and others open it directly, and in AutoCAD you can use `SAVEAS` to turn it into DWG. Writing DWG directly isn't supported because LibreDWG's DWG writer is still experimental.
+- **DXF:** Export DXF writes AutoCAD R12 ASCII DXF of the model, with blocks, attributes, layers and text styles. Use it for programs that don't read DWG.
 - **PLOT** writes a PDF to scale. **Export SVG / PNG** writes the model. All of them print on white, and white and very light colours come out black.
 
-The DWG reader lives in `lib/libredwg/`, which is LibreDWG (GPL-3.0); see `lib/libredwg/NOTICE.md`.
+The DWG reader lives in `lib/libredwg/`, which is LibreDWG (GPL-3.0); see `lib/libredwg/NOTICE.md`. The DWG writer lives in `lib/acad-ts/`, which is acad-ts (MIT); see `lib/acad-ts/NOTICE.md`.
 
 ## Code layout
 
@@ -90,6 +97,7 @@ The DWG reader lives in `lib/libredwg/`, which is LibreDWG (GPL-3.0); see `lib/l
 | `js/io.js` | DWG import (via LibreDWG), DXF import/export (blocks, attributes, styles), downloads |
 | `js/library.js` | Built-in block/symbol library |
 | `js/plot.js` | Paper sizes, scales, vector PDF writer, Plot dialog |
+| `js/dwgout.js` | DWG writing (BananaCAD drawing → native AutoCAD objects via acad-ts) |
 | `js/commands.js` | All commands, written as generators that `yield` prompts |
 | `js/app.js` | Command runner, command line, mouse/keyboard, panels, drawing loop |
 
