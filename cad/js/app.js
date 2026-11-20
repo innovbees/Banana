@@ -6,9 +6,26 @@ const OSNAP_MODES = [
   ['int', 'Intersection'], ['perp', 'Perpendicular'], ['ins', 'Insertion'], ['node', 'Node'], ['nea', 'Nearest'],
 ];
 
+function newLayout(name) { return { name, paper: 'A3', orient: 'landscape', ents: [] }; }
+/* doc.entities always refers to the active space (model or a layout sheet). */
+function attachSpaces(doc) {
+  const own = Object.getOwnPropertyDescriptor(doc, 'entities');
+  if (own && !own.get) { if (!Array.isArray(doc.model)) doc.model = Array.isArray(doc.entities) ? doc.entities : []; delete doc.entities; }
+  if (!Array.isArray(doc.model)) doc.model = [];
+  if (!Array.isArray(doc.layouts) || !doc.layouts.length) doc.layouts = [newLayout('Layout1')];
+  if (!Object.prototype.hasOwnProperty.call(doc, '_space')) Object.defineProperty(doc, '_space', { value: -1, writable: true, enumerable: false, configurable: true });
+  if (doc._space >= doc.layouts.length) doc._space = -1;
+  if (!Object.getOwnPropertyDescriptor(doc, 'entities')) Object.defineProperty(doc, 'entities', {
+    enumerable: false, configurable: true,
+    get() { return this._space < 0 ? this.model : this.layouts[this._space].ents; },
+    set(v) { if (this._space < 0) this.model = v; else this.layouts[this._space].ents = v; },
+  });
+  if (!doc.layers.find((l) => l.name === 'Viewports')) doc.layers.push({ name: 'Viewports', color: '#808080', visible: true, locked: false, linetype: 'Continuous', plot: false });
+  return doc;
+}
 function newDoc() {
-  return {
-    name: 'Drawing1', entities: [], nextId: 1,
+  return attachSpaces({
+    name: 'Drawing1', model: [], layouts: [newLayout('Layout1')], units: 'mm', nextId: 1,
     layers: [
       { name: '0', color: '#ffffff', visible: true, locked: false, linetype: 'Continuous' },
       { name: 'Annotation', color: '#ffff00', visible: true, locked: false, linetype: 'Continuous' },
@@ -26,7 +43,7 @@ function newDoc() {
     clayer: '0', ccolor: 'bylayer', textSize: 2.5, dimScale: 1, dimDec: 2,
     filletRad: 0, offsetDist: 1, lastRadius: undefined, revArc: 10,
     hatchPattern: 'ANSI31', hatchScale: 1, hatchAngle: 0,
-  };
+  });
 }
 
 const App = {
@@ -36,6 +53,9 @@ const App = {
     osmodes: { end: true, mid: true, cen: true, quad: true, int: true, perp: true, ins: true, node: true, nea: false } },
   tracked: [],
   sel: new Set(),
+  get space() { return this.doc._space; },
+  spaceViews: {},
+  activeVp: null,
   undoStack: [], redoStack: [],
   cmd: null, lastCmd: null, lastPoint: null,
   mouse: { sx: 0, sy: 0, over: false, world: { x: 0, y: 0 }, pt: { x: 0, y: 0 }, snap: null, shift: false },
@@ -58,7 +78,7 @@ const App = {
     let restored = false;
     try {
       const s = localStorage.getItem(AUTOSAVE_KEY);
-      if (s) { const o = JSON.parse(s); if (o && o.doc && Array.isArray(o.doc.entities) && o.doc.entities.length) { this.doc = Object.assign(newDoc(), o.doc); if (o.view) this.view = o.view; if (o.settings) Object.assign(this.settings, o.settings, { osmodes: Object.assign(this.settings.osmodes, o.settings.osmodes || {}) }); restored = true; } }
+      if (s) { const o = JSON.parse(s); if (o && o.doc && ((o.doc.model && o.doc.model.length) || (o.doc.entities && o.doc.entities.length))) { this.doc = attachSpaces(Object.assign(newDoc(), o.doc)); this.doc._space = -1; if (o.view) this.view = o.view; if (o.settings) Object.assign(this.settings, o.settings, { osmodes: Object.assign(this.settings.osmodes, o.settings.osmodes || {}) }); restored = true; } }
     } catch (err) { /* storage unavailable */ }
     if (!restored) this.view = { cx: 210, cy: 148, scale: Math.max(0.5, (this.W - 40) / 440) };
     if (!this.doc.blocks) this.doc.blocks = {};
@@ -111,11 +131,11 @@ const App = {
   autosave() {
     try { localStorage.setItem(AUTOSAVE_KEY, JSON.stringify({ doc: this.doc, view: this.view, settings: this.settings })); } catch (err) { /* quota */ }
   },
-  serialize() { const d = this.doc; return JSON.stringify({ e: d.entities, l: d.layers, n: d.nextId, c: d.clayer, b: d.blocks, ts: d.textStyles, ds: d.dimStyles, t: d.textStyle, dd: d.dimStyle }); },
+  serialize() { const d = this.doc; return JSON.stringify({ m: d.model, la: d.layouts, l: d.layers, n: d.nextId, c: d.clayer, b: d.blocks, ts: d.textStyles, ds: d.dimStyles, t: d.textStyle, dd: d.dimStyle }); },
   captureState() { return this.serialize(); },
   restoreState(s) {
     const o = JSON.parse(s);
-    this.doc.entities = o.e; this.doc.layers = o.l; this.doc.nextId = o.n; this.doc.clayer = o.c; if (o.b) this.doc.blocks = o.b; if (o.ts) { this.doc.textStyles = o.ts; this.doc.dimStyles = o.ds; this.doc.textStyle = o.t; this.doc.dimStyle = o.dd; }
+    this.doc.model = o.m; this.doc.layouts = o.la; if (this.doc._space >= o.la.length) this.doc._space = -1; this.doc.layers = o.l; this.doc.nextId = o.n; this.doc.clayer = o.c; if (o.b) this.doc.blocks = o.b; if (o.ts) { this.doc.textStyles = o.ts; this.doc.dimStyles = o.ds; this.doc.textStyle = o.t; this.doc.dimStyle = o.dd; }
     this.index = null;
     for (const id of [...this.sel]) if (!this.get(id)) this.sel.delete(id);
     this.changed(); this.refreshUI();
@@ -330,10 +350,99 @@ const App = {
   toWorld(sx, sy) { return { x: (sx - this.W / 2) / this.view.scale + this.view.cx, y: (this.H / 2 - sy) / this.view.scale + this.view.cy }; },
   pushView() { this.viewStack.push({ ...this.view }); if (this.viewStack.length > 50) this.viewStack.shift(); },
   zoomExtents() {
+    if (this.space >= 0) {
+      const ps = paperSize(this.doc.layouts[this.space]);
+      const b0 = Render.extents(this.doc) || { minx: 0, miny: 0, maxx: ps.w, maxy: ps.h };
+      this.pushView();
+      this.zoomRect({ minx: Math.min(0, b0.minx), miny: Math.min(0, b0.miny), maxx: Math.max(ps.w, b0.maxx), maxy: Math.max(ps.h, b0.maxy) }, false);
+      return;
+    }
     const b = Render.extents(this.doc);
     this.pushView();
     if (!b) { this.view = { cx: 210, cy: 148, scale: Math.max(0.5, (this.W - 40) / 440) }; this.requestRedraw(); return; }
     this.zoomRect(b, false);
+  },
+  setSpace(i) {
+    if (i === this.space) return;
+    if (this.cmd) this.cancel(true);
+    this.spaceViews[this.space] = { ...this.view };
+    this.doc._space = i;
+    this.sel.clear(); this.index = null; this.activeVp = null; this.hover = null;
+    if (i >= 0) {
+      const L = this.doc.layouts[i];
+      if (!L.ents.length && !L.init) { L.init = true; this.autoViewport(L); }
+    }
+    if (this.spaceViews[i]) this.view = { ...this.spaceViews[i] }; else this.zoomExtents();
+    this.print(i < 0 ? 'Model space' : `Layout "${this.doc.layouts[i].name}" (${this.doc.layouts[i].paper} ${this.doc.layouts[i].orient})`);
+    this.changed(); this.refreshUI(); this.buildLayoutBar();
+  },
+  autoViewport(L, rect) {
+    const ps = paperSize(L), m = 10;
+    const r = rect || { minx: m, miny: m, maxx: ps.w - m, maxy: ps.h - m };
+    const ext = Render.extents(this.doc, this.doc.model) || { minx: 0, miny: 0, maxx: 100, maxy: 100 };
+    const w = r.maxx - r.minx, h = r.maxy - r.miny;
+    const vp = { type: 'viewport', p1: { x: r.minx, y: r.miny }, p2: { x: r.maxx, y: r.maxy }, cx: (ext.minx + ext.maxx) / 2, cy: (ext.miny + ext.maxy) / 2,
+      scale: fitStdScale(this.doc, ext.maxx - ext.minx, ext.maxy - ext.miny, w * 0.95, h * 0.95), layer: 'Viewports', color: 'bylayer', id: this.doc.nextId++ };
+    if (!this.layer('Viewports')) this.doc.layers.push({ name: 'Viewports', color: '#808080', visible: true, locked: false, linetype: 'Continuous', plot: false });
+    L.ents.push(vp);
+    return vp;
+  },
+  vpAt(p) {
+    if (this.space < 0) return null;
+    const vis = new Set(this.doc.layers.filter((l) => l.visible).map((l) => l.name));
+    return this.doc.entities.filter((e) => e.type === 'viewport' && vis.has(e.layer)).reverse().find((v) => p.x > v.p1.x && p.x < v.p2.x && p.y > v.p1.y && p.y < v.p2.y) || null;
+  },
+  buildLayoutBar() {
+    const bar = document.getElementById('layoutbar');
+    if (!bar) return;
+    bar.innerHTML = '';
+    const mk = (label, i) => {
+      const b = document.createElement('button');
+      b.textContent = label; b.className = 'ltab' + (i === this.space ? ' on' : '');
+      b.onmousedown = (ev) => ev.preventDefault();
+      b.onclick = () => this.setSpace(i);
+      if (i >= 0) {
+        b.ondblclick = () => this.renameLayout(i);
+        b.oncontextmenu = (ev) => { ev.preventDefault(); this.layoutMenu(ev, i); };
+      }
+      bar.appendChild(b);
+    };
+    mk('Model', -1);
+    this.doc.layouts.forEach((L, i) => mk(L.name, i));
+    const add = document.createElement('button'); add.className = 'ltab add'; add.textContent = '+'; add.title = 'New layout';
+    add.onclick = () => { this.doc.layouts.push(newLayout(this.uniqueLayoutName())); this.setSpace(this.doc.layouts.length - 1); };
+    bar.appendChild(add);
+    const hint = document.createElement('span'); hint.className = 'lhint';
+    hint.textContent = this.space >= 0 ? (this.activeVp ? 'Inside viewport: wheel = zoom, middle-drag = pan · Esc to leave' : 'Paper space (mm) · double-click inside a viewport to pan/zoom it · right-click a tab for options') : '';
+    bar.appendChild(hint);
+  },
+  uniqueLayoutName() { let i = this.doc.layouts.length + 1; while (this.doc.layouts.some((l) => l.name === `Layout${i}`)) i++; return `Layout${i}`; },
+  renameLayout(i) {
+    const L = this.doc.layouts[i], n = (prompt('Layout name', L.name) || '').trim();
+    if (!n || n === L.name) return;
+    if (this.doc.layouts.some((l) => l.name === n)) { this.print(`Layout "${n}" already exists.`); return; }
+    this.pushUndoNow(); L.name = n; this.changed(); this.buildLayoutBar(); this.refreshUI();
+  },
+  deleteLayout(i) {
+    if (this.doc.layouts.length < 2) { this.print('A drawing needs at least one layout.'); return; }
+    if (!confirm(`Delete layout "${this.doc.layouts[i].name}"?`)) return;
+    this.pushUndoNow();
+    if (this.space === i) this.setSpace(-1);
+    this.doc.layouts.splice(i, 1);
+    if (this.space > i) this.doc._space--;
+    this.changed(); this.buildLayoutBar();
+  },
+  layoutMenu(ev, i) {
+    let m = document.getElementById('tabmenu');
+    if (!m) { m = document.createElement('div'); m.id = 'tabmenu'; document.body.appendChild(m); document.addEventListener('mousedown', (e2) => { if (!m.contains(e2.target)) m.style.display = 'none'; }); }
+    m.innerHTML = '';
+    const item = (label, fn) => { const d = document.createElement('div'); d.className = 'ci'; d.textContent = label; d.onmousedown = (e2) => { e2.preventDefault(); m.style.display = 'none'; fn(); }; m.appendChild(d); };
+    item('Rename…', () => this.renameLayout(i));
+    item('Duplicate', () => { this.pushUndoNow(); const c = JSON.parse(JSON.stringify(this.doc.layouts[i])); c.name = this.uniqueLayoutName(); c.ents.forEach((e) => (e.id = this.doc.nextId++)); this.doc.layouts.push(c); this.setSpace(this.doc.layouts.length - 1); });
+    item('Plot…', () => { this.setSpace(i); Plot.open(this); });
+    item('Delete', () => this.deleteLayout(i));
+    m.style.display = 'block';
+    m.style.left = ev.clientX + 'px'; m.style.top = ev.clientY - m.offsetHeight - 4 + 'px';
   },
   zoomRect(b, push = true) {
     if (push) this.pushView();
@@ -529,7 +638,21 @@ const App = {
     vp.addEventListener('mouseleave', () => { this.mouse.over = false; this.hover = null; this.updateDyn(); this.requestRedraw(); });
     cv.addEventListener('mousedown', (ev) => this.onDown(ev));
     window.addEventListener('mouseup', (ev) => this.onUp(ev));
-    cv.addEventListener('wheel', (ev) => { ev.preventDefault(); const r = cv.getBoundingClientRect(); this.zoomAt(ev.clientX - r.left, ev.clientY - r.top, ev.deltaY < 0 ? 1.2 : 1 / 1.2); }, { passive: false });
+    cv.addEventListener('wheel', (ev) => {
+      ev.preventDefault();
+      const r = cv.getBoundingClientRect(), sx = ev.clientX - r.left, sy = ev.clientY - r.top, f = ev.deltaY < 0 ? 1.2 : 1 / 1.2;
+      const vp = this.activeVp && this.get(this.activeVp);
+      if (vp) {
+        if (vp.locked) { this.print('Viewport display is locked (unlock it in Properties).'); return; }
+        const p = this.toWorld(sx, sy), P0 = G.mid(vp.p1, vp.p2);
+        const m = { x: vp.cx + (p.x - P0.x) / vp.scale, y: vp.cy + (p.y - P0.y) / vp.scale };
+        const ns = vp.scale * f;
+        vp.cx = m.x - (m.x - vp.cx) * vp.scale / ns; vp.cy = m.y - (m.y - vp.cy) * vp.scale / ns; vp.scale = ns;
+        this.changed(); this.refreshProps();
+        return;
+      }
+      this.zoomAt(sx, sy, f);
+    }, { passive: false });
     cv.addEventListener('contextmenu', (ev) => { ev.preventDefault(); this.onRight(ev); });
     cv.addEventListener('dblclick', (ev) => this.onDbl(ev));
     window.addEventListener('keydown', (ev) => this.onKey(ev));
@@ -581,7 +704,10 @@ const App = {
     const ms = this.mouse;
     ms.over = true; ms.shift = ev.shiftKey;
     if (this.drag) {
-      if (this.drag.type === 'pan') {
+      if (this.drag.type === 'vppan') {
+        const vp = this.get(this.drag.id);
+        if (vp) { vp.cx -= (sx - ms.sx) / this.view.scale / vp.scale; vp.cy += (sy - ms.sy) / this.view.scale / vp.scale; this.changed(); }
+      } else if (this.drag.type === 'pan') {
         this.view.cx -= (sx - ms.sx) / this.view.scale; this.view.cy += (sy - ms.sy) / this.view.scale;
       }
     }
@@ -596,7 +722,11 @@ const App = {
     const { sx, sy } = this.evPos(ev);
     Object.assign(this.mouse, { sx, sy, over: true, shift: ev.shiftKey });
     this.updateMouse();
-    if (ev.button === 1) { this.drag = { type: 'pan' }; this.el.vp.classList.add('panning'); return; }
+    if (ev.button === 1) {
+      const vp = this.activeVp && this.get(this.activeVp);
+      if (vp && !vp.locked) { this.pushUndoNow(); this.drag = { type: 'vppan', id: vp.id }; } else this.drag = { type: 'pan' };
+      this.el.vp.classList.add('panning'); return;
+    }
     if (ev.button !== 0) return;
     if (document.activeElement !== this.el.input && !(this.cmd && this.cmd.prompt.type === 'textedit')) this.el.input.focus();
     const pr = this.cmd && this.cmd.prompt;
@@ -636,6 +766,17 @@ const App = {
     if (ev.button !== 0) return;
     const { sx, sy } = this.evPos(ev);
     if (this.cmd) return;
+    if (this.space >= 0) {
+      const p = this.toWorld(sx, sy), onEdge = this.pick(sx, sy);
+      if (!onEdge || onEdge.type === 'viewport') {
+        const vp = onEdge ? null : this.vpAt(p);
+        this.activeVp = vp ? vp.id : null;
+        this.sel.clear(); this.win = null;
+        if (vp) { this.sel.add(vp.id); this.print(`Inside viewport (scale ${scaleLabel(this.doc, vp.scale)}): mouse wheel zooms, middle-drag pans. Esc or double-click outside to leave.`); }
+        this.buildLayoutBar(); this.refreshUI(); this.requestRedraw();
+        if (!onEdge) return;
+      }
+    }
     const e = this.pick(sx, sy);
     if (!e) return;
     if (['text', 'mtext', 'leader', 'dim'].includes(e.type)) { this.win = null; this.runCommand('TEXTEDIT', { id: e.id }); }
@@ -704,6 +845,7 @@ const App = {
       inp.value = '';
       if (this.win) { this.win = null; }
       else if (this.cmd) this.cancel();
+      else if (this.activeVp) { this.activeVp = null; this.buildLayoutBar(); }
       else if (this.sel.size) { this.sel.clear(); this.afterSelChange(); }
       this.updateDyn(); this.requestRedraw();
       return;
@@ -846,6 +988,7 @@ const App = {
     const lay = this.layer(shown || this.doc.clayer);
     document.getElementById('layerswatch').style.background = lay ? lay.color : '#fff';
     this.el.title.textContent = this.doc.name;
+    this.buildLayoutBar();
     document.title = `${this.doc.name} — BananaCAD`;
     this.refreshProps();
   },
@@ -863,6 +1006,33 @@ const App = {
     body.innerHTML = '';
     const ids = this.selectedIds();
     const h = (tag, cls, txt) => { const x = document.createElement(tag); if (cls) x.className = cls; if (txt != null) x.textContent = txt; return x; };
+    if (!ids.length && this.space >= 0) {
+      const L = this.doc.layouts[this.space];
+      body.appendChild(h('h4', null, `Layout: ${L.name}`));
+      const tbl = h('div', 'grid2');
+      const row = (label, el) => { tbl.appendChild(h('label', null, label)); tbl.appendChild(el); };
+      const ps = h('select'); Object.keys(PAPERS).forEach((k) => { const o = h('option', null, `${k} (${PAPERS[k][0]}×${PAPERS[k][1]})`); o.value = k; ps.appendChild(o); }); ps.value = L.paper;
+      ps.onchange = () => { this.pushUndoNow(); L.paper = ps.value; this.changed(); this.zoomExtents(); this.refreshUI(); };
+      row('Paper size', ps);
+      const or = h('select'); [['landscape', 'Landscape'], ['portrait', 'Portrait']].forEach(([v, l]) => { const o = h('option', null, l); o.value = v; or.appendChild(o); }); or.value = L.orient;
+      or.onchange = () => { this.pushUndoNow(); L.orient = or.value; this.changed(); this.zoomExtents(); this.refreshUI(); };
+      row('Orientation', or);
+      body.appendChild(tbl);
+      const acts = h('div', 'actions');
+      const btn = (label, fn) => { const b = h('button', null, label); b.onclick = fn; acts.appendChild(b); };
+      btn('Add viewport', () => this.runCommand('MVIEW'));
+      btn('Add title block', () => {
+        const p2 = paperSize(L);
+        libraryEnsure(this.doc, 'Title block A3');
+        const k = Math.min(p2.w / 420, p2.h / 297);
+        this.runCommand('INSERT', { name: 'Title block A3' });
+        if (this.cmd) { this.submit(`S`); this.submit(String(+k.toFixed(6))); this.submit('0,0'); }
+      });
+      btn('Plot this layout…', () => Plot.open(this));
+      body.appendChild(acts);
+      body.appendChild(h('div', 'muted', 'Paper space is in millimetres. Viewports show the model at an exact scale — select a viewport border to change its scale. Double-click inside a viewport to pan/zoom it.'));
+      return;
+    }
     if (!ids.length) {
       body.appendChild(h('div', 'muted', 'No selection. Click objects, or drag a window (left→right = inside, right→left = crossing).'));
       const tbl = h('div', 'grid2');
@@ -898,6 +1068,15 @@ const App = {
     row('Layer', layerSel);
     const commonColor = new Set(ents.map((e) => e.color)).size === 1 ? ents[0].color : 'bylayer';
     row('Color', this.colorControl(commonColor, (v) => apply((e) => (e.color = v))));
+    {
+      const lws = h('select');
+      const cur = new Set(ents.map((e) => (e.lw == null ? 'bylayer' : String(e.lw))));
+      [['bylayer', 'ByLayer'], ...LINEWEIGHTS.map((v) => [String(v), `${v.toFixed(2)} mm`])].forEach(([v, l]) => { const o = h('option', null, l); o.value = v; lws.appendChild(o); });
+      if (cur.size > 1) { const o = h('option', null, '*VARIES*'); o.value = ''; lws.prepend(o); }
+      lws.value = cur.size === 1 ? [...cur][0] : '';
+      lws.onchange = () => lws.value && apply((e) => { if (lws.value === 'bylayer') delete e.lw; else e.lw = +lws.value; });
+      row('Lineweight', lws);
+    }
     const num = (label, get, set, ro) => {
       const i = h('input'); i.type = 'number'; i.step = 'any'; i.value = +(+get()).toFixed(6);
       if (ro) i.readOnly = true; else i.onchange = () => { const v = parseFloat(i.value); if (!isNaN(v)) apply((e) => set(e, v)); };
@@ -987,6 +1166,22 @@ const App = {
         case 'revcloud':
           num('Arc length', () => e.arc, (o, v) => v > 0 && (o.arc = v));
           break;
+        case 'viewport': {
+          const sc = h('select');
+          const curL = scaleLabel(this.doc, e.scale);
+          const opts = STD_SCALES.map(([l, n]) => [String(n), l]);
+          if (!STD_SCALES.some(([l]) => l === curL)) opts.unshift(['custom', curL + ' (custom)']);
+          opts.forEach(([v, l]) => { const o = h('option', null, l); o.value = v; sc.appendChild(o); });
+          sc.value = STD_SCALES.find(([l]) => l === curL) ? String(STD_SCALES.find(([l]) => l === curL)[1]) : 'custom';
+          sc.onchange = () => sc.value !== 'custom' && apply((o) => (o.scale = scaleFactor(this.doc, +sc.value)));
+          row('Scale', sc);
+          num('Custom 1:N', () => (UNITS_MM[this.doc.units || 'mm'] || 1) / e.scale, (o, v) => v > 0 && (o.scale = scaleFactor(this.doc, v)));
+          num('View center X', () => e.cx, (o, v) => (o.cx = v)); num('View center Y', () => e.cy, (o, v) => (o.cy = v));
+          num('Width (mm)', () => e.p2.x - e.p1.x, (o, v) => v > 0 && (o.p2.x = o.p1.x + v)); num('Height (mm)', () => e.p2.y - e.p1.y, (o, v) => v > 0 && (o.p2.y = o.p1.y + v));
+          const lk = h('input'); lk.type = 'checkbox'; lk.checked = !!e.locked; lk.onchange = () => apply((o) => (o.locked = lk.checked)); row('Display locked', lk);
+          const onb = h('input'); onb.type = 'checkbox'; onb.checked = e.on !== false; onb.onchange = () => apply((o) => (o.on = onb.checked)); row('Viewport on', onb);
+          break;
+        }
         case 'insert': {
           const nm = h('input'); nm.value = e.name; nm.readOnly = true; row('Block', nm);
           num('Position X', () => e.p.x, (o, v) => (o.p.x = v)); num('Position Y', () => e.p.y, (o, v) => (o.p.y = v));
@@ -1013,6 +1208,12 @@ const App = {
       num('Height', () => ents[0].h, (o, v) => v > 0 && (o.h = v));
     }
     const acts = h('div', 'actions');
+    if (ents.length === 1 && ents[0].type === 'viewport') {
+      const v = ents[0];
+      const fb = h('button', null, 'Fit drawing'); fb.onclick = () => apply((o) => { const ext = Render.extents(this.doc, this.doc.model); if (!ext) return; o.cx = (ext.minx + ext.maxx) / 2; o.cy = (ext.miny + ext.maxy) / 2; o.scale = fitStdScale(this.doc, ext.maxx - ext.minx, ext.maxy - ext.miny, (o.p2.x - o.p1.x) * 0.95, (o.p2.y - o.p1.y) * 0.95); });
+      acts.appendChild(fb);
+      const ib = h('button', null, 'Pan/zoom inside'); ib.onclick = () => { this.activeVp = v.id; this.buildLayoutBar(); this.requestRedraw(); }; acts.appendChild(ib);
+    }
     if (ents.length === 1 && ents[0].type === 'table') {
       const t = ents[0];
       const mkb = (label, fn) => { const b = h('button', null, label); b.onclick = () => apply(() => fn(t)); acts.appendChild(b); };
@@ -1235,7 +1436,7 @@ const App = {
     head.appendChild(add);
     body.appendChild(head);
     const tbl = document.createElement('table'); tbl.className = 'layers';
-    tbl.innerHTML = '<tr><th title="Current">Cur</th><th>Name</th><th title="On/Off">On</th><th title="Locked">Lock</th><th>Color</th><th>Linetype</th><th></th></tr>';
+    tbl.innerHTML = '<tr><th title="Current">Cur</th><th>Name</th><th title="On/Off">On</th><th title="Locked">Lock</th><th title="Plot">Plot</th><th>Color</th><th>Linetype</th><th title="Lineweight (mm)">LW</th><th></th></tr>';
     for (const l of d.layers) {
       const tr = document.createElement('tr');
       if (l.name === d.clayer) tr.className = 'cur';
@@ -1256,12 +1457,18 @@ const App = {
       on.onchange = () => { l.visible = on.checked; for (const id of [...this.sel]) if (this.get(id).layer === l.name) this.sel.delete(id); this.changed(); }; td().appendChild(on);
       const lk = document.createElement('input'); lk.type = 'checkbox'; lk.checked = !!l.locked;
       lk.onchange = () => { l.locked = lk.checked; this.changed(); }; td().appendChild(lk);
+      const pl = document.createElement('input'); pl.type = 'checkbox'; pl.checked = l.plot !== false; pl.title = 'Plot this layer';
+      pl.onchange = () => { this.pushUndoNow(); l.plot = pl.checked; this.changed(); }; td().appendChild(pl);
       const col = document.createElement('input'); col.type = 'color'; col.value = l.color;
       col.onchange = () => { this.pushUndoNow(); l.color = col.value; this.changed(); this.refreshUI(); }; td().appendChild(col);
       const lt = document.createElement('select');
       Object.keys(LINETYPES).forEach((k) => { const o = document.createElement('option'); o.value = k; o.textContent = k; lt.appendChild(o); });
       lt.value = l.linetype || 'Continuous';
       lt.onchange = () => { this.pushUndoNow(); l.linetype = lt.value; this.changed(); }; td().appendChild(lt);
+      const lw = document.createElement('select'); lw.className = 'lwsel';
+      LINEWEIGHTS.forEach((v) => { const o = document.createElement('option'); o.value = v; o.textContent = v.toFixed(2); lw.appendChild(o); });
+      lw.value = l.lw == null ? 0.25 : l.lw;
+      lw.onchange = () => { this.pushUndoNow(); l.lw = +lw.value; this.changed(); }; td().appendChild(lw);
       const del = document.createElement('button'); del.textContent = '×'; del.title = 'Delete layer'; del.className = 'del';
       del.onclick = () => {
         if (l.name === '0') { this.print('Layer 0 cannot be deleted.'); return; }
@@ -1305,6 +1512,11 @@ const App = {
       [90, 45, 30, 22.5, 15, 10, 5].forEach((v) => { const o = document.createElement('option'); o.value = v; o.textContent = v + '°'; sl.appendChild(o); });
       sl.value = s.polarInc; sl.onchange = () => { s.polarInc = +sl.value; this.autosave(); };
       tbl.append(l, sl); }
+    { const l = document.createElement('label'); l.textContent = 'Drawing units';
+      const us = document.createElement('select');
+      [['mm', 'Millimetres'], ['cm', 'Centimetres'], ['m', 'Metres'], ['in', 'Inches'], ['ft', 'Feet']].forEach(([v, t]) => { const o = document.createElement('option'); o.value = v; o.textContent = t; us.appendChild(o); });
+      us.value = d.units || 'mm'; us.onchange = () => { d.units = us.value; this.autosave(); };
+      tbl.append(l, us); }
     num('Grid spacing', () => s.gridSize, (v) => v > 0 && (s.gridSize = v));
     num('Snap spacing', () => s.snapSize, (v) => v > 0 && (s.snapSize = v));
     num('Text height', () => d.textSize, (v) => v > 0 && (d.textSize = v));
@@ -1357,6 +1569,7 @@ const App = {
         ['Blocks', ['BLOCK', 'INSERT', 'ATTDEF', 'ATTEDIT', 'ATTSYNC', 'BEDIT', 'BCLOSE', 'BLOCKSPALETTE', 'PURGE']],
         ['Inquiry & view', ['DIST', 'AREA', 'ID', 'LIST', 'ZOOM', 'PAN', 'REGEN']],
         ['Settings', ['LAYER', '-LAYER', 'COLOR', 'TEXTSIZE', 'DIMSCALE', 'DIMDEC', 'GRID', 'SNAP', 'ORTHO', 'OSNAP']],
+        ['Layouts & plotting', ['LAYOUT', 'PAGESETUP', 'MVIEW', 'MSPACE', 'PSPACE', 'PLOT', 'UNITS']],
         ['File & edit', ['NEW', 'OPEN', 'SAVE', 'SAVEAS', 'EXPORT', 'PLOT', 'UNDO', 'REDO', 'COPYCLIP', 'CUTCLIP', 'PASTECLIP', 'SELECTALL', 'HELP']],
       ];
       let html = '';
@@ -1373,7 +1586,7 @@ const App = {
 
   /* ===================== files ===================== */
   newDrawing() {
-    this.doc = newDoc(); this.sel.clear(); this.blockEdit = null; this.undoStack = []; this.redoStack = []; this.index = null;
+    this.doc = newDoc(); this.sel.clear(); this.blockEdit = null; this.activeVp = null; this.spaceViews = {}; this.undoStack = []; this.redoStack = []; this.index = null;
     this.view = { cx: 210, cy: 148, scale: Math.max(0.5, (this.W - 40) / 440) };
     this.changed(); this.refreshUI(); this.print('New drawing.');
   },
@@ -1419,13 +1632,14 @@ const App = {
       } else {
         const o = JSON.parse(text);
         const d = o.doc || o;
-        if (!Array.isArray(d.entities)) throw new Error('Not a BananaCAD drawing.');
-        this.doc = Object.assign(newDoc(), d);
+        if (!Array.isArray(d.entities) && !Array.isArray(d.model)) throw new Error('Not a BananaCAD drawing.');
+        this.doc = attachSpaces(Object.assign(newDoc(), d));
+        this.doc._space = -1;
         this.doc.blocks = this.doc.blocks || {};
         this.doc.name = this.doc.name || base;
         this.print(`Opened "${name}" (${this.doc.entities.length} objects).`);
       }
-      this.sel.clear(); this.undoStack = []; this.redoStack = []; this.index = null; this.blockEdit = null;
+      this.sel.clear(); this.undoStack = []; this.redoStack = []; this.index = null; this.blockEdit = null; this.activeVp = null; this.spaceViews = {};
       this.changed(); this.refreshUI(); this.zoomExtents();
     } catch (err) { console.error(err); this.print('Could not open file: ' + err.message); }
   },
@@ -1435,8 +1649,9 @@ const App = {
     const text = await f.text();
     if (/\.dxf$/i.test(f.name) || /^\s*0\s*\r?\n\s*SECTION/.test(text)) return { fileName: f.name, ...IO.fromDXF(text) };
     const o = JSON.parse(text), d = o.doc || o;
-    if (!Array.isArray(d.entities)) throw new Error('not a drawing file');
-    return { fileName: f.name, entities: d.entities, blocks: d.blocks || {}, layers: d.layers || [] };
+    const ents = d.model || d.entities;
+    if (!Array.isArray(ents)) throw new Error('not a drawing file');
+    return { fileName: f.name, entities: ents, blocks: d.blocks || {}, layers: d.layers || [] };
   },
   pickAndReadDrawing() {
     return new Promise((resolve) => {
@@ -1471,7 +1686,7 @@ const App = {
     else if (k === 'PNG') { this.renderPNG().toBlob((b) => { IO.download(`${this.doc.name}.png`, b); this.print(`Exported "${this.doc.name}.png".`); }); }
   },
   renderPNG(maxDim = 3000) {
-    const b = Render.extents(this.doc) || { minx: 0, miny: 0, maxx: 100, maxy: 100 };
+    const b = Render.extents(this.doc, this.doc.model) || { minx: 0, miny: 0, maxx: 100, maxy: 100 };
     const w0 = Math.max(b.maxx - b.minx, 1e-6), h0 = Math.max(b.maxy - b.miny, 1e-6);
     const scale = (maxDim * 0.92) / Math.max(w0, h0);
     const W = Math.round(w0 * scale / 0.92), H = Math.round(h0 * scale / 0.92);
@@ -1480,7 +1695,8 @@ const App = {
     ctx.fillStyle = '#ffffff'; ctx.fillRect(0, 0, W, H);
     const st = { ctx, dpr: 1, W, H, view: { cx: (b.minx + b.maxx) / 2, cy: (b.miny + b.maxy) / 2, scale }, doc: this.doc, print: true };
     ctx.lineCap = 'round'; ctx.lineJoin = 'round';
-    Render.drawDrawing(st);
+    st.lwt = this.settings.lwt;
+    Render.drawDrawing(st, null, null, this.doc.model);
     return c;
   },
 
@@ -1491,12 +1707,14 @@ const App = {
   },
   draw() {
     const ctx = this.ctx2d, W = this.W, H = this.H, dpr = this.dpr;
-    const st = { ctx, dpr, W, H, view: this.view, doc: this.doc };
+    const paper = this.space >= 0;
+    const st = { ctx, dpr, W, H, view: this.view, doc: this.doc, print: paper, lwt: this.settings.lwt };
     ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
-    ctx.fillStyle = '#1f252d'; ctx.fillRect(0, 0, W, H);
+    ctx.fillStyle = paper ? '#5b616a' : '#1f252d'; ctx.fillRect(0, 0, W, H);
     ctx.lineCap = 'round'; ctx.lineJoin = 'round';
-    if (this.settings.grid) this.drawGrid(ctx);
     E.ctxDoc = this.doc;
+    if (paper) this.drawPaper(ctx, st);
+    else if (this.settings.grid) this.drawGrid(ctx);
     const be = this.blockEdit;
     if (be) {
       const skip = new Set([...(this.hidden || []), ...be.ids]);
@@ -1517,7 +1735,7 @@ const App = {
       const ms = this.mouse;
       const base = pr.base || pr._first;
       if (base && this.wantsPoint(pr) && pr.rubber !== false && ms.over) {
-        Render.drawOps(st, [{ op: 'poly', pts: [base, ms.pt] }], 'rgba(255,255,255,0.55)', { dash: [4, 4] });
+        Render.drawOps(st, [{ op: 'poly', pts: [base, ms.pt] }], paper ? 'rgba(40,50,60,0.6)' : 'rgba(255,255,255,0.55)', { dash: [4, 4] });
       }
       let prev = [];
       try { if (pr.preview && ms.over && pr.type !== 'textedit') prev = pr.preview(ms.pt) || []; } catch (err) { console.error(err); }
@@ -1622,7 +1840,7 @@ const App = {
     // crosshair
     if (ms.over && !(pr && pr.type === 'textedit')) {
       const x = Math.round(ms.sx) + 0.5, y = Math.round(ms.sy) + 0.5;
-      ctx.strokeStyle = 'rgba(235,240,245,0.75)'; ctx.lineWidth = 1;
+      ctx.strokeStyle = paper ? 'rgba(30,36,44,0.8)' : 'rgba(235,240,245,0.75)'; ctx.lineWidth = 1;
       ctx.beginPath();
       const picking = !this.cmd || (pr && (pr.type === 'select' || pr.type === 'entity' || pr.pickbox));
       const gap = picking ? 6 : 0;
@@ -1631,6 +1849,27 @@ const App = {
       ctx.stroke();
       if (picking) ctx.strokeRect(x - 5, y - 5, 10, 10);
     }
+  },
+  /* Paper sheet + viewport contents for layouts. */
+  drawPaper(ctx, st) {
+    const L = this.doc.layouts[this.space], ps = paperSize(L);
+    const a = this.toScreen({ x: 0, y: ps.h }), b = this.toScreen({ x: ps.w, y: 0 });
+    ctx.fillStyle = 'rgba(0,0,0,0.35)'; ctx.fillRect(a.x + 6, a.y + 6, b.x - a.x, b.y - a.y);
+    ctx.fillStyle = '#ffffff'; ctx.fillRect(a.x, a.y, b.x - a.x, b.y - a.y);
+    const vis = new Set(this.doc.layers.filter((l) => l.visible).map((l) => l.name));
+    for (const vp of L.ents) {
+      if (vp.type !== 'viewport' || !vis.has(vp.layer) || vp.on === false) continue;
+      const q1 = this.toScreen({ x: vp.p1.x, y: vp.p2.y }), q2 = this.toScreen({ x: vp.p2.x, y: vp.p1.y });
+      ctx.save();
+      ctx.setTransform(this.dpr, 0, 0, this.dpr, 0, 0);
+      ctx.beginPath(); ctx.rect(q1.x, q1.y, q2.x - q1.x, q2.y - q1.y); ctx.clip();
+      const S = this.view.scale * vp.scale, sP0 = this.toScreen(G.mid(vp.p1, vp.p2));
+      const st2 = { ...st, view: { cx: vp.cx - (sP0.x - this.W / 2) / S, cy: vp.cy + (sP0.y - this.H / 2) / S, scale: S } };
+      Render.drawDrawing(st2, null, null, this.doc.model);
+      ctx.restore();
+      if (this.activeVp === vp.id) { ctx.setTransform(this.dpr, 0, 0, this.dpr, 0, 0); ctx.strokeStyle = '#3b8cff'; ctx.lineWidth = 3; ctx.strokeRect(q1.x, q1.y, q2.x - q1.x, q2.y - q1.y); }
+    }
+    ctx.setTransform(this.dpr, 0, 0, this.dpr, 0, 0);
   },
   drawGrid(ctx) {
     const s = this.view.scale;
@@ -1713,19 +1952,6 @@ const App = {
   },
 };
 
-/* Printing (PLOT) via hidden iframe with the SVG output. */
-App.plot = function () {
-  const svg = Render.toSVG(this.doc);
-  const f = document.createElement('iframe');
-  f.style.cssText = 'position:fixed;right:0;bottom:0;width:0;height:0;border:0';
-  document.body.appendChild(f);
-  const d = f.contentWindow.document;
-  d.open();
-  d.write(`<!doctype html><html><head><title>${this.doc.name}</title><style>@page{margin:10mm}html,body{margin:0;height:100%}svg{width:100%;height:100%}</style></head><body>${svg.replace(/^<\?xml[^>]*>/, '')}</body></html>`);
-  d.close();
-  setTimeout(() => { f.contentWindow.focus(); f.contentWindow.print(); setTimeout(() => f.remove(), 1000); }, 250);
-};
-
 /* Grip editing: an internal command started by clicking a grip. */
 const GRIP_CMD = {
   name: 'GRIP', aliases: [], desc: 'grip edit', internal: true, sel: true,
@@ -1766,7 +1992,10 @@ const RIBBON = [
     ['Attributes', [['ATTDEF', 'Define', 'attdef'], ['ATTEDIT', 'Edit values', 'attedit'], ['ATTSYNC', 'Sync', 'sync']]],
     ['Import', [['OPEN', 'Open DWG/DXF', 'open']]],
   ] },
-  { tab: 'Layout', groups: [] },
+  { tab: 'Layout', groups: [
+    ['Layouts', [['LAYOUT', 'Layouts', 'layout'], ['PAGESETUP', 'Page setup', 'page'], ['MVIEW', 'Viewport', 'viewport'], ['MSPACE', 'Into viewport', 'zoomwin'], ['PSPACE', 'Paper', 'page']]],
+    ['Output', [['PLOT', 'Plot / PDF', 'print'], ['EXPORT', 'Export', 'export']]],
+  ] },
   { tab: 'View', groups: [
     ['Navigate', [['ZOOM_E', 'Extents', 'zoomext'], ['ZOOM', 'Window', 'zoomwin'], ['PAN', 'Pan', 'pan'], ['REGEN', 'Regen', 'rotate']]],
     ['Palettes', [['LAYER', 'Layers', 'layers'], ['OSNAP', 'Settings', 'cmd'], ['HELP', 'Help', 'help']]],
@@ -1830,6 +2059,9 @@ const ICONS = {
   align: '<path d="M4 18l6-6M14 6h6v6"/><path d="M4 18h16" stroke-dasharray="2 2"/>',
   area: '<path d="M4 18l3-12 10 2 3 10z"/><path d="M8 14h6" stroke-dasharray="1.5 1.5"/>',
   cmd: '<rect x="4" y="5" width="16" height="14" rx="2"/><path d="M8 10l3 2-3 2M13 15h3"/>',
+  layout: '<rect x="3" y="5" width="18" height="14"/><rect x="6" y="8" width="8" height="8"/><path d="M16 15h3"/>',
+  page: '<path d="M6 3h9l4 4v14H6z"/><path d="M9 12h7M9 16h5"/>',
+  viewport: '<rect x="3" y="5" width="18" height="14"/><path d="M6 15l4-4 3 3 3-2 3 3"/>',
   table: '<rect x="3" y="4" width="18" height="16"/><path d="M3 9h18M3 14.5h18M9 4v16M15 4v16"/>',
   tstyle: '<path d="M4 18L9 5l5 13M6 13h6"/><path d="M15 18h6M18 9v9"/>',
   dimang: '<path d="M4 20L20 20M4 20L16 6"/><path d="M14 20a10 10 0 0 0-2.8-7"/>',

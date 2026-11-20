@@ -36,7 +36,7 @@ const IO = {
   toDXF(doc) {
     const L = [];
     const w = (c, v) => { L.push(String(c)); L.push(typeof v === 'number' ? (Number.isInteger(v) ? String(v) : v.toFixed(8).replace(/0+$/, '0')) : String(v)); };
-    const ext = Render.extents(doc) || { minx: 0, miny: 0, maxx: 100, maxy: 100 };
+    const ext = Render.extents(doc, doc.model || doc.entities) || { minx: 0, miny: 0, maxx: 100, maxy: 100 };
     w(0, 'SECTION'); w(2, 'HEADER');
     w(9, '$ACADVER'); w(1, 'AC1009');
     w(9, '$INSBASE'); w(10, 0); w(20, 0); w(30, 0);
@@ -126,7 +126,7 @@ const IO = {
     }
     w(0, 'ENDSEC');
     w(0, 'SECTION'); w(2, 'ENTITIES');
-    for (const e of doc.entities) writeEnt(e);
+    for (const e of doc.model || doc.entities) writeEnt(e);
     w(0, 'ENDSEC'); w(0, 'EOF');
     return L.join('\r\n') + '\r\n';
   },

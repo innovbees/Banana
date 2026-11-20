@@ -1019,7 +1019,7 @@ defCmd('EXPORT', ['EXP', 'DXFOUT', 'SVGOUT', 'PNGOUT'], 'Export to DXF (AutoCAD)
   if (!k) { const r = yield P.kw('Export format', ['DXF', 'SVG', 'PNG'], { def: 'DXF' }); if (r == null) return; k = r.kw || r; }
   c.app.exportAs(k);
 }, { transparent: true });
-defCmd('PLOT', ['PRINT'], 'Print the drawing (fit to page)', function* (c) { c.app.plot(); }, { transparent: true });
+defCmd('PLOT', ['PRINT', 'EXPORTPDF'], 'Plot to PDF: model at a scale, or a layout sheet', function* (c) { Plot.open(c.app); }, { transparent: true });
 defCmd('HELP', ['?', 'COMMANDS'], 'Show the command reference (F1)', function* (c) { c.app.showHelp(); }, { transparent: true });
 
 /* ======================= MORE MODIFY (group 1) ======================= */
@@ -1489,14 +1489,15 @@ defCmd('PURGE', ['PU'], 'Remove unused blocks and layers', function* (c) {
       changed = false;
       const used = new Set();
       const visit = (list) => { for (const e of list) if (e.type === 'insert' && !used.has(e.name)) { used.add(e.name); if (d.blocks[e.name]) visit(d.blocks[e.name].ents); } };
-      visit(d.entities);
+      visit(d.model); d.layouts.forEach((l) => visit(l.ents));
       for (const n of Object.keys(d.blocks)) if (!used.has(n)) { delete d.blocks[n]; nb++; changed = true; }
     }
   }
   if (what !== 'Blocks') {
     const used = new Set(['0', d.clayer]);
     const visit = (list) => { for (const e of list) { used.add(e.layer); } };
-    visit(d.entities); Object.values(d.blocks).forEach((b) => visit(b.ents));
+    visit(d.model); d.layouts.forEach((l) => visit(l.ents)); Object.values(d.blocks).forEach((b) => visit(b.ents));
+    used.add('Viewports');
     const before = d.layers.length;
     d.layers = d.layers.filter((l) => used.has(l.name));
     nl = before - d.layers.length;
@@ -1690,3 +1691,77 @@ defCmd('TABLEDIT', ['TABLEEDIT', 'TED'], 'Edit table cells (Tab moves to the nex
   }
   yield* editCells(c, e, cell.r, cell.c);
 });
+
+
+/* ======================= LAYOUTS & PLOTTING (group 4) ======================= */
+defCmd('LAYOUT', ['LO', 'LAYOUTS'], 'Create, switch, rename or delete layout sheets', function* (c) {
+  const app = c.app, d = c.doc;
+  const r = yield P.kw(`Layouts: ${d.layouts.map((l) => l.name).join(', ')}. Enter an option`, ['New', 'Set', 'Rename', 'Delete', 'Model']);
+  if (r == null) return;
+  const k = r.kw || r;
+  if (k === 'Model') { app.setSpace(-1); return; }
+  if (k === 'New') {
+    const n = yield P.str('Enter new layout name', { def: app.uniqueLayoutName(), spaces: true }); if (!n) return;
+    if (d.layouts.some((l) => l.name === n)) { c.print('A layout with that name exists.'); return; }
+    d.layouts.push(newLayout(n.trim())); app.setSpace(d.layouts.length - 1); return;
+  }
+  const n = yield P.str(`Enter layout name`, { def: app.space >= 0 ? d.layouts[app.space].name : d.layouts[0].name, spaces: true }); if (!n) return;
+  const i = d.layouts.findIndex((l) => l.name.toLowerCase() === n.trim().toLowerCase());
+  if (i < 0) { c.print(`Layout "${n}" not found.`); return; }
+  if (k === 'Set') app.setSpace(i);
+  if (k === 'Delete') app.deleteLayout(i);
+  if (k === 'Rename') {
+    const nn = yield P.str('Enter new name', { spaces: true }); if (!nn) return;
+    if (d.layouts.some((l) => l.name === nn.trim())) { c.print('A layout with that name exists.'); return; }
+    d.layouts[i].name = nn.trim(); c.changed(); app.buildLayoutBar();
+  }
+}, { transparent: true });
+
+defCmd('PAGESETUP', ['PSETUP'], 'Paper size and orientation of the current layout', function* (c) {
+  const app = c.app, d = c.doc;
+  if (app.space < 0) { c.print('Switch to a layout tab first (PAGESETUP sets the sheet of a layout; model plots choose paper in PLOT).'); return; }
+  const L = d.layouts[app.space];
+  const p = yield P.kw('Paper size', Object.keys(PAPERS), { def: L.paper }); if (p == null) return;
+  const o = yield P.kw('Orientation', ['Landscape', 'Portrait'], { def: L.orient === 'portrait' ? 'Portrait' : 'Landscape' }); if (o == null) return;
+  L.paper = p.kw || p; L.orient = (o.kw || o).toLowerCase();
+  c.changed(); app.zoomExtents(); app.refreshUI();
+}, { transparent: true });
+
+defCmd('MVIEW', ['MV', 'VPORTS'], 'Create a layout viewport showing the model at a scale', function* (c) {
+  const app = c.app, d = c.doc;
+  if (app.space < 0) { c.print('Viewports live on layout sheets. Click a layout tab (bottom) first.'); return; }
+  const L = d.layouts[app.space];
+  const a = yield P.point('Specify corner of viewport', { keywords: ['Fit'] }); if (!a) return;
+  let r;
+  if (a.kw === 'Fit') { const ps = paperSize(L); r = { minx: 10, miny: 10, maxx: ps.w - 10, maxy: ps.h - 10 }; }
+  else {
+    const b = yield P.point('Specify opposite corner', { base: a, rubber: false, preview: (m) => [{ type: 'pline', pts: rectPts(a, m), closed: true }] });
+    if (!b) return;
+    r = rectOf(a, b);
+    if (r.maxx - r.minx < 1 || r.maxy - r.miny < 1) { c.print('Viewport is too small.'); return; }
+  }
+  const vp = app.autoViewport(L, r);
+  c.changed();
+  c.print(`Viewport created at scale ${scaleLabel(d, vp.scale)}. Select its border to change the scale in Properties.`);
+});
+
+defCmd('MSPACE', ['MS'], 'Work inside a layout viewport (pan/zoom the model view)', function* (c) {
+  const app = c.app;
+  if (app.space < 0) { c.print('Already in model space.'); return; }
+  const vps = c.doc.entities.filter((e) => e.type === 'viewport');
+  if (!vps.length) { c.print('This layout has no viewports (use MVIEW).'); return; }
+  let vp = vps.length === 1 ? vps[0] : null;
+  if (!vp) { const s = yield P.ent('Select viewport border', { filter: (e) => e.type === 'viewport', filterMsg: 'Select a viewport border.' }); if (!s) return; vp = s.e; }
+  app.activeVp = vp.id; app.buildLayoutBar(); app.requestRedraw();
+  c.print('Inside viewport: mouse wheel zooms, middle-drag pans. Type PSPACE or press Esc to return to paper.');
+}, { transparent: true });
+defCmd('PSPACE', ['PS'], 'Return to paper space from inside a viewport', function* (c) { c.app.activeVp = null; c.app.buildLayoutBar(); c.app.requestRedraw(); }, { transparent: true });
+
+defCmd('UNITS', ['UN'], 'Drawing units (used for plot and viewport scales)', function* (c) {
+  const names = { mm: 'Millimeters', cm: 'Centimeters', m: 'Meters', in: 'Inches', ft: 'Feet' };
+  const r = yield P.kw('Drawing units', Object.values(names), { def: names[c.doc.units || 'mm'] }); if (r == null) return;
+  const v = r.kw || r;
+  c.doc.units = Object.keys(names).find((k) => names[k] === v) || 'mm';
+  c.print(`Drawing units: ${v}. A 1:100 plot now means 1 ${c.doc.units} on paper = 100 ${c.doc.units} in the drawing.`);
+  c.app.refreshUI();
+}, { transparent: true });

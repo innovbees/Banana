@@ -16,11 +16,14 @@ function luminance(hex) {
   return (0.299 * ((n >> 16) & 255) + 0.587 * ((n >> 8) & 255) + 0.114 * (n & 255)) / 255;
 }
 const printColor = (c) => (luminance(c) > 0.8 ? '#000000' : c);
+const LINEWEIGHTS = [0, 0.05, 0.09, 0.13, 0.15, 0.18, 0.2, 0.25, 0.3, 0.35, 0.4, 0.5, 0.53, 0.6, 0.7, 0.8, 0.9, 1, 1.06, 1.2, 1.4, 1.58, 2, 2.11];
 
 const Render = {
   layerOf(doc, e) { return doc.layers.find((l) => l.name === e.layer) || doc.layers[0]; },
   colorOf(doc, e) { return !e.color || e.color === 'bylayer' ? this.layerOf(doc, e).color : e.color; },
   dashOf(doc, e) { return LINETYPES[this.layerOf(doc, e).linetype] || []; },
+  /* Lineweight in mm (ByLayer -> layer, default 0.25). */
+  lwOf(doc, e) { const v = e.lw == null || e.lw === 'bylayer' ? this.layerOf(doc, e).lw : e.lw; return v == null || v === 'default' ? 0.25 : +v; },
 
   /* st: {ctx, dpr, W, H, view:{cx,cy,scale}, doc} */
   worldXf(st) {
@@ -109,13 +112,15 @@ const Render = {
       return;
     }
     const color = opt.color || (st.print ? printColor(this.colorOf(st.doc, e)) : this.colorOf(st.doc, e));
-    this.drawOps(st, E.ops(e, st.doc), color, { dash: opt.dash || this.dashOf(st.doc, e), lw: opt.lw, preview: opt.preview });
+    let lw = opt.lw;
+    if (lw == null && st.lwt) lw = Math.max(1, this.lwOf(st.doc, e) * 3.78 * (st.lwScale || 1));
+    this.drawOps(st, E.ops(e, st.doc), color, { dash: opt.dash || this.dashOf(st.doc, e), lw, preview: opt.preview });
   },
 
   /* Draw a whole drawing (used by on-screen render and PNG export). */
-  drawDrawing(st, skip, only) {
+  drawDrawing(st, skip, only, list) {
     const doc = st.doc, vis = new Set(doc.layers.filter((l) => l.visible).map((l) => l.name));
-    const ents = doc.entities.filter((e) => vis.has(e.layer) && !(skip && skip.has(e.id)) && (!only || only.has(e.id)));
+    const ents = (list || doc.entities).filter((e) => vis.has(e.layer) && !(skip && skip.has(e.id)) && (!only || only.has(e.id)));
     this.worldXf(st);
     for (const e of ents) if (e.type === 'hatch') this.drawEntity(st, e);
     for (const e of ents) if (e.type !== 'hatch') this.drawEntity(st, e);
@@ -134,7 +139,7 @@ const Render = {
   },
 
   toSVG(doc) {
-    const b = this.extents(doc) || { minx: 0, miny: 0, maxx: 100, maxy: 100 };
+    const b = this.extents(doc, doc.model) || { minx: 0, miny: 0, maxx: 100, maxy: 100 };
     const w0 = Math.max(b.maxx - b.minx, 1e-6), h0 = Math.max(b.maxy - b.miny, 1e-6);
     const m = Math.max(w0, h0) * 0.04;
     const vb = [b.minx - m, -(b.maxy + m), w0 + 2 * m, h0 + 2 * m];
@@ -144,7 +149,7 @@ const Render = {
     const out = [];
     const vis = new Set(doc.layers.filter((l) => l.visible).map((l) => l.name));
     const ents = [];
-    for (const e0 of doc.entities) if (vis.has(e0.layer)) for (const e of E.flatten(e0)) if (vis.has(e.layer)) ents.push(e);
+    for (const e0 of doc.model || doc.entities) if (vis.has(e0.layer)) for (const e of E.flatten(e0)) if (vis.has(e.layer)) ents.push(e);
     ents.sort((a, b2) => (a.type === 'hatch' ? 0 : 1) - (b2.type === 'hatch' ? 0 : 1));
     for (const e of ents) {
       const c = printColor(this.colorOf(doc, e));

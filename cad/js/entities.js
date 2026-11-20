@@ -378,6 +378,7 @@ E.ops = (e, doc) => {
       return lines.map((str, i) => ({ op: 'text', p: G.rotate(G.add(e.p, { x: 0, y: -e.h - i * e.h * LINE_SPACING }), e.p, rot), h: e.h, rot, str, align: 'left', style: e.style }));
     }
     case 'table': return tableOps(e);
+    case 'viewport': return [{ op: 'poly', pts: vpCorners(e), closed: true }];
     case 'leader': {
       const g = E.leaderGeom(e), h = e.h || 2.5, ops = [];
       ops.push({ op: 'poly', pts: [...e.pts, g.land] });
@@ -441,6 +442,7 @@ E.prims = (e) => {
     case 'arc': return [G.arcPrim(e.c, e.r, e.a1, G.ccwSweep(e.a1, e.a2))];
     case 'ellipse': return segsOf(ellipsePts(e), true);
     case 'revcloud': return segsOf(revcloudPts(e.pts, e.arc), true);
+    case 'viewport': return segsOf(vpCorners(e), true);
     case 'insert': { const out = []; for (const c of E.children(e)) for (const p of E.prims(c)) out.push(p); return out; }
   }
   return [];
@@ -508,6 +510,7 @@ E.snaps = (e, doc) => {
     case 'insert': { add('ins', e.p); const ch = E.children(e); if (ch.length < 3000) for (const c of ch) for (const q of E.snaps(c, doc)) s.push(q); break; }
     case 'leader': e.pts.forEach((p) => add('end', p)); break;
     case 'revcloud': e.pts.forEach((p) => add('end', p)); break;
+    case 'viewport': vpCorners(e).forEach((p) => add('end', p)); break;
     case 'dim':
       for (const op of E.ops(e, doc)) if (op.op === 'poly') { add('end', op.pts[0]); add('end', op.pts[op.pts.length - 1]); }
       break;
@@ -528,6 +531,7 @@ E.grips = (e) => {
     case 'text': case 'mtext': case 'attdef': case 'insert': return [e.p];
     case 'dim': return E.dimKeys(e).map((k) => e[k]);
     case 'table': return [e.p];
+    case 'viewport': return vpCorners(e);
   }
   return [];
 };
@@ -578,10 +582,16 @@ E.setGrip = (e, i, p) => {
     case 'text': case 'mtext': case 'attdef': case 'insert': e.p = p; break;
     case 'dim': { const k = E.dimKeys(e)[i]; if (k) e[k] = p; if (k !== 'pos' && e.assoc) delete e.assoc[k]; break; }
     case 'table': e.p = p; break;
+    case 'viewport': {
+      const c = vpCorners(e), opp = c[(i + 2) % 4];
+      e.p1 = { x: Math.min(p.x, opp.x), y: Math.min(p.y, opp.y) }; e.p2 = { x: Math.max(p.x, opp.x), y: Math.max(p.y, opp.y) };
+      break;
+    }
   }
 };
 
 E.clone = (e) => JSON.parse(JSON.stringify(e));
+function vpCorners(e) { return [{ x: e.p1.x, y: e.p1.y }, { x: e.p2.x, y: e.p1.y }, { x: e.p2.x, y: e.p2.y }, { x: e.p1.x, y: e.p2.y }]; }
 E.dimKeys = (e) => (e.kind === 'radius' || e.kind === 'diameter' ? ['pos'] : e.kind === 'angular' ? ['c', 'p1', 'p2', 'pos'] : e.kind === 'ordinate' ? ['p1', 'pos'] : ['p1', 'p2', 'pos']);
 
 E.transform = (e, xf) => {
@@ -616,6 +626,11 @@ E.transform = (e, xf) => {
       if (e.kind === 'angular' && xf.mirror) [e.p1, e.p2] = [e.p2, e.p1];
       if (e.kind === 'ordinate' && Math.abs(Math.sin(xf.rot)) > 0.7 && !xf.mirror) e.axis = e.axis === 'x' ? 'y' : 'x';
       break;
+    case 'viewport': {
+      const a = P(e.p1), b = P(e.p2);
+      e.p1 = { x: Math.min(a.x, b.x), y: Math.min(a.y, b.y) }; e.p2 = { x: Math.max(a.x, b.x), y: Math.max(a.y, b.y) };
+      break;
+    }
     case 'table':
       e.p = P(e.p); e.h *= s; e.cw = e.cw.map((v) => v * s); e.rh = e.rh.map((v) => v * s);
       if (!xf.mirror) e.rot = angOf(e.rot || 0);
@@ -769,7 +784,7 @@ E.explode = (e, doc) => {
   return null;
 };
 
-E.label = (t) => ({ line: 'Line', pline: 'Polyline', spline: 'Spline', circle: 'Circle', arc: 'Arc', ellipse: 'Ellipse', text: 'Text', mtext: 'MText', leader: 'Leader', dim: 'Dimension', revcloud: 'Revision cloud', hatch: 'Hatch', table: 'Table', insert: 'Block reference', attdef: 'Attribute definition' }[t] || t);
+E.label = (t) => ({ line: 'Line', pline: 'Polyline', spline: 'Spline', circle: 'Circle', arc: 'Arc', ellipse: 'Ellipse', text: 'Text', mtext: 'MText', leader: 'Leader', dim: 'Dimension', revcloud: 'Revision cloud', hatch: 'Hatch', table: 'Table', viewport: 'Viewport', insert: 'Block reference', attdef: 'Attribute definition' }[t] || t);
 
 E.describe = (e, doc) => {
   const f = (v) => fmtNum(v, 4), P = (p) => `X=${f(p.x)}  Y=${f(p.y)}`;
@@ -784,6 +799,7 @@ E.describe = (e, doc) => {
     case 'leader': L.push(`  arrow at ${P(e.pts[0])}`, `  "${e.text}"`); break;
     case 'dim': L.push(`  ${e.kind} dimension, style "${e.dimstyle || '(legacy)'}"${e.assoc && Object.keys(e.assoc).length ? ', associative' : ''}`); break;
     case 'table': L.push(`  ${e.rh.length} rows × ${e.cw.length} columns`); break;
+    case 'viewport': L.push(`  ${fmtNum(e.p2.x - e.p1.x, 2)} × ${fmtNum(e.p2.y - e.p1.y, 2)} mm on paper, scale ${fmtNum(e.scale, 6)} paper mm per unit`); break;
     case 'hatch': L.push(`  Pattern=${e.pattern}  Scale=${e.scale}  Angle=${e.angle}°`); break;
     case 'insert': L.push(`  Block "${e.name}" at ${P(e.p)}`, `  Scale X=${f(e.sx ?? 1)} Y=${f(e.sy ?? 1)}  Rotation=${f(G.normAng(e.rot || 0) / DEG)}°`); for (const a of e.attribs || []) L.push(`  ${a.tag} = "${a.value}"`); break;
     case 'attdef': L.push(`  Tag=${e.tag}  Prompt="${e.prompt || ''}"  Default="${e.def || ''}"`); break;

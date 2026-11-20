@@ -14,7 +14,7 @@
 * { box-sizing: border-box; }
 html, body { margin: 0; height: 100%; overflow: hidden; background: var(--bg); color: var(--fg); font: 13px var(--font); }
 button { font: inherit; color: inherit; }
-#app { display: grid; grid-template-rows: auto auto 1fr auto auto; height: 100vh; }
+#app { display: grid; grid-template-rows: auto auto 1fr auto auto auto; height: 100vh; }
 
 /* top bar */
 #topbar { display: flex; align-items: center; gap: 12px; padding: 4px 10px; background: #22282e; border-bottom: 1px solid var(--line); }
@@ -160,3 +160,16 @@ body.busy, body.busy #viewport { cursor: progress; }
 .btools button { background: var(--bg3); border: 1px solid var(--line); border-radius: 3px; font-size: 11px; line-height: 1; padding: 2px 6px; cursor: pointer; min-width: 22px; }
 .btools button:hover { border-color: var(--accent); }
 .tabs .tab { padding: 8px 2px; font-size: 12px; }
+
+#layoutbar { display: flex; align-items: center; gap: 2px; padding: 2px 8px 0; background: #262c33; border-top: 1px solid var(--line); font-size: 12px; min-height: 26px; }
+.ltab { background: transparent; border: 1px solid transparent; border-bottom: 0; border-radius: 5px 5px 0 0; padding: 3px 12px; cursor: pointer; color: var(--muted); }
+.ltab:hover { color: #fff; background: var(--bg3); }
+.ltab.on { background: var(--canvas); color: #fff; border-color: var(--line); }
+.ltab.add { font-weight: 700; }
+.lhint { margin-left: 12px; color: var(--muted); font-size: 11px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+#tabmenu { position: fixed; display: none; z-index: 50; min-width: 150px; background: #2e353d; border: 1px solid #5a646f; border-radius: 6px; padding: 4px; box-shadow: 0 8px 24px rgba(0,0,0,.45); }
+#tabmenu .ci { padding: 5px 12px; border-radius: 4px; cursor: pointer; }
+#tabmenu .ci:hover { background: var(--accent); color: #fff; }
+.mbox.small { width: min(560px, 94vw); }
+.actions button.primary { background: var(--accent); border-color: var(--accent); color: #fff; }
+table.layers .lwsel { width: 52px; }
