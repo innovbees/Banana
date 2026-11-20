@@ -50,6 +50,13 @@ for z0, z1, lab in [(1.0, 2.4, 'WIR 1'), (3.3, 4.9, 'WIR 2')]:
     r(RW + T, z0, RW + 1.4, z1, '#efebe5', '#9a948c', 1); t((X(RW + T) + X(RW + 1.4)) / 2, Y((z0 + z1) / 2), lab, 12, QUIET, 'middle')
 t((X(RW + T) + X(RW + 1.4)) / 2, Y(2.82), 'robe walkway 900', 10.5, QUIET, 'middle'); t((X(RW + T) + X(RW + 1.4)) / 2, Y(2.82) + 14, 'to ensuite →', 10.5, QUIET, 'middle')
 
+# walnut barn door on a ceiling-mounted track: closed over the walkway, slides south (open position dashed)
+ln(3.885, 2.30, 3.885, 4.40, '#1f1c1a', 1.6)
+r(3.865, 3.30, 3.905, 4.30, 'none', '#7a5233', 1, dash='4 3')
+r(3.865, 2.35, 3.905, 3.35, '#7a5233', '#4a3020', 1.2)
+for i, (txt, sz, col, w) in enumerate([('WALNUT BARN DOOR', 10.5, '#7a5233', '700'), ('1000 x 2200, slides south', 10, '#7a5233', '400'), ('black track 2.1 m on ceiling', 9.5, QUIET, '400')]):
+    t(X(4.18), Y(3.5) + i * 14, txt, sz, col, 'start', w)
+
 # curtains (ceiling track) - still fully operable behind the bed
 ln(0.7, 4.82, 3.3, 4.82, '#b8a99a', 3, dash='2 3')
 # bed

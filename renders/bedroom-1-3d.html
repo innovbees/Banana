@@ -214,7 +214,7 @@ if(EW!=='none'){ const za=EW==='full'?1.0:2.25;
     const parts = (EW==='full' && z0<2.2) ? [[z0,1.2],[2.2,z1]] : [[z0,z1]];
     for(const [p0,p1] of parts){ if(p1-p0<0.02) continue; box(3.975,4.0,0,CH-0.065,p0,p1,EWM); flutes(p0,p1,3.975); } } }
 // ---------- Sliding door options for the full-height robe walkway opening (choose with ?slide=none|flush|walnut|glass|pocket|curtain) ----------
-const SLIDE=P.get('slide')||'none';
+const SLIDE=P.get('slide')||'barn';
 { const z0=2.35, z1=3.35, y0=0.015, y1=2.335, xf=3.885, xb=3.925;          // panel 1000 x 2320, ~75-115 mm off the wall, closed position
   const trackM=mat('#2b2622',0.4,0.6);
   if(['flush','walnut','glass'].includes(SLIDE)){ box(3.87,3.94,CH-0.045,CH-0.004,z0-0.02,z1+1.0,trackM,false); }   // ceiling-fixed track, travel to the south
@@ -232,6 +232,25 @@ const SLIDE=P.get('slide')||'none';
     box(3.875,3.915,y0,y1,z0+sh,z1+sh,EWM);
     for(let z=z0+sh+FL/2;z<z1+sh-FL/4;z+=FL){ const c=cyl(3.875,(y0+y1)/2,z,0.0155,0.0155,y1-y0,EWM,10); c.castShadow=false; }
     box(3.845,3.86,0.8,1.6,z0+sh+0.05,z0+sh+0.068,brass); }
+  if(SLIDE==='barn'){ const sh=P.get('open')==='1'?0.95:0, BS=P.get('barn')||'frame';   // walnut barn door on a ceiling-mounted black barn track; ?barn=frame|z, ?open=1
+    const blk=mat('#1f1c1a',0.45,0.7), a=z0+sh, b=z1+sh, X0=3.865, X1=3.905, top=2.2, dark=mat('#2e1d12',0.75);
+    box(3.882,3.888,2.285,2.33,z0-0.05,z1+1.05,blk,false);                         // flat-bar track 2.1 m
+    for(const zb of [z0-0.0,z0+0.7,z0+1.4,z1+1.0]) box(3.877,3.893,2.33,CH,zb-0.02,zb+0.02,blk,false);   // ceiling brackets
+    for(const zs of [z0-0.07,z1+1.07]) box(3.876,3.894,2.25,2.33,zs-0.012,zs+0.012,blk,false);           // end stops
+    box(X0+0.016,X1-0.016,0.012,top,a,b,dark);                                    // core / groove shadow
+    const st=0.12;
+    box(X0,X1,0.012,top,a,a+st,walnut); box(X0,X1,0.012,top,b-st,b,walnut);       // stiles
+    box(X0,X1,top-st,top,a,b,walnut); box(X0,X1,0.012,0.2,a,b,walnut);             // top + bottom rail
+    if(BS==='frame'){ box(X0,X1,1.02,1.12,a,b,walnut);
+      const n=7, w=(b-a-2*st)/n; for(let i=0;i<n;i++) for(const [ya,yb] of [[0.2,1.02],[1.12,top-st]]) box(X0+0.008,X1-0.008,ya,yb,a+st+i*w+0.004,a+st+(i+1)*w-0.004,walnut); }
+    else { const n=8, w=(b-a-2*st)/n; for(let i=0;i<n;i++) box(X0+0.008,X1-0.008,0.2,top-st,a+st+i*w+0.003,a+st+(i+1)*w-0.003,walnut);
+      box(X0,X1,1.1,1.2,a,b,walnut);
+      const L=Math.hypot(b-a-2*st,0.9-0.04), ang=Math.atan2(0.86,b-a-2*st);
+      for(const [yc] of [[0.65],[1.6]]){ const m=new THREE.Mesh(new THREE.BoxGeometry(0.044,0.1,L),walnut); m.position.set((X0+X1)/2-0.002,yc,(a+b)/2); m.rotation.x=(yc<1?1:1)*ang; m.castShadow=true; m.receiveShadow=true; scene.add(m);} }
+    for(const zs of [a+0.16,b-0.16]){ box(X0-0.005,X0,1.98,2.33,zs-0.02,zs+0.02,blk); box(X1,X1+0.005,1.98,2.2,zs-0.02,zs+0.02,blk);   // strap hangers
+      const wl=cyl(3.885,2.265,zs,0.045,0.045,0.03,blk,24); wl.rotation.z=Math.PI/2; }
+    box(X0-0.035,X0-0.028,0.85,1.45,a+0.07,a+0.09,blk); box(X0-0.035,X0,0.85,0.87,a+0.07,a+0.09,blk); box(X0-0.035,X0,1.43,1.45,a+0.07,a+0.09,blk);  // ladder pull
+    box(3.86,3.91,0,0.03,3.36,3.4,blk); }                                          // floor guide
   if(SLIDE==='pocket'){ const pz0=2.85;                                       // shown half open, sliding into a wall pocket to the south
     box(3.995,4.035,y0,CH-0.01,pz0,pz0+0.9,mat(PAL.wall,0.85)); box(3.99,3.995,1.0,1.2,pz0+0.03,pz0+0.05,mat('#3a3633',0.6));
     box(3.98,4.0,0,CH,3.3,3.32,mat(PAL.ceil,0.6)); box(3.98,4.0,0,CH,2.38,2.4,mat(PAL.ceil,0.6)); }

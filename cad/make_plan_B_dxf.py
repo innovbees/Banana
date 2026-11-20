@@ -54,4 +54,11 @@ for i, s in enumerate(['BEDROOM 1 - LAYOUT B: HEAD TO WINDOW', f'Elyse king 2060
                        'Check all dimensions on site before ordering']):
     text(tb_x + 100, -T + 1350 - i * 210, s, 85 if i == 0 else 60, al=TA.MIDDLE_LEFT)
 msp.add_lwpolyline([(RW + 2000, RL + 200), (RW + 2080, RL - 50), (RW + 2000, RL + 20), (RW + 1920, RL - 50)], close=True, dxfattribs={'layer': 'A-TEXT'}); text(RW + 2000, RL + 320, 'N', 120)
+# walnut barn door, ceiling-mounted black track, slides south (open position dashed)
+doc.layers.add('I-DOOR-BARN', color=30); doc.layers.add('I-DOOR-BARN-OPEN', color=30, linetype='DASHED')
+msp.add_line((3885, RL - 2300), (3885, RL - 4400), dxfattribs={'layer': 'I-DOOR-BARN'})
+rect(3865, RL - 3350, 3905, RL - 2350, 'I-DOOR-BARN')
+rect(3865, RL - 4300, 3905, RL - 3300, 'I-DOOR-BARN-OPEN')
+text(RW + 160, RL - 3550, 'WALNUT BARN DOOR 1000 x 2200 x 40', 50, 'I-DOOR-BARN', al=TA.MIDDLE_LEFT)
+text(RW + 160, RL - 3650, 'BLACK TRACK 2100 CEILING-MOUNTED, SLIDES SOUTH', 40, 'I-DOOR-BARN', al=TA.MIDDLE_LEFT)
 doc.set_modelspace_vport(height=7000, center=(3000, 2400)); doc.saveas(OUT); print('saved', OUT)
