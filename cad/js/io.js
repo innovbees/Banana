@@ -54,37 +54,54 @@ const IO = {
     w(0, 'STYLE'); w(2, 'STANDARD'); w(70, 0); w(40, 0); w(41, 1); w(50, 0); w(71, 0); w(42, 2.5); w(3, 'txt'); w(4, '');
     w(0, 'ENDTAB');
     w(0, 'ENDSEC');
-    w(0, 'SECTION'); w(2, 'ENTITIES');
-    const head = (type, e) => { w(0, type); w(8, e.layer); if (e.color && e.color !== 'bylayer') w(62, hexToAci(e.color)); };
+    const head = (type, e) => { w(0, type); w(8, e.layer || '0'); if (e.color === 'byblock') w(62, 0); else if (e.color && e.color !== 'bylayer') w(62, hexToAci(e.color)); };
     const P = (p, k = 0) => { w(10 + k, p.x); w(20 + k, p.y); w(30 + k, 0); };
     const poly = (e, pts, closed) => {
       if (pts.length === 2 && !closed) { head('LINE', e); P(pts[0]); P(pts[1], 1); return; }
       head('POLYLINE', e); w(66, 1); P({ x: 0, y: 0 }); w(70, closed ? 1 : 0);
-      for (const p of pts) { w(0, 'VERTEX'); w(8, e.layer); P(p); }
-      w(0, 'SEQEND'); w(8, e.layer);
+      for (const p of pts) { w(0, 'VERTEX'); w(8, e.layer || '0'); P(p); }
+      w(0, 'SEQEND'); w(8, e.layer || '0');
     };
-    for (const e of doc.entities) {
-      if (e.type === 'ellipse') { poly(e, E.loop(e), true); continue; }
+    const textAlign = (t) => { const j = { left: 0, center: 1, right: 2 }[t.align || 'left']; if (j) { w(72, j); P(t.p, 1); } };
+    const writeEnt = (e) => {
+      if (e.type === 'insert') {
+        const atts = (e.attribs || []).filter((a) => a.value != null);
+        head('INSERT', e); if (atts.length) w(66, 1); w(2, e.name); P(e.p);
+        if ((e.sx ?? 1) !== 1) w(41, e.sx); if ((e.sy ?? 1) !== 1) w(42, e.sy); if (e.rot) w(50, G.normAng(e.rot) / DEG);
+        if (atts.length) {
+          const xf = XF.matrix(E.insertMatrix(e));
+          for (const a of atts) {
+            const t = E.transform({ type: 'text', p: { ...a.p }, h: a.h, rot: a.rot || 0, text: a.value, align: a.align }, xf);
+            w(0, 'ATTRIB'); w(8, e.layer); P(t.p); w(40, t.h); w(1, String(a.value)); w(2, a.tag); w(70, a.invisible ? 1 : 0);
+            if (t.rot) w(50, G.normAng(t.rot) / DEG); textAlign(t);
+          }
+          w(0, 'SEQEND'); w(8, e.layer);
+        }
+        return;
+      }
+      if (e.type === 'attdef') {
+        head('ATTDEF', e); P(e.p); w(40, e.h); w(1, e.def || ''); w(3, e.prompt || e.tag); w(2, e.tag); w(70, e.invisible ? 1 : 0);
+        if (e.rot) w(50, G.normAng(e.rot) / DEG); textAlign(e);
+        return;
+      }
+      if (e.type === 'ellipse') { poly(e, E.loop(e), true); return; }
       if (e.type === 'pline' && e.b && e.b.some((x) => x)) {
         head('POLYLINE', e); w(66, 1); P({ x: 0, y: 0 }); w(70, e.closed ? 1 : 0);
-        e.pts.forEach((p, i) => { w(0, 'VERTEX'); w(8, e.layer); P(p); if (e.b[i]) w(42, e.b[i]); });
-        w(0, 'SEQEND'); w(8, e.layer);
-        continue;
+        e.pts.forEach((p, i) => { w(0, 'VERTEX'); w(8, e.layer || '0'); P(p); if (e.b[i]) w(42, e.b[i]); });
+        w(0, 'SEQEND'); w(8, e.layer || '0');
+        return;
       }
       for (const op of E.ops(e, doc)) {
         switch (op.op) {
           case 'poly': poly(e, op.pts, op.closed); break;
-          case 'fill': {
-            head('SOLID', e); const p = op.pts; P(p[0]); P(p[1], 1); P(p[2], 2); P(p[3] || p[2], 3); break;
-          }
+          case 'fill': { head('SOLID', e); const p = op.pts; P(p[0]); P(p[1], 1); P(p[2], 2); P(p[3] || p[2], 3); break; }
           case 'circle': head('CIRCLE', e); P(op.c); w(40, op.r); break;
           case 'arc': head('ARC', e); P(op.c); w(40, op.r); w(50, G.normAng(op.a1) / DEG); w(51, G.normAng(op.a2) / DEG); break;
           case 'text': {
             if (!op.str) break;
             head('TEXT', e); P(op.p); w(40, op.h); w(1, op.str);
             if (op.rot) w(50, G.normAng(op.rot) / DEG);
-            const j = { left: 0, center: 1, right: 2 }[op.align || 'left'];
-            if (j) { w(72, j); P(op.p, 1); }
+            textAlign(op);
             break;
           }
           case 'hatch': {
@@ -92,13 +109,22 @@ const IO = {
             const pat = HATCH_PATTERNS[op.pattern];
             if (pat) for (const fam of pat) {
               const segs = G.hatchSegments(op.loops, (fam.ang + (op.angle || 0)) * DEG, fam.sp * (op.scale || 1), 5000) || [];
-              for (const [a, b] of segs) { head('LINE', e); P(a); P(b, 1); }
+              for (const [a2, b2] of segs) { head('LINE', e); P(a2); P(b2, 1); }
             }
             break;
           }
         }
       }
+    };
+    w(0, 'SECTION'); w(2, 'BLOCKS');
+    for (const [name, blk] of Object.entries(doc.blocks || {})) {
+      w(0, 'BLOCK'); w(8, '0'); w(2, name); w(70, (name.startsWith('*') ? 1 : 0) | (blk.ents.some((x) => x.type === 'attdef') ? 2 : 0)); P(blk.base); w(3, name);
+      for (const c of blk.ents) writeEnt(c);
+      w(0, 'ENDBLK'); w(8, '0');
     }
+    w(0, 'ENDSEC');
+    w(0, 'SECTION'); w(2, 'ENTITIES');
+    for (const e of doc.entities) writeEnt(e);
     w(0, 'ENDSEC'); w(0, 'EOF');
     return L.join('\r\n') + '\r\n';
   },
@@ -241,7 +267,7 @@ const IO = {
     /* Convert one list of DXF objects into entities (+ pseudo '_insert' / '_dim' refs). */
     const convert = (list, inBlock) => {
       const out = [];
-      let polyline = null;
+      let polyline = null, lastIns = null;
       for (const o of list) {
         const b = base(o);
         if (!inBlock && get(o, 67) === '1') { if (o.type !== 'SEQEND' && o.type !== 'VERTEX') skip('paper space'); continue; }
@@ -293,10 +319,9 @@ const IO = {
               }
               polyline = null;
               break;
-            case 'TEXT': case 'ATTRIB': {
-              if (o.type === 'ATTRIB' && (parseInt(get(o, 70, '0'), 10) & 1)) break;
+            case 'TEXT': case 'ATTRIB': case 'ATTDEF': {
               const str = uni(get(o, 1, ''));
-              if (!str.trim()) break;
+              if (o.type === 'TEXT' && !str.trim()) break;
               const j = parseInt(get(o, 72, '0'), 10), vj = parseInt(get(o, o.type === 'ATTRIB' ? 74 : 73, '0'), 10);
               const h = num(o, 40, 2.5);
               let rot = num(o, 50, 0) * DEG, p = P(o, 10), align = 'left';
@@ -307,6 +332,11 @@ const IO = {
                 const dy = j === 4 || vj === 2 ? -h / 2 : vj === 3 ? -h : vj === 1 ? h * 0.25 : 0;
                 if (dy) p = G.add(p, G.rotate({ x: 0, y: dy }, { x: 0, y: 0 }, rot));
               }
+              if (o.type === 'ATTRIB') {
+                if (lastIns) (lastIns.atts = lastIns.atts || []).push({ tag: (get(o, 2, '') || '').trim(), value: str, p, h, rot, align, invisible: (parseInt(get(o, 70, '0'), 10) & 1) === 1 });
+                break;
+              }
+              if (o.type === 'ATTDEF') { out.push({ ...b, type: 'attdef', tag: (get(o, 2, '') || '').trim(), prompt: uni(get(o, 3, '')), def: str, p, h, rot, align, invisible: (parseInt(get(o, 70, '0'), 10) & 1) === 1 }); break; }
               out.push({ ...b, type: 'text', p, h, rot, text: str, align });
               break;
             }
@@ -437,8 +467,9 @@ const IO = {
             }
             case 'INSERT': {
               const sx = num(o, 41, 1), sy = num(o, 42, 1);
-              out.push({ ...b, type: '_insert', name: (get(o, 2, '') || '').trim(), p: P(o, 10), sx, sy, rot: num(o, 50, 0) * DEG,
-                cols: Math.max(1, num(o, 70, 1)), rows: Math.max(1, num(o, 71, 1)), cs: num(o, 44, 0), rs: num(o, 45, 0), flip: flipped(o) });
+              lastIns = { ...b, type: '_insert', name: (get(o, 2, '') || '').trim(), p: P(o, 10), sx, sy, rot: num(o, 50, 0) * DEG,
+                cols: Math.max(1, num(o, 70, 1)), rows: Math.max(1, num(o, 71, 1)), cs: num(o, 44, 0), rs: num(o, 45, 0), flip: flipped(o) };
+              out.push(lastIns);
               break;
             }
             case 'DIMENSION': case 'ARC_DIMENSION': case 'LARGE_RADIAL_DIMENSION': {
@@ -447,7 +478,7 @@ const IO = {
               out.push({ ...b, type: '_dim', native: o.type === 'DIMENSION', name: (get(o, 2, '') || '').trim(), off: P(o, 12), dt, p10: P(o, 10), p13: P(o, 13), p14: P(o, 14), ang: num(o, 50, 0) * DEG, text: uni(get(o, 1, '')) });
               break;
             }
-            case 'BLOCK': case 'ENDBLK': case 'ATTDEF': case 'POINT': case 'VIEWPORT': case 'LIGHT': case 'SUN': break;
+            case 'BLOCK': case 'ENDBLK': case 'POINT': case 'VIEWPORT': case 'LIGHT': case 'SUN': break;
             default: skip(o.type);
           }
         } catch (err) { skip(o.type + ' (error)'); }
@@ -479,54 +510,52 @@ const IO = {
         else if (blk) blk.objs.push(o);
       } else if (o.section === 'ENTITIES') model.push(o);
     }
-    const blocks = new Map();
-    const blockEnts = (name) => {
-      const k = name.toUpperCase();
-      if (!blocks.has(k)) { const bo = blockObjs.get(k); blocks.set(k, bo ? { base: bo.base, ents: convert(bo.objs, true) } : null); }
-      return blocks.get(k);
-    };
-    const MAX = 400000;
-    const ents = [];
-    const emit = (e, m, parent) => {
-      if (ents.length >= MAX) { skip('objects over limit'); return; }
-      const n = E.clone(e);
-      if (parent) {
-        if (n.layer === '0') n.layer = parent.layer;
-        if (n.color === 'byblock') n.color = parent.color;
-      }
-      if (m !== ID) E.transform(n, mxf(m));
-      if (n.color === 'byblock') n.color = 'bylayer';
-      ents.push(n);
-    };
-    const expand = (list, m, parent, depth) => {
+    // block definitions are kept as blocks; references stay block references
+    const blocks = {}, byUpper = {};
+    for (const bo of blockObjs.values()) {
+      if (/^\*(model|paper)_space/i.test(bo.name) || !bo.name) continue;
+      blocks[bo.name] = { name: bo.name, base: bo.base, ents: [] };
+      byUpper[bo.name.toUpperCase()] = bo.name;
+    }
+    const resolve = (list) => {
+      const res = [];
       for (const e of list) {
-        if (e.type === '_insert' || e.type === '_dim') {
-          const me = parent ? { layer: e.layer === '0' ? parent.layer : e.layer, color: e.color === 'byblock' ? parent.color : e.color } : { layer: e.layer, color: e.color };
-          const bk = e.name ? blockEnts(e.name) : null;
-          if (e.type === '_dim') {
-            if (bk && bk.ents.length && depth < 12) { expand(bk.ents, mul(m, [1, 0, 0, 1, e.off.x, e.off.y]), me, depth + 1); continue; }
-            const isAligned = e.dt === 1;
-            if (e.native && (e.dt === 0 || isAligned)) emit({ type: 'dim', kind: isAligned ? 'aligned' : 'linear', p1: e.p13, p2: e.p14, pos: e.p10, dirAng: e.ang, h: 2.5, scale: 1, text: e.text, layer: me.layer, color: me.color }, m, null);
-            else skip('DIMENSION (no block)');
-            continue;
-          }
-          if (!bk) { skip(`INSERT of missing block`); continue; }
-          if (depth > 12) { skip('INSERT (nested too deep)'); continue; }
+        if (e.type === '_insert') {
+          const name = byUpper[e.name.toUpperCase()], bk = name && blocks[name];
+          if (!bk) { skip('INSERT of missing block'); continue; }
+          const cs = Math.cos(e.rot), sn = Math.sin(e.rot);
           for (let r = 0; r < e.rows; r++) for (let c = 0; c < e.cols; c++) {
-            const cs = Math.cos(e.rot), sn = Math.sin(e.rot);
             const off = { x: c * e.cs, y: r * e.rs };
             const at = { x: e.p.x + off.x * cs - off.y * sn, y: e.p.y + off.x * sn + off.y * cs };
-            let im = mul([cs, sn, -sn, cs, at.x, at.y], mul([e.sx, 0, 0, e.sy, 0, 0], [1, 0, 0, 1, -bk.base.x, -bk.base.y]));
-            if (e.flip) im = mul(FLIP, im);
-            expand(bk.ents, mul(m, im), me, depth + 1);
+            const ins = { layer: e.layer, color: e.color, type: 'insert', name, p: at, sx: e.sx, sy: e.sy, rot: e.rot };
+            if (e.flip) { ins.p = { x: -at.x, y: at.y }; ins.sx = -ins.sx; ins.rot = -ins.rot; }
+            if (!r && !c && e.atts) {
+              const inv = M2.inv(M2.insert(ins.p, ins.sx, ins.sy, ins.rot, bk.base)), sc = Math.sqrt(Math.abs(ins.sx * ins.sy)) || 1;
+              ins.attribs = e.atts.map((a) => ({ tag: a.tag, value: a.value, p: { x: inv[0] * a.p.x + inv[2] * a.p.y + inv[4], y: inv[1] * a.p.x + inv[3] * a.p.y + inv[5] }, h: a.h / sc, rot: a.rot - ins.rot, align: a.align, invisible: a.invisible }));
+            }
+            res.push(ins);
           }
           continue;
         }
-        emit(e, m, parent);
+        if (e.type === '_dim') {
+          const name = e.name && byUpper[e.name.toUpperCase()], bk = name && blocks[name];
+          if (bk && bk.ents.length) { res.push({ layer: e.layer, color: e.color, type: 'insert', name, p: e.off, sx: 1, sy: 1, rot: 0 }); continue; }
+          if (e.native && (e.dt === 0 || e.dt === 1)) res.push({ type: 'dim', kind: e.dt === 1 ? 'aligned' : 'linear', p1: e.p13, p2: e.p14, pos: e.p10, dirAng: e.ang, h: 2.5, scale: 1, text: e.text, layer: e.layer, color: e.color });
+          else skip('DIMENSION (no block)');
+          continue;
+        }
+        res.push(e);
       }
+      return res;
     };
-    expand(convert(model, false), ID, null, 0);
-    return { layers, entities: ents, skipped };
+    for (const bo of blockObjs.values()) if (blocks[bo.name]) blocks[bo.name].ents = resolve(convert(bo.objs, true));
+    const ents = resolve(convert(model, false));
+    for (const e of ents) if (e.color === 'byblock') e.color = 'bylayer';
+    // drop block definitions nothing refers to (directly or nested) except named ones
+    const used = new Set(), visit = (list) => { for (const e of list) if (e.type === 'insert' && !used.has(e.name)) { used.add(e.name); visit(blocks[e.name].ents); } };
+    visit(ents);
+    for (const k of Object.keys(blocks)) if (k.startsWith('*') && !used.has(k)) delete blocks[k];
+    return { layers, entities: ents, blocks, skipped };
   },
 
   /* ---------------- DWG import (via LibreDWG WebAssembly) ---------------- */

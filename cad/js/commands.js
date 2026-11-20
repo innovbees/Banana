@@ -1287,3 +1287,202 @@ defCmd('PEDIT', ['PE'], 'Edit polylines: close/open, join, decurve, reverse; con
     c.changed();
   }
 });
+
+/* ======================= BLOCKS (group 2) ======================= */
+const blockNames = (doc) => Object.keys(doc.blocks || {}).filter((n) => !n.startsWith('*')).sort((a, b) => a.localeCompare(b));
+const findBlockName = (doc, s) => { const t = String(s).trim().toLowerCase(); return Object.keys(doc.blocks || {}).find((n) => n.toLowerCase() === t) || Object.keys(LIBRARY).find((n) => n.toLowerCase() === t) || null; };
+function blockUses(doc, name, target, seen = new Set()) {
+  if (name === target) return true;
+  if (seen.has(name)) return false;
+  seen.add(name);
+  const b = doc.blocks[name];
+  return !!b && b.ents.some((e) => e.type === 'insert' && blockUses(doc, e.name, target, seen));
+}
+/* Make block references match their block's attribute definitions (keeps typed values). */
+function attSync(c, name) {
+  const blk = c.doc.blocks[name];
+  if (!blk) return 0;
+  let n = 0;
+  for (const e of c.doc.entities) {
+    if (e.type !== 'insert' || e.name !== name) continue;
+    const old = Object.fromEntries((e.attribs || []).map((a) => [a.tag, a.value]));
+    e.attribs = E.attribsFor(blk, old);
+    n++;
+  }
+  if (n) c.changed();
+  return n;
+}
+
+defCmd('BLOCK', ['B', 'BMAKE'], 'Create a block (reusable symbol) from selected objects', function* (c) {
+  const d = c.doc;
+  let name = yield P.str('Enter block name', { spaces: true });
+  if (!name) return;
+  name = name.trim();
+  if (!name || /[<>/\\":;?*|=`]/.test(name)) { c.print('Invalid block name.'); return; }
+  const existing = Object.keys(d.blocks).find((n) => n.toLowerCase() === name.toLowerCase());
+  if (existing) {
+    const k = yield P.kw(`Block "${existing}" already exists. Redefine it?`, ['Yes', 'No'], { def: 'No' });
+    if (!k || (k.kw || k) !== 'Yes') return;
+    name = existing;
+  }
+  const base = yield P.point('Specify insertion base point'); if (!base) return;
+  const ids = yield* getSel(c, 'Select objects for the block');
+  if (!ids.length) { c.print('No objects selected.'); return; }
+  if (ids.some((id) => { const e = c.get(id); return e.type === 'insert' && blockUses(d, e.name, name); })) { c.print('A block cannot contain itself.'); return; }
+  const k = yield P.kw('Then', ['Convert', 'Retain', 'Delete'], { def: 'Convert' });
+  if (k == null) return;
+  const mode = k.kw || k;
+  const ents = ids.map((id) => { const n = E.clone(c.get(id)); delete n.id; return n; });
+  d.blocks[name] = { name, base: { ...base }, ents };
+  if (mode !== 'Retain') ids.forEach((id) => c.remove(id));
+  if (mode === 'Convert') c.add({ type: 'insert', name, p: { ...base }, sx: 1, sy: 1, rot: 0, attribs: E.attribsFor(d.blocks[name]) });
+  if (existing) attSync(c, name);
+  c.changed();
+  c.print(`Block "${name}" ${existing ? 'redefined' : 'created'} (${ents.length} objects).`);
+  c.app.refreshUI();
+}, { sel: true });
+
+defCmd('INSERT', ['I', 'DDINSERT', 'CLASSICINSERT'], 'Insert a block (from this drawing, the library or a file)', function* (c, opts) {
+  const d = c.doc;
+  let name = opts && opts.name ? findBlockName(d, opts.name) : null;
+  if (opts && opts.file) name = { kw: 'File' };
+  while (!name || typeof name !== 'string') {
+    if (!name) {
+      const names = blockNames(d);
+      const r = yield P.str(`Enter block name${names.length ? ' (' + names.slice(0, 6).join(', ') + (names.length > 6 ? ', …' : '') + ')' : ''}`, { keywords: ['File', 'Library', '?'], def: d.lastBlock && d.blocks[d.lastBlock] ? d.lastBlock : undefined, spaces: true });
+      if (r == null) return;
+      name = r.kw ? r : findBlockName(d, r);
+      if (!name) { c.print(`Block "${r}" not found. Type ? to list blocks, L for the library, or F to insert a file.`); continue; }
+    }
+    if (name.kw === '?') { const ns = blockNames(d); c.print(ns.length ? 'Blocks: ' + ns.join(', ') : 'No blocks in this drawing.'); c.print('Library: ' + Object.keys(LIBRARY).join(', ')); c.app.expandHistory(true); name = null; continue; }
+    if (name.kw === 'Library') { c.app.showPanel('blocks'); c.print('Library: ' + Object.keys(LIBRARY).join(', ')); name = null; continue; }
+    if (name.kw === 'File') {
+      const f = yield { type: 'wait', msg: 'Choose a drawing file to insert as a block…', promise: c.app.pickAndReadDrawing() };
+      if (!f || f.error) { if (f && f.error) c.print('Could not read file: ' + f.error); return; }
+      name = c.app.blockFromDrawing(f);
+      c.print(`Block "${name}" created from ${f.fileName} (${d.blocks[name].ents.length} objects).`);
+    }
+  }
+  if (LIBRARY[name] && !d.blocks[name]) libraryEnsure(d, name);
+  const blk = d.blocks[name];
+  d.lastBlock = name;
+  let sx = 1, sy = 1, rot = 0;
+  for (;;) {
+    const mk = (p) => ({ type: 'insert', name, p, sx, sy, rot, attribs: E.attribsFor(blk) });
+    const r = yield P.point(`Specify insertion point for "${name}"`, { keywords: ['Scale', 'Rotate'], preview: (m) => [mk(m)] });
+    if (!r) return;
+    if (r.kw === 'Scale') { const v = yield P.num('Specify scale factor', { def: sx }); if (v) { sx = v; sy = v; } continue; }
+    if (r.kw === 'Rotate') { const v = yield P.angle('Specify rotation angle', { def: (rot / DEG) || 0 }); if (v != null) rot = v * DEG; continue; }
+    const values = {};
+    for (const ad of blk.ents.filter((x) => x.type === 'attdef')) {
+      const v = yield P.str(`Enter attribute value — ${ad.prompt || ad.tag}`, { def: ad.def || '', spaces: true });
+      if (v == null) return;
+      values[ad.tag] = v;
+    }
+    c.add({ type: 'insert', name, p: r, sx, sy, rot, attribs: E.attribsFor(blk, values) });
+    c.app.refreshUI();
+    return;
+  }
+});
+
+defCmd('ATTDEF', ['ATT', 'DDATTDEF'], 'Define an attribute (editable text field) for a block', function* (c) {
+  const d = c.doc;
+  let tag = yield P.str('Enter attribute tag name (no spaces)');
+  if (!tag) return;
+  tag = tag.trim().toUpperCase();
+  if (/\s/.test(tag)) { c.print('Tags cannot contain spaces.'); return; }
+  const prompt = yield P.str('Enter attribute prompt', { def: tag, spaces: true }); if (prompt == null) return;
+  const def = yield P.str('Enter default value', { def: '', spaces: true }); if (def == null) return;
+  const p = yield P.point('Specify start point'); if (!p) return;
+  const h = yield P.dist('Specify text height', { base: p, def: d.textSize }); if (!(h > 0)) return;
+  c.add({ type: 'attdef', tag, prompt, def, p, h, rot: 0, align: 'left' });
+  c.print('Include this attribute definition when you create the block with BLOCK.');
+});
+
+defCmd('ATTEDIT', ['ATE', 'EATTEDIT', 'DDATTE'], 'Edit the attribute values of a block reference', function* (c, opts) {
+  let e = opts && opts.id ? c.get(opts.id) : null;
+  if (!e) {
+    const s = yield P.ent('Select a block reference', { filter: (x) => x.type === 'insert' && (x.attribs || []).length, filterMsg: 'That block has no attributes.' });
+    if (!s) return;
+    e = s.e;
+  }
+  for (const a of e.attribs) {
+    const v = yield P.str(`${a.tag}`, { def: a.value ?? '', spaces: true });
+    if (v == null) return;
+    a.value = v;
+    c.changed();
+  }
+});
+
+defCmd('ATTSYNC', [], 'Update block references to match the block\'s attribute definitions', function* (c) {
+  const r = yield P.str('Enter name of block to synchronize', { def: c.doc.lastBlock, spaces: true });
+  if (!r) return;
+  const name = findBlockName(c.doc, r);
+  if (!name || !c.doc.blocks[name]) { c.print('Block not found.'); return; }
+  c.print(`${attSync(c, name)} reference(s) of "${name}" updated.`);
+});
+
+defCmd('BEDIT', ['BE', 'REFEDIT'], 'Edit a block definition in place (BCLOSE to finish)', function* (c, opts) {
+  const app = c.app, d = c.doc;
+  if (app.blockEdit) { c.print(`Already editing "${app.blockEdit.name}". Use BCLOSE first.`); return; }
+  let ins = null, name = opts && opts.name;
+  if (!name) {
+    const s = yield P.ent('Select a block reference to edit', { keywords: ['Name'], filter: (x) => x.type === 'insert', filterMsg: 'Select a block reference.' });
+    if (!s) return;
+    if (s.kw === 'Name') { const r = yield P.str('Enter block name', { spaces: true, def: d.lastBlock }); if (!r) return; name = findBlockName(d, r); }
+    else { ins = s.e; name = ins.name; }
+  }
+  if (!name || !d.blocks[name]) { c.print('Block not found.'); return; }
+  if (!ins) ins = d.entities.find((x) => x.type === 'insert' && x.name === name) || null;
+  const m = ins ? E.insertMatrix(ins) : M2.mul([1, 0, 0, 1, app.view.cx, app.view.cy], [1, 0, 0, 1, -d.blocks[name].base.x, -d.blocks[name].base.y]);
+  app.blockEdit = { name, insId: ins ? ins.id : null, m, ids: new Set() };
+  const xf = XF.matrix(m);
+  for (const e of d.blocks[name].ents) { const n = E.transform(E.clone(e), xf); delete n.id; c.add(n); }
+  c.print(`Block editor: editing "${name}". Draw and modify as usual; other objects are greyed out. Type BCLOSE when you are done.`);
+  app.refreshUI();
+});
+
+defCmd('BCLOSE', ['BC', 'REFCLOSE'], 'Finish editing a block: Save or Discard changes', function* (c) {
+  const app = c.app, be = app.blockEdit, d = c.doc;
+  if (!be) { c.print('Not editing a block.'); return; }
+  const k = yield P.kw(`Save changes to block "${be.name}"?`, ['Save', 'Discard'], { def: 'Save' });
+  if (k == null) return;
+  const ids = [...be.ids].filter((id) => c.get(id));
+  if ((k.kw || k) === 'Save') {
+    const xf = XF.matrix(M2.inv(be.m));
+    d.blocks[be.name].ents = ids.map((id) => { const n = E.transform(E.clone(c.get(id)), xf); delete n.id; return n; });
+  }
+  app.blockEdit = null;
+  ids.forEach((id) => c.remove(id));
+  if ((k.kw || k) === 'Save') { const n = attSync(c, be.name); c.print(`Block "${be.name}" saved${n ? `; ${n} reference(s) updated` : ''}.`); }
+  else c.print('Changes discarded.');
+  c.changed(); app.refreshUI();
+});
+
+defCmd('PURGE', ['PU'], 'Remove unused blocks and layers', function* (c) {
+  const k = yield P.kw('Purge', ['Blocks', 'Layers', 'All'], { def: 'All' });
+  if (k == null) return;
+  const what = k.kw || k, d = c.doc;
+  let nb = 0, nl = 0;
+  if (what !== 'Layers') {
+    for (let changed = true; changed;) {
+      changed = false;
+      const used = new Set();
+      const visit = (list) => { for (const e of list) if (e.type === 'insert' && !used.has(e.name)) { used.add(e.name); if (d.blocks[e.name]) visit(d.blocks[e.name].ents); } };
+      visit(d.entities);
+      for (const n of Object.keys(d.blocks)) if (!used.has(n)) { delete d.blocks[n]; nb++; changed = true; }
+    }
+  }
+  if (what !== 'Blocks') {
+    const used = new Set(['0', d.clayer]);
+    const visit = (list) => { for (const e of list) { used.add(e.layer); } };
+    visit(d.entities); Object.values(d.blocks).forEach((b) => visit(b.ents));
+    const before = d.layers.length;
+    d.layers = d.layers.filter((l) => used.has(l.name));
+    nl = before - d.layers.length;
+  }
+  c.print(`Purged ${nb} block(s) and ${nl} layer(s).`);
+  c.changed(); c.app.refreshUI();
+});
+
+defCmd('BLOCKSPALETTE', ['BP', 'BLOCKS', 'LIBRARY'], 'Show the Blocks panel (drawing blocks + symbol library)', function* (c) { c.app.showPanel('blocks'); }, { transparent: true });

@@ -15,6 +15,7 @@ function newDoc() {
       { name: 'Dimensions', color: '#00ffff', visible: true, locked: false, linetype: 'Continuous' },
       { name: 'Hidden', color: '#808080', visible: true, locked: false, linetype: 'Hidden' },
     ],
+    blocks: {},
     clayer: '0', ccolor: 'bylayer', textSize: 2.5, dimScale: 1, dimDec: 2,
     filletRad: 0, offsetDist: 1, lastRadius: undefined, revArc: 10,
     hatchPattern: 'ANSI31', hatchScale: 1, hatchAngle: 0,
@@ -53,6 +54,8 @@ const App = {
       if (s) { const o = JSON.parse(s); if (o && o.doc && Array.isArray(o.doc.entities) && o.doc.entities.length) { this.doc = Object.assign(newDoc(), o.doc); if (o.view) this.view = o.view; if (o.settings) Object.assign(this.settings, o.settings, { osmodes: Object.assign(this.settings.osmodes, o.settings.osmodes || {}) }); restored = true; } }
     } catch (err) { /* storage unavailable */ }
     if (!restored) this.view = { cx: 210, cy: 148, scale: Math.max(0.5, (this.W - 40) / 440) };
+    if (!this.doc.blocks) this.doc.blocks = {};
+    E.ctxDoc = this.doc;
     this.print('BananaCAD — 2D drafting. Type a command (e.g. LINE or L) and press Enter. Press F1 for the command list.');
     if (restored) this.print(`Restored autosaved drawing "${this.doc.name}" (${this.doc.entities.length} objects).`);
     this.showPrompt();
@@ -62,8 +65,14 @@ const App = {
 
   /* ===================== document helpers ===================== */
   layer(name) { return this.doc.layers.find((l) => l.name.toLowerCase() === String(name).toLowerCase()); },
-  visibleEntities() { const v = new Set(this.doc.layers.filter((l) => l.visible).map((l) => l.name)); return this.doc.entities.filter((e) => v.has(e.layer)); },
-  selectableEntities() { const v = new Set(this.doc.layers.filter((l) => l.visible && !l.locked).map((l) => l.name)); return this.doc.entities.filter((e) => v.has(e.layer)); },
+  visibleEntities() {
+    const v = new Set(this.doc.layers.filter((l) => l.visible).map((l) => l.name)), be = this.blockEdit;
+    return this.doc.entities.filter((e) => v.has(e.layer) && !(be && e.id === be.insId));
+  },
+  selectableEntities() {
+    const v = new Set(this.doc.layers.filter((l) => l.visible && !l.locked).map((l) => l.name)), be = this.blockEdit;
+    return this.doc.entities.filter((e) => v.has(e.layer) && (!be || be.ids.has(e.id)));
+  },
   selectedIds() { return [...this.sel].filter((id) => this.get(id)); },
   get(id) {
     if (!this.index) { this.index = new Map(); for (const e of this.doc.entities) this.index.set(e.id, e); }
@@ -74,6 +83,7 @@ const App = {
     if (!e.layer || !this.layer(e.layer)) e.layer = this.doc.clayer;
     if (!e.color) e.color = this.doc.ccolor;
     this.doc.entities.push(e);
+    if (this.blockEdit) this.blockEdit.ids.add(e.id);
     this.index = null; this.changed();
     return e;
   },
@@ -83,6 +93,7 @@ const App = {
     this.sel.delete(id); this.index = null; this.changed();
   },
   changed() {
+    E.ctxDoc = this.doc; E.rev++;
     this.rev++; this.cache.clear();
     this.requestRedraw();
     clearTimeout(this._saveT);
@@ -92,11 +103,11 @@ const App = {
   autosave() {
     try { localStorage.setItem(AUTOSAVE_KEY, JSON.stringify({ doc: this.doc, view: this.view, settings: this.settings })); } catch (err) { /* quota */ }
   },
-  serialize() { return JSON.stringify({ e: this.doc.entities, l: this.doc.layers, n: this.doc.nextId, c: this.doc.clayer }); },
+  serialize() { return JSON.stringify({ e: this.doc.entities, l: this.doc.layers, n: this.doc.nextId, c: this.doc.clayer, b: this.doc.blocks }); },
   captureState() { return this.serialize(); },
   restoreState(s) {
     const o = JSON.parse(s);
-    this.doc.entities = o.e; this.doc.layers = o.l; this.doc.nextId = o.n; this.doc.clayer = o.c;
+    this.doc.entities = o.e; this.doc.layers = o.l; this.doc.nextId = o.n; this.doc.clayer = o.c; if (o.b) this.doc.blocks = o.b;
     this.index = null;
     for (const id of [...this.sel]) if (!this.get(id)) this.sel.delete(id);
     this.changed(); this.refreshUI();
@@ -151,6 +162,10 @@ const App = {
     if (r.done) { this.finish(); return; }
     cmd.prompt = r.value || { type: 'point', msg: '' };
     if (cmd.prompt.type === 'textedit') this.openEditor(cmd.prompt); else this.closeEditor();
+    if (cmd.prompt.type === 'wait') {
+      const pr = cmd.prompt, alive = () => this.cmd === cmd && cmd.prompt === pr;
+      Promise.resolve(pr.promise).then((v) => { if (alive()) this.advance(v); }, (err) => { if (alive()) this.advance({ error: (err && err.message) || String(err) }); });
+    }
     this.showPrompt();
     this.updateMouse();
     this.requestRedraw();
@@ -205,6 +220,7 @@ const App = {
   parseInput(pr, raw) {
     const t = pr.type === 'string' ? raw.replace(/\s+$/, '') : raw.trim();
     if (pr.type === 'pan') return null;
+    if (pr.type === 'wait') return undefined;
     if (pr.type === 'select') {
       if (!t) return this.selectedIds();
       if (/^all$/i.test(t)) { this.selectableEntities().forEach((e) => this.sel.add(e.id)); this.print(`${this.sel.size} found`); this.requestRedraw(); return undefined; }
@@ -590,6 +606,7 @@ const App = {
     const e = this.pick(sx, sy);
     if (!e) return;
     if (['text', 'mtext', 'leader', 'dim'].includes(e.type)) { this.win = null; this.runCommand('TEXTEDIT', { id: e.id }); }
+    else if (e.type === 'insert' && (e.attribs || []).length) { this.win = null; this.runCommand('ATTEDIT', { id: e.id }); }
     else { this.sel.clear(); this.sel.add(e.id); this.showPanel('props'); this.refreshUI(); }
   },
   selectClick(sx, sy, shift) {
@@ -800,6 +817,7 @@ const App = {
     const body = document.getElementById('panelbody');
     if (!body || document.body.classList.contains('noside')) return;
     if (this.panel === 'layers') this.buildLayers(body);
+    else if (this.panel === 'blocks') this.buildBlocks(body);
     else if (this.panel === 'settings') this.buildSettings(body);
     else this.buildProps(body);
   },
@@ -912,6 +930,20 @@ const App = {
         case 'revcloud':
           num('Arc length', () => e.arc, (o, v) => v > 0 && (o.arc = v));
           break;
+        case 'insert': {
+          const nm = h('input'); nm.value = e.name; nm.readOnly = true; row('Block', nm);
+          num('Position X', () => e.p.x, (o, v) => (o.p.x = v)); num('Position Y', () => e.p.y, (o, v) => (o.p.y = v));
+          num('Scale X', () => e.sx ?? 1, (o, v) => v && (o.sx = v)); num('Scale Y', () => e.sy ?? 1, (o, v) => v && (o.sy = v));
+          num('Rotation', () => G.normAng(e.rot || 0) / DEG, (o, v) => (o.rot = v * DEG));
+          (e.attribs || []).forEach((a, i) => txt(a.tag, () => a.value ?? '', (o, v) => { if (o.attribs && o.attribs[i]) o.attribs[i].value = v; }));
+          break;
+        }
+        case 'attdef':
+          txt('Tag', () => e.tag, (o, v) => (o.tag = v.trim().toUpperCase().replace(/\s+/g, '_')));
+          txt('Prompt', () => e.prompt || '', (o, v) => (o.prompt = v));
+          txt('Default', () => e.def || '', (o, v) => (o.def = v));
+          num('Height', () => e.h, (o, v) => v > 0 && (o.h = v));
+          break;
         case 'hatch': {
           const s = h('select'); Object.keys(HATCH_PATTERNS).forEach((k) => { const o = h('option', null, k); o.value = k; s.appendChild(o); });
           s.value = e.pattern; s.onchange = () => apply((o) => (o.pattern = s.value)); row('Pattern', s);
@@ -924,6 +956,10 @@ const App = {
       num('Height', () => ents[0].h, (o, v) => v > 0 && (o.h = v));
     }
     const acts = h('div', 'actions');
+    if (ents.length === 1 && ents[0].type === 'insert') {
+      const be = h('button', null, 'Edit block'); be.onclick = () => this.runCommand('BEDIT', { name: ents[0].name }); acts.appendChild(be);
+      if ((ents[0].attribs || []).length) { const ae = h('button', null, 'Edit attributes'); ae.onclick = () => this.runCommand('ATTEDIT', { id: ents[0].id }); acts.appendChild(ae); }
+    }
     for (const [label, c] of [['Move', 'MOVE'], ['Copy', 'COPY'], ['Rotate', 'ROTATE'], ['Scale', 'SCALE'], ['Mirror', 'MIRROR'], ['Erase', 'ERASE']]) {
       const b = h('button', null, label); b.onclick = () => this.runCommand(c); acts.appendChild(b);
     }
@@ -942,6 +978,80 @@ const App = {
     c.onchange = () => onChange(c.value);
     wrap.append(s, c);
     return wrap;
+  },
+  thumb(ents, size = 84) {
+    const c = document.createElement('canvas');
+    c.width = size * 2; c.height = size * 2; c.style.width = '100%'; c.style.aspectRatio = '1';
+    const ctx = c.getContext('2d');
+    const b = Render.extents(this.doc, ents);
+    if (!b) return c;
+    const w = Math.max(b.maxx - b.minx, 1e-6), h = Math.max(b.maxy - b.miny, 1e-6);
+    const st = { ctx, dpr: 2, W: size, H: size, view: { cx: (b.minx + b.maxx) / 2, cy: (b.miny + b.maxy) / 2, scale: (size * 0.82) / Math.max(w, h) }, doc: this.doc };
+    ctx.lineCap = 'round'; ctx.lineJoin = 'round';
+    Render.worldXf(st);
+    for (const e of ents) Render.drawEntity(st, e, { color: '#d9e1e8' });
+    return c;
+  },
+  buildBlocks(body) {
+    body.innerHTML = '';
+    const d = this.doc, h = (tag, cls, txt) => { const x = document.createElement(tag); if (cls) x.className = cls; if (txt != null) x.textContent = txt; return x; };
+    const acts = h('div', 'actions');
+    for (const [label, fn] of [['Create block', () => this.runCommand('BLOCK')], ['Insert from file…', () => this.runCommand('INSERT', { file: true })], ['Purge unused', () => this.runCommand('PURGE')]]) {
+      const b = h('button', null, label); b.onclick = fn; acts.appendChild(b);
+    }
+    body.appendChild(acts);
+    const refs = {};
+    const count = (list) => { for (const e of list) if (e.type === 'insert') refs[e.name] = (refs[e.name] || 0) + 1; };
+    count(d.entities); Object.values(d.blocks).forEach((b) => count(b.ents));
+    body.appendChild(h('h4', null, 'In this drawing'));
+    const names = Object.keys(d.blocks).filter((n) => !n.startsWith('*')).sort((a, b) => a.localeCompare(b));
+    if (!names.length) body.appendChild(h('div', 'muted', 'No blocks yet. Select objects and press "Create block" (BLOCK), or click a symbol from the library below.'));
+    const grid = h('div', 'bgrid');
+    for (const n of names) {
+      const card = h('div', 'bcard');
+      card.title = `Click to insert "${n}"`;
+      card.appendChild(this.thumb(d.blocks[n].ents));
+      card.appendChild(h('div', 'bname', n));
+      card.appendChild(h('div', 'bmeta', `${refs[n] || 0} in use`));
+      const tools = h('div', 'btools');
+      const mk = (label, title, fn) => { const b = h('button', null, label); b.title = title; b.onclick = (ev) => { ev.stopPropagation(); fn(); }; tools.appendChild(b); };
+      mk('✎', 'Edit block definition (BEDIT)', () => this.runCommand('BEDIT', { name: n }));
+      mk('Aa', 'Rename block', () => {
+        const nn = (prompt('New block name', n) || '').trim();
+        if (!nn || nn === n) return;
+        if (d.blocks[nn]) { this.print(`Block "${nn}" already exists.`); return; }
+        this.pushUndoNow();
+        d.blocks[nn] = { ...d.blocks[n], name: nn }; delete d.blocks[n];
+        const fixN = (list) => list.forEach((e) => { if (e.type === 'insert' && e.name === n) e.name = nn; });
+        fixN(d.entities); Object.values(d.blocks).forEach((b) => fixN(b.ents));
+        this.changed(); this.refreshUI();
+      });
+      mk('✕', 'Delete block (and its references)', () => {
+        const k = refs[n] || 0;
+        if (k && !confirm(`"${n}" is used ${k} time(s). Delete the block and all its references?`)) return;
+        this.pushUndoNow();
+        const keep = (e) => !(e.type === 'insert' && e.name === n);
+        d.entities = d.entities.filter(keep); Object.values(d.blocks).forEach((b) => (b.ents = b.ents.filter(keep)));
+        delete d.blocks[n]; this.index = null;
+        this.changed(); this.refreshUI();
+      });
+      card.appendChild(tools);
+      card.onclick = () => this.runCommand('INSERT', { name: n });
+      grid.appendChild(card);
+    }
+    body.appendChild(grid);
+    body.appendChild(h('h4', null, 'Symbol library (mm)'));
+    const lg = h('div', 'bgrid');
+    for (const [n, lib] of Object.entries(LIBRARY)) {
+      const card = h('div', 'bcard');
+      card.title = `${lib.desc} — click to insert`;
+      card.appendChild(this.thumb(lib.ents));
+      card.appendChild(h('div', 'bname', n));
+      card.onclick = () => this.runCommand('INSERT', { name: n });
+      lg.appendChild(card);
+    }
+    body.appendChild(lg);
+    body.appendChild(h('div', 'muted', 'Library symbols are drawn in millimetres on layer 0, so they take the layer of the block reference. Use Scale when inserting into drawings in other units.'));
   },
   buildLayers(body) {
     body.innerHTML = '';
@@ -1074,6 +1184,7 @@ const App = {
         ['Draw', ['LINE', 'PLINE', 'RECTANG', 'CIRCLE', 'ARC', 'POLYGON', 'ELLIPSE', 'SPLINE', 'HATCH', 'REVCLOUD']],
         ['Annotate / comments', ['TEXT', 'MTEXT', 'MLEADER', 'TEXTEDIT', 'DIMLINEAR', 'DIMALIGNED', 'DIMRADIUS', 'DIMDIAMETER']],
         ['Modify', ['ERASE', 'MOVE', 'COPY', 'ROTATE', 'SCALE', 'MIRROR', 'STRETCH', 'OFFSET', 'TRIM', 'EXTEND', 'FILLET', 'CHAMFER', 'BREAK', 'BREAKATPOINT', 'JOIN', 'LENGTHEN', 'ALIGN', 'PEDIT', 'ARRAY', 'EXPLODE', 'MATCHPROP']],
+        ['Blocks', ['BLOCK', 'INSERT', 'ATTDEF', 'ATTEDIT', 'ATTSYNC', 'BEDIT', 'BCLOSE', 'BLOCKSPALETTE', 'PURGE']],
         ['Inquiry & view', ['DIST', 'AREA', 'ID', 'LIST', 'ZOOM', 'PAN', 'REGEN']],
         ['Settings', ['LAYER', '-LAYER', 'COLOR', 'TEXTSIZE', 'DIMSCALE', 'DIMDEC', 'GRID', 'SNAP', 'ORTHO', 'OSNAP']],
         ['File & edit', ['NEW', 'OPEN', 'SAVE', 'SAVEAS', 'EXPORT', 'PLOT', 'UNDO', 'REDO', 'COPYCLIP', 'CUTCLIP', 'PASTECLIP', 'SELECTALL', 'HELP']],
@@ -1092,7 +1203,7 @@ const App = {
 
   /* ===================== files ===================== */
   newDrawing() {
-    this.doc = newDoc(); this.sel.clear(); this.undoStack = []; this.redoStack = []; this.index = null;
+    this.doc = newDoc(); this.sel.clear(); this.blockEdit = null; this.undoStack = []; this.redoStack = []; this.index = null;
     this.view = { cx: 210, cy: 148, scale: Math.max(0.5, (this.W - 40) / 440) };
     this.changed(); this.refreshUI(); this.print('New drawing.');
   },
@@ -1125,7 +1236,10 @@ const App = {
         const r = IO.fromDXF(text);
         const d = newDoc();
         d.name = base;
+        d.blocks = r.blocks || {};
         for (const l of r.layers) { const ex = d.layers.find((x) => x.name === l.name); if (ex) Object.assign(ex, l); else d.layers.push(l); }
+        const ensureLayers = (list) => { for (const e of list) if (e.layer && !d.layers.find((l) => l.name === e.layer)) d.layers.push({ name: e.layer, color: '#ffffff', visible: true, locked: false, linetype: 'Continuous' }); };
+        Object.values(d.blocks).forEach((bk) => ensureLayers(bk.ents));
         for (const e of r.entities) { if (!d.layers.find((l) => l.name === e.layer)) d.layers.push({ name: e.layer, color: '#ffffff', visible: true, locked: false, linetype: 'Continuous' }); e.id = d.nextId++; d.entities.push(e); }
         this.doc = d;
         this.print(`Imported ${r.entities.length} objects and ${r.layers.length} layers from "${name}".`);
@@ -1136,12 +1250,48 @@ const App = {
         const d = o.doc || o;
         if (!Array.isArray(d.entities)) throw new Error('Not a BananaCAD drawing.');
         this.doc = Object.assign(newDoc(), d);
+        this.doc.blocks = this.doc.blocks || {};
         this.doc.name = this.doc.name || base;
         this.print(`Opened "${name}" (${this.doc.entities.length} objects).`);
       }
-      this.sel.clear(); this.undoStack = []; this.redoStack = []; this.index = null;
+      this.sel.clear(); this.undoStack = []; this.redoStack = []; this.index = null; this.blockEdit = null;
       this.changed(); this.refreshUI(); this.zoomExtents();
     } catch (err) { console.error(err); this.print('Could not open file: ' + err.message); }
+  },
+  /* Read a drawing file (DWG/DXF/BCAD) into {fileName, entities, blocks, layers}. */
+  async readDrawing(f) {
+    if (/\.dwg$/i.test(f.name)) { this.print(`Reading DWG "${f.name}"…`); return { fileName: f.name, ...IO.fromDXF(await IO.dwgToDXF(await f.arrayBuffer())) }; }
+    const text = await f.text();
+    if (/\.dxf$/i.test(f.name) || /^\s*0\s*\r?\n\s*SECTION/.test(text)) return { fileName: f.name, ...IO.fromDXF(text) };
+    const o = JSON.parse(text), d = o.doc || o;
+    if (!Array.isArray(d.entities)) throw new Error('not a drawing file');
+    return { fileName: f.name, entities: d.entities, blocks: d.blocks || {}, layers: d.layers || [] };
+  },
+  pickAndReadDrawing() {
+    return new Promise((resolve) => {
+      const inp = document.createElement('input');
+      inp.type = 'file'; inp.accept = '.dwg,.dxf,.bcad,.json';
+      let done = false;
+      const fin = (v) => { if (!done) { done = true; resolve(v); } };
+      inp.addEventListener('change', () => { const f = inp.files[0]; if (!f) { fin(null); return; } this.readDrawing(f).then(fin, (err) => fin({ error: err.message || String(err) })); });
+      inp.addEventListener('cancel', () => fin(null));
+      inp.click();
+    });
+  },
+  /* Turn a read drawing into a block of this drawing (layers and nested blocks merged). */
+  blockFromDrawing(f) {
+    const d = this.doc;
+    const stem = f.fileName.replace(/\.[^.]+$/, '');
+    let name = stem, i = 2;
+    while (d.blocks[name]) name = `${stem} (${i++})`;
+    for (const l of f.layers || []) if (!this.layer(l.name)) d.layers.push({ ...l });
+    const map = {};
+    for (const bn of Object.keys(f.blocks || {})) { let nn = bn, k = 2; while (d.blocks[nn]) nn = `${bn} (${k++})`; map[bn] = nn; }
+    const fix = (list) => list.map((e) => { const n = E.clone(e); delete n.id; if (n.type === 'insert' && map[n.name]) n.name = map[n.name]; if (n.layer && !this.layer(n.layer)) d.layers.push({ name: n.layer, color: '#ffffff', visible: true, locked: false, linetype: 'Continuous' }); return n; });
+    for (const bn of Object.keys(f.blocks || {})) d.blocks[map[bn]] = { ...f.blocks[bn], name: map[bn], ents: fix(f.blocks[bn].ents) };
+    d.blocks[name] = { name, base: { x: 0, y: 0 }, ents: fix(f.entities) };
+    this.changed();
+    return name;
   },
   exportAs(k) {
     k = String(k).toUpperCase();
@@ -1175,7 +1325,14 @@ const App = {
     ctx.fillStyle = '#1f252d'; ctx.fillRect(0, 0, W, H);
     ctx.lineCap = 'round'; ctx.lineJoin = 'round';
     if (this.settings.grid) this.drawGrid(ctx);
-    Render.drawDrawing(st, this.hidden);
+    E.ctxDoc = this.doc;
+    const be = this.blockEdit;
+    if (be) {
+      const skip = new Set([...(this.hidden || []), ...be.ids]);
+      if (be.insId) skip.add(be.insId);
+      ctx.globalAlpha = 0.28; Render.drawDrawing(st, skip); ctx.globalAlpha = 1;
+      Render.drawDrawing(st, this.hidden, be.ids);
+    } else Render.drawDrawing(st, this.hidden);
     // highlights
     Render.worldXf(st);
     for (const id of this.sel) {
@@ -1227,6 +1384,13 @@ const App = {
       ctx.setLineDash([]);
     }
     this.drawUCS(ctx);
+    if (be) {
+      const msg = `BLOCK EDITOR — "${be.name}" · type BCLOSE to save or discard`;
+      ctx.font = `600 13px ${FONT_FAMILY}`;
+      const w = ctx.measureText(msg).width + 24;
+      ctx.fillStyle = 'rgba(255,170,0,0.92)'; ctx.fillRect((W - w) / 2, 8, w, 26);
+      ctx.fillStyle = '#1b1b1b'; ctx.textAlign = 'center'; ctx.fillText(msg, W / 2, 26); ctx.textAlign = 'left';
+    }
     // tracking
     const ms = this.mouse;
     this.el.tip.style.display = 'none';
@@ -1418,7 +1582,11 @@ const RIBBON = [
     ['Text & notes', [['TEXT', 'Text', 'text'], ['MTEXT', 'MText', 'mtext'], ['MLEADER', 'Leader note', 'leader'], ['REVCLOUD', 'Rev cloud', 'cloud'], ['TEXTEDIT', 'Edit text', 'text']]],
     ['Dimensions', [['DIMLINEAR', 'Linear', 'dimlin'], ['DIMALIGNED', 'Aligned', 'dimali'], ['DIMRADIUS', 'Radius', 'dimrad'], ['DIMDIAMETER', 'Diameter', 'dimdia']]],
   ] },
-  { tab: 'Insert', groups: [] },
+  { tab: 'Insert', groups: [
+    ['Block', [['INSERT', 'Insert', 'insert'], ['BLOCK', 'Create', 'blockmake'], ['BEDIT', 'Edit block', 'blockedit'], ['BCLOSE', 'Close editor', 'check'], ['BLOCKSPALETTE', 'Library', 'library'], ['PURGE', 'Purge', 'erase']]],
+    ['Attributes', [['ATTDEF', 'Define', 'attdef'], ['ATTEDIT', 'Edit values', 'attedit'], ['ATTSYNC', 'Sync', 'sync']]],
+    ['Import', [['OPEN', 'Open DWG/DXF', 'open']]],
+  ] },
   { tab: 'Layout', groups: [] },
   { tab: 'View', groups: [
     ['Navigate', [['ZOOM_E', 'Extents', 'zoomext'], ['ZOOM', 'Window', 'zoomwin'], ['PAN', 'Pan', 'pan'], ['REGEN', 'Regen', 'rotate']]],
@@ -1483,6 +1651,14 @@ const ICONS = {
   align: '<path d="M4 18l6-6M14 6h6v6"/><path d="M4 18h16" stroke-dasharray="2 2"/>',
   area: '<path d="M4 18l3-12 10 2 3 10z"/><path d="M8 14h6" stroke-dasharray="1.5 1.5"/>',
   cmd: '<rect x="4" y="5" width="16" height="14" rx="2"/><path d="M8 10l3 2-3 2M13 15h3"/>',
+  insert: '<rect x="9" y="9" width="12" height="12"/><path d="M3 3l9 9M12 6v6H6"/>',
+  blockmake: '<rect x="3" y="3" width="8" height="8"/><circle cx="17" cy="7" r="4"/><path d="M3 15h18v6H3z" stroke-dasharray="2 2"/>',
+  blockedit: '<rect x="3" y="3" width="12" height="12" stroke-dasharray="2 2"/><path d="M13 21l1-4 7-7 3 3-7 7z"/>',
+  check: '<path d="M4 12l5 5L20 6"/>',
+  library: '<rect x="3" y="3" width="7" height="7"/><circle cx="17.5" cy="6.5" r="3.5"/><path d="M3 14h7v7H3zM14 14l7 7M21 14l-7 7"/>',
+  attdef: '<path d="M4 6h10M9 6v12"/><rect x="13" y="12" width="8" height="8" rx="1"/><path d="M15 16h4"/>',
+  attedit: '<rect x="3" y="6" width="14" height="10" rx="1"/><path d="M6 11h6M14 20l1-3 5-5 2 2-5 5z"/>',
+  sync: '<path d="M20 11a8 8 0 0 0-14-4M4 13a8 8 0 0 0 14 4"/><path d="M6 3v4h4M18 21v-4h-4"/>',
   help: '<circle cx="12" cy="12" r="9"/><path d="M9.5 9a2.5 2.5 0 1 1 3.5 2.3c-.6.3-1 .9-1 1.7V14M12 17v.5"/>',
 };
 

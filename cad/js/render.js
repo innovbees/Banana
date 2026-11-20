@@ -100,14 +100,18 @@ const Render = {
   },
 
   drawEntity(st, e, opt = {}) {
+    if (e.type === 'insert') {
+      for (const c of E.children(e)) { const l = this.layerOf(st.doc, c); if (l && !l.visible) continue; this.drawEntity(st, c, opt); }
+      return;
+    }
     const color = opt.color || (st.print ? printColor(this.colorOf(st.doc, e)) : this.colorOf(st.doc, e));
     this.drawOps(st, E.ops(e, st.doc), color, { dash: opt.dash || this.dashOf(st.doc, e), lw: opt.lw, preview: opt.preview });
   },
 
   /* Draw a whole drawing (used by on-screen render and PNG export). */
-  drawDrawing(st, skip) {
+  drawDrawing(st, skip, only) {
     const doc = st.doc, vis = new Set(doc.layers.filter((l) => l.visible).map((l) => l.name));
-    const ents = doc.entities.filter((e) => vis.has(e.layer) && !(skip && skip.has(e.id)));
+    const ents = doc.entities.filter((e) => vis.has(e.layer) && !(skip && skip.has(e.id)) && (!only || only.has(e.id)));
     this.worldXf(st);
     for (const e of ents) if (e.type === 'hatch') this.drawEntity(st, e);
     for (const e of ents) if (e.type !== 'hatch') this.drawEntity(st, e);
@@ -135,7 +139,8 @@ const Render = {
     const esc = (t) => String(t).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
     const out = [];
     const vis = new Set(doc.layers.filter((l) => l.visible).map((l) => l.name));
-    const ents = doc.entities.filter((e) => vis.has(e.layer));
+    const ents = [];
+    for (const e0 of doc.entities) if (vis.has(e0.layer)) for (const e of E.flatten(e0)) if (vis.has(e.layer)) ents.push(e);
     ents.sort((a, b2) => (a.type === 'hatch' ? 0 : 1) - (b2.type === 'hatch' ? 0 : 1));
     for (const e of ents) {
       const c = printColor(this.colorOf(doc, e));

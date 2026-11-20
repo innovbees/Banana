@@ -150,6 +150,39 @@ function revcloudPts(pts, arcLen) {
 }
 
 const E = {};
+/* Blocks: E.ctxDoc is the current drawing (for block definitions); E.rev changes on every edit. */
+E.ctxDoc = null;
+E.rev = 0;
+const _insCache = new WeakMap();
+E.blockOf = (name) => (E.ctxDoc && E.ctxDoc.blocks ? E.ctxDoc.blocks[name] : null);
+E.insertMatrix = (e) => { const blk = E.blockOf(e.name); return M2.insert(e.p, e.sx ?? 1, e.sy ?? 1, e.rot || 0, blk ? blk.base : { x: 0, y: 0 }); };
+/* World-space child entities of a block reference (nested blocks flattened, attributes as text). */
+E.children = (e, depth = 0) => {
+  if (depth === 0) { const hit = _insCache.get(e); if (hit && hit.rev === E.rev) return hit.ents; }
+  const blk = E.blockOf(e.name), out = [];
+  if (blk && depth < 10) {
+    const xf = XF.matrix(E.insertMatrix(e));
+    const inherit = (c) => { if (!c.layer || c.layer === '0') c.layer = e.layer; if (!c.color || c.color === 'byblock') c.color = e.color; return c; };
+    for (const c0 of blk.ents) {
+      if (c0.type === 'attdef') continue;
+      const c = inherit(E.clone(c0));
+      if (c.type === 'insert') { for (const g of E.children(c, depth + 1)) out.push(E.transform(g, xf)); continue; }
+      out.push(E.transform(c, xf));
+    }
+    for (const a of e.attribs || []) {
+      if (a.invisible || a.value == null || a.value === '') continue;
+      out.push(E.transform(inherit({ type: 'text', p: { ...a.p }, h: a.h, rot: a.rot || 0, text: String(a.value), align: a.align || 'left', layer: a.layer || '0', color: a.color || 'byblock' }), xf));
+    }
+  }
+  if (depth === 0) _insCache.set(e, { rev: E.rev, ents: out });
+  return out;
+};
+/* Simple world entities that make up e (block references expanded). */
+E.flatten = (e) => (e.type === 'insert' ? E.children(e) : [e]);
+/* Attribute values for a new reference of a block, from its attribute definitions. */
+E.attribsFor = (blk, values = {}) => blk.ents.filter((c) => c.type === 'attdef').map((d) => ({
+  tag: d.tag, value: values[d.tag] ?? d.def ?? '', p: { ...d.p }, h: d.h, rot: d.rot || 0, align: d.align || 'left', invisible: !!d.invisible, layer: d.layer, color: d.color,
+}));
 
 E.dimText = (e, meas, dec) => {
   const v = fmtNum(meas, dec);
@@ -255,6 +288,8 @@ E.ops = (e, doc) => {
     case 'dim': return E.dimOps(e, dec);
     case 'revcloud': return [{ op: 'poly', pts: revcloudPts(e.pts, e.arc), closed: true }];
     case 'hatch': return [{ op: 'hatch', loops: e.loops, pattern: e.pattern, scale: e.scale, angle: e.angle }];
+    case 'attdef': return [{ op: 'text', p: e.p, h: e.h, rot: e.rot || 0, str: e.tag, align: e.align || 'left' }];
+    case 'insert': { const out = []; for (const c of E.children(e)) for (const op of E.ops(c, doc)) out.push(op); return out; }
   }
   return [];
 };
@@ -302,6 +337,7 @@ E.prims = (e) => {
     case 'arc': return [G.arcPrim(e.c, e.r, e.a1, G.ccwSweep(e.a1, e.a2))];
     case 'ellipse': return segsOf(ellipsePts(e), true);
     case 'revcloud': return segsOf(revcloudPts(e.pts, e.arc), true);
+    case 'insert': { const out = []; for (const c of E.children(e)) for (const p of E.prims(c)) out.push(p); return out; }
   }
   return [];
 };
@@ -364,7 +400,8 @@ E.snaps = (e, doc) => {
       break;
     }
     case 'ellipse': { const mn = G.mul(G.perp(e.maj), e.ratio); add('cen', e.c); [e.maj, G.mul(e.maj, -1), mn, G.mul(mn, -1)].forEach((v) => add('quad', G.add(e.c, v))); break; }
-    case 'text': case 'mtext': add('ins', e.p); break;
+    case 'text': case 'mtext': case 'attdef': add('ins', e.p); break;
+    case 'insert': { add('ins', e.p); const ch = E.children(e); if (ch.length < 3000) for (const c of ch) for (const q of E.snaps(c, doc)) s.push(q); break; }
     case 'leader': e.pts.forEach((p) => add('end', p)); break;
     case 'revcloud': e.pts.forEach((p) => add('end', p)); break;
     case 'dim':
@@ -384,7 +421,7 @@ E.grips = (e) => {
     case 'circle': return [e.c, ...[0, 1, 2, 3].map((k) => G.polar(e.c, k * Math.PI / 2, e.r))];
     case 'arc': { const sw = G.ccwSweep(e.a1, e.a2); return [G.polar(e.c, e.a1, e.r), G.polar(e.c, e.a1 + sw / 2, e.r), G.polar(e.c, e.a2, e.r), e.c]; }
     case 'ellipse': { const mn = G.mul(G.perp(e.maj), e.ratio); return [e.c, G.add(e.c, e.maj), G.sub(e.c, e.maj), G.add(e.c, mn), G.sub(e.c, mn)]; }
-    case 'text': case 'mtext': return [e.p];
+    case 'text': case 'mtext': case 'attdef': case 'insert': return [e.p];
     case 'dim': return e.kind === 'radius' || e.kind === 'diameter' ? [e.pos] : [e.p1, e.p2, e.pos];
   }
   return [];
@@ -433,7 +470,7 @@ E.setGrip = (e, i, p) => {
       if (e.ratio > 1) { const ml = G.len(e.maj) * e.ratio; e.maj = G.mul(G.norm(G.perp(e.maj)), ml); e.ratio = 1 / e.ratio; }
       break;
     }
-    case 'text': case 'mtext': e.p = p; break;
+    case 'text': case 'mtext': case 'attdef': case 'insert': e.p = p; break;
     case 'dim':
       if (e.kind === 'radius' || e.kind === 'diameter') e.pos = p;
       else if (i === 0) e.p1 = p; else if (i === 1) e.p2 = p; else e.pos = p;
@@ -459,7 +496,11 @@ E.transform = (e, xf) => {
       break;
     }
     case 'ellipse': e.c = P(e.c); e.maj = xf.v(e.maj); break;
-    case 'text': case 'mtext':
+    case 'insert':
+      e.p = P(e.p); e.sx = (e.sx ?? 1) * s; e.sy = (e.sy ?? 1) * s;
+      if (xf.mirror) { e.rot = xf.rot - (e.rot || 0); e.sy = -e.sy; } else e.rot = (e.rot || 0) + xf.rot;
+      break;
+    case 'text': case 'mtext': case 'attdef':
       e.p = P(e.p); e.h *= s; if (e.width) e.width *= s;
       if (!xf.mirror) e.rot = angOf(e.rot || 0);
       else if (e.type === 'mtext') { /* keep readable */ }
@@ -601,6 +642,7 @@ E.explode = (e, doc) => {
   const base = { layer: e.layer, color: e.color };
   if (e.type === 'pline') return E.prims(e).map((s) => (s.kind === 'seg' ? { ...base, type: 'line', p1: { ...s.a }, p2: { ...s.b } } : { ...base, type: 'arc', c: { ...s.c }, r: s.r, a1: s.a1, a2: s.a1 + s.sweep }));
   if (e.type === 'spline') return [{ ...base, type: 'pline', pts: splinePts(e), closed: !!e.closed }];
+  if (e.type === 'insert') return E.children(e).map((c) => { const n = E.clone(c); delete n.id; return n; });
   if (e.type === 'mtext') return E.ops(e, doc).map((op) => ({ ...base, type: 'text', p: op.p, h: op.h, rot: op.rot, text: op.str, align: 'left' }));
   if (['dim', 'leader', 'revcloud'].includes(e.type)) {
     const out = [];
@@ -616,7 +658,7 @@ E.explode = (e, doc) => {
   return null;
 };
 
-E.label = (t) => ({ line: 'Line', pline: 'Polyline', spline: 'Spline', circle: 'Circle', arc: 'Arc', ellipse: 'Ellipse', text: 'Text', mtext: 'MText', leader: 'Leader', dim: 'Dimension', revcloud: 'Revision cloud', hatch: 'Hatch' }[t] || t);
+E.label = (t) => ({ line: 'Line', pline: 'Polyline', spline: 'Spline', circle: 'Circle', arc: 'Arc', ellipse: 'Ellipse', text: 'Text', mtext: 'MText', leader: 'Leader', dim: 'Dimension', revcloud: 'Revision cloud', hatch: 'Hatch', insert: 'Block reference', attdef: 'Attribute definition' }[t] || t);
 
 E.describe = (e, doc) => {
   const f = (v) => fmtNum(v, 4), P = (p) => `X=${f(p.x)}  Y=${f(p.y)}`;
@@ -631,6 +673,8 @@ E.describe = (e, doc) => {
     case 'leader': L.push(`  arrow at ${P(e.pts[0])}`, `  "${e.text}"`); break;
     case 'dim': L.push(`  ${e.kind}`); break;
     case 'hatch': L.push(`  Pattern=${e.pattern}  Scale=${e.scale}  Angle=${e.angle}°`); break;
+    case 'insert': L.push(`  Block "${e.name}" at ${P(e.p)}`, `  Scale X=${f(e.sx ?? 1)} Y=${f(e.sy ?? 1)}  Rotation=${f(G.normAng(e.rot || 0) / DEG)}°`); for (const a of e.attribs || []) L.push(`  ${a.tag} = "${a.value}"`); break;
+    case 'attdef': L.push(`  Tag=${e.tag}  Prompt="${e.prompt || ''}"  Default="${e.def || ''}"`); break;
   }
   return L;
 };

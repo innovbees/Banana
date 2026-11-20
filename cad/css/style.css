@@ -147,3 +147,16 @@ code, kbd { font-family: var(--mono); background: #1f252c; border: 1px solid #44
 
 #viewport.drop::after { content: "Drop DWG / DXF / BCAD file to open"; position: absolute; inset: 12px; display: grid; place-items: center; border: 2px dashed var(--accent); border-radius: 10px; background: rgba(59,140,255,.12); color: #fff; font-size: 18px; pointer-events: none; }
 body.busy, body.busy #viewport { cursor: progress; }
+
+.bgrid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; margin-bottom: 10px; }
+.bcard { background: #1f252c; border: 1px solid var(--line); border-radius: 6px; padding: 4px; cursor: pointer; text-align: center; font-size: 11px; min-width: 0; }
+.bcard:hover { border-color: var(--accent); }
+.bcard canvas { display: block; }
+.bname { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin-top: 2px; }
+.bmeta { color: var(--muted); font-size: 10px; }
+.btools { display: flex; gap: 2px; justify-content: center; margin-top: 3px; }
+.btools { visibility: hidden; }
+.bcard:hover .btools { visibility: visible; }
+.btools button { background: var(--bg3); border: 1px solid var(--line); border-radius: 3px; font-size: 11px; line-height: 1; padding: 2px 6px; cursor: pointer; min-width: 22px; }
+.btools button:hover { border-color: var(--accent); }
+.tabs .tab { padding: 8px 2px; font-size: 12px; }
