@@ -141,112 +141,73 @@ drape(1.0,3.0,RL-0.1,sheerM,22,0.02);                                       // s
 // ---------- Rug ----------
 // (no rug - wall-to-wall carpet)
 
-// ---------- Bought king bed: Nick Scali Solenne (dims from Nick Scali: 2960 W (headboard) x 2310 L x 1055 H; base ~2000 W (assumed); 5 horizontal channels) ----------
-const bz0=1.85, bz1=3.85, bx0=0.87, bx1=3.05;
-const solM = mat('#ffffff',1,0,{map: canvasTex(256,256,speckle('#9d8d7f',256,256,4000,[0.8,1.8],0.32,0.3,19),3,3)});
-rbox(bx1-bx0,0.3,bz1-bz0,0.13,solM,(bx0+bx1)/2,0.2,(bz0+bz1)/2);
-box(bx0+0.08,bx1-0.08,0.0,0.05,bz0+0.08,bz1-0.08,mat('#2c2b2a',0.6)); // recessed plinth
-rbox(bx1-bx0-0.06,0.26,bz1-bz0-0.06,0.06,sheet,(bx0+bx1)/2,0.45,(bz0+bz1)/2);
-// duvet folded back over the foot two-thirds, draping over sides
-rbox(2.38-bx0,0.27,bz1-bz0+0.05,0.05,duvet,(bx0+2.38)/2-0.01,0.47,(bz0+bz1)/2).receiveShadow=false;
-{const roll=new THREE.Mesh(new THREE.CapsuleGeometry(0.05,bz1-bz0-0.02,8,16),duvet); roll.rotation.x=Math.PI/2; roll.position.set(2.36,0.6,(bz0+bz1)/2); roll.castShadow=false; scene.add(roll);}
-// knit throw at an angle near foot
-rbox(0.5,0.04,bz1-bz0+0.12,0.015,knit,1.45,0.615,(bz0+bz1)/2).castShadow=false;
-// Solenne headboard: 2960 wide (centre panel + a wing each side), 1055 high, 5 horizontal channels, back face 20 mm off the walnut wall
-{ const HH=1.055, rows=5, rh=(HH-0.04)/rows, panels=[[1.37,1.85],[1.85,3.85],[3.85,4.33]];
-  for(const [z0,z1] of panels){ box(3.08,3.16,0,0.04,z0+0.05,z1-0.05,mat('#2c2b2a',0.6));
-    for(let r=0;r<rows;r++){ rbox(0.13,rh-0.008,z1-z0-0.01,0.055,solM,3.115,0.04+r*rh+rh/2,(z0+z1)/2); } } }
-box(3.2,3.3,0,1.35,1.35,4.35,walnut);                          // walnut headboard wall, 1.35 m, frames the Solenne headboard
-box(3.19,3.31,1.35,1.37,1.35,4.35,travertine);                 // stone cap
-// pillows
-function pillow(x,y,z,w,h,d,m,tilt){ const o=rbox(d,h,w,Math.min(d,h)*0.45,m,x,y,z); o.rotation.z=tilt; return o; }
-for(const zc of [2.45,3.25]){ pillow(2.94,0.86,zc,0.74,0.6,0.18,mat(PAL.pillowA,0.85),0.18); pillow(2.79,0.78,zc,0.68,0.44,0.17,mat(PAL.pillowB,0.85),0.22); }
-pillow(2.63,0.72,2.85,0.6,0.3,0.15,velvet,0.2);
+// ---------- LAYOUT B: Nick Scali Elyse king bed, head to the SOUTH window, 400 mm gap ----------
+// Elyse: 2060 W x 2430 L, headboard 930 H (fabric assumed Warm Linen; headboard style assumed plain padded)
+const GAPB=0.40, BW=2.06, BL=2.43, HBZ=RL-GAPB, FZ=HBZ-BL, bx0=2.0-BW/2, bx1=2.0+BW/2;
+const linenM = mat('#ffffff',1,0,{map: canvasTex(256,256,speckle('#d8ccba',256,256,4000,[0.8,1.6],0.3,0.25,23),3,3)});
+rbox(BW,0.3,BL-0.1,0.1,linenM,2.0,0.2,(FZ+HBZ-0.1)/2);                                   // upholstered base
+box(bx0+0.08,bx1-0.08,0.0,0.05,FZ+0.08,HBZ-0.18,mat('#2c2b2a',0.6));                     // recessed plinth
+rbox(BW,0.88,0.1,0.045,linenM,2.0,0.05+0.44,HBZ-0.05);                                    // headboard 930 H
+rbox(BW-0.06,0.24,BL-0.2,0.06,sheet,2.0,0.47,(FZ+HBZ-0.1)/2+0.02);                        // mattress + sheet
+const DFOLD=FZ+1.45;
+rbox(BW+0.04,0.27,DFOLD-FZ,0.05,duvet,2.0,0.47,(FZ+DFOLD)/2-0.01).receiveShadow=false;  // duvet over the foot
+{const roll=new THREE.Mesh(new THREE.CapsuleGeometry(0.05,BW-0.04,8,16),duvet); roll.rotation.z=Math.PI/2; roll.position.set(2.0,0.6,DFOLD); roll.castShadow=false; scene.add(roll);}
+rbox(BW+0.12,0.04,0.5,0.015,knit,2.0,0.615,FZ+0.42).castShadow=false;                   // knit throw across the foot
+function pillow(x,y,z,w,h,d,m,tilt){ const o=rbox(w,h,d,Math.min(d,h)*0.45,m,x,y,z); o.rotation.x=tilt; return o; }
+for(const xc of [1.57,2.43]){ pillow(xc,0.86,HBZ-0.2,0.74,0.6,0.18,mat(PAL.pillowA,0.85),0.18); pillow(xc,0.78,HBZ-0.36,0.68,0.44,0.17,mat(PAL.pillowB,0.85),0.22); }
+pillow(2.0,0.72,HBZ-0.52,0.6,0.3,0.15,velvet,0.2);
 
-
-// ---------- Nightstands ----------
-for(const [z0,z1] of [[1.36,1.81],[3.89,4.34]]){   // 450 nightstands in front of the headboard wings
-  box(2.61,3.06,0.0,0.52,z0+0.01,z1-0.01,walnut);
-  for(let k=0;k<9;k++){ const zz=z0+0.04+k*0.042; box(2.595,2.61,0.08,0.45,zz,zz+0.022,walnut); } // fluted front
-  box(2.58,3.06,0.52,0.56,z0,z1,travertine);
-  box(2.58,2.59,0.26,0.28,(z0+z1)/2-0.08,(z0+z1)/2+0.08,brass);              // pull
-  // pendant above each nightstand
-  cyl(2.84,1.98,(z0+z1)/2,0.004,0.004,0.84,brass,6);
-  const pg=new THREE.Mesh(new THREE.SphereGeometry(0.085,32,16),mat('#f7f1e6',0.35,0,{emissive:'#fff1d8',emissiveIntensity:0.15})); pg.position.set(2.84,1.5,(z0+z1)/2); pg.castShadow=true; scene.add(pg);
-  cyl(2.84,1.59,(z0+z1)/2,0.025,0.025,0.035,brass);
+// ---------- Nightstands either side of the headboard (450 x 450 x 550) ----------
+const NSX=[[bx0-0.02-0.45,bx0-0.02],[bx1+0.02,bx1+0.47]], NSZ0=HBZ-0.45, NSZ1=HBZ;
+for(const [x0,x1] of NSX){
+  box(x0+0.01,x1-0.01,0.0,0.52,NSZ0,NSZ1,walnut);
+  for(let k=0;k<9;k++){ const xx=x0+0.04+k*0.042; box(xx,xx+0.022,0.08,0.45,NSZ0-0.015,NSZ0,walnut); } // fluted front (faces north)
+  box(x0,x1,0.52,0.56,NSZ0-0.02,NSZ1,travertine);
+  box((x0+x1)/2-0.08,(x0+x1)/2+0.08,0.26,0.28,NSZ0-0.03,NSZ0-0.015,brass);                       // pull
+  cyl((x0+x1)/2,1.98,NSZ0+0.12,0.004,0.004,0.84,brass,6);                                          // pendant rod
+  const pg=new THREE.Mesh(new THREE.SphereGeometry(0.085,32,16),mat('#f7f1e6',0.35,0,{emissive:'#fff1d8',emissiveIntensity:0.15})); pg.position.set((x0+x1)/2,1.5,NSZ0+0.12); pg.castShadow=true; scene.add(pg);
+  cyl((x0+x1)/2,1.59,NSZ0+0.12,0.025,0.025,0.035,brass);
 }
-// styling on south nightstand (window side): books, carafe, bud vase
-box(2.68,2.96,0.56,0.6,3.98,4.18,mat('#d6d7d8',0.8)); box(2.7,2.94,0.6,0.625,4.0,4.16,mat('#3e4a52',0.7));
-cyl(2.75,0.62,4.25,0.035,0.04,0.12,mat('#e9efe9',0.1,0,{transparent:true,opacity:0.5})); cyl(2.95,0.64,3.95,0.025,0.02,0.08,mat('#f1f1ef',0.4));
-cyl(2.95,0.72,3.95,0.004,0.004,0.1,mat('#5d7a4c',0.8),6); pillow(2.95,0.78,3.95,0.05,0.04,0.05,mat('#fffaf2',0.7),0);
-// north nightstand: small clock + tray
-box(2.7,2.98,0.56,0.57,1.45,1.7,brass); cyl(2.9,0.62,1.6,0.05,0.05,0.04,brass).rotation.z=Math.PI/2;
+{ const [ex0,ex1]=NSX[1], [wx0,wx1]=NSX[0];
+  box(ex0+0.05,ex0+0.25,0.56,0.6,NSZ0+0.08,NSZ0+0.36,mat('#d6d7d8',0.8)); box(ex0+0.06,ex0+0.24,0.6,0.625,NSZ0+0.1,NSZ0+0.34,mat('#3e4a52',0.7));
+  cyl(ex1-0.1,0.62,NSZ0+0.12,0.035,0.04,0.12,mat('#e9efe9',0.1,0,{transparent:true,opacity:0.5}));
+  cyl(ex1-0.12,0.64,NSZ0+0.32,0.025,0.02,0.08,mat('#f1f1ef',0.4)); cyl(ex1-0.12,0.72,NSZ0+0.32,0.004,0.004,0.1,mat('#5d7a4c',0.8),6);
+  box(wx0+0.1,wx0+0.35,0.56,0.57,NSZ0+0.1,NSZ0+0.32,brass); cyl(wx1-0.12,0.62,NSZ0+0.2,0.05,0.05,0.04,brass).rotation.z=Math.PI/2; }
 
-// ---------- West wall: plain limewash plaster (no panelling, no TV) ----------
-// (picture light removed - art lit by ceiling spotlights A1/A2)
-// Large abstract artwork centred on bed (z 2.85): 1.2m wide x 1.5m high, bottom 0.65m, thin brass floater frame, brass picture light
-{ const ART=P.get('art')||'landscape'; const AW=ART==='landscape'?1.8:1.2, AH=ART==='landscape'?0.9:1.5, AB=ART==='landscape'?1.0:0.65, ZC=2.85, LY=AB+AH+0.1;
-  const art=canvasTex(ART==='landscape'?900:600,ART==='landscape'?450:750,(g,w,h)=>{ g.fillStyle=PAL.art[0]; g.fillRect(0,0,w,h); const r=rnd(41);
+// ---------- Artwork on the NORTH wall, centred on the bed (bed faces north) ----------
+{ const AW=1.8, AH=0.9, AB=1.0, XC=2.0;
+  const art=canvasTex(900,450,(g,w,h)=>{ g.fillStyle=PAL.art[0]; g.fillRect(0,0,w,h); const r=rnd(41);
     const blobs=[[PAL.art[1],0.35,0.3,0.42],[PAL.art[2],0.62,0.55,0.34],[PAL.art[3],0.3,0.72,0.16],[PAL.art[4],0.7,0.2,0.1],[PAL.art[5],0.5,0.5,0.25],[PAL.art[6],0.25,0.45,0.2]];
     for(const [c,x,y,rr] of blobs){ for(let i=0;i<60;i++){ g.globalAlpha=0.05+r()*0.06; g.fillStyle=c; g.beginPath(); g.ellipse(x*w+(r()-0.5)*w*0.15,y*h+(r()-0.5)*h*0.15,rr*w*(0.6+r()*0.5),rr*h*(0.4+r()*0.4),r()*3,0,7); g.fill(); } }
     g.globalAlpha=0.6; g.strokeStyle=PAL.art[4]; g.lineWidth=3; g.beginPath(); g.moveTo(w*0.18,h*0.62); g.bezierCurveTo(w*0.4,h*0.5,w*0.55,h*0.75,w*0.82,h*0.58); g.stroke(); g.globalAlpha=1; });
-  box(0.0,0.045,AB-0.02,AB+AH+0.02,ZC-AW/2-0.02,ZC+AW/2+0.02,brass);                                   // floater frame
-  box(0.045,0.05,AB,AB+AH,ZC-AW/2,ZC+AW/2,mat('#ffffff',0.9,0,{map:art}));          // canvas face
-  // rotate texture to face east: draw on a plane instead for correct orientation
-  const pl=new THREE.Mesh(new THREE.PlaneGeometry(AW,AH),mat('#ffffff',0.9,0,{map:art})); pl.position.set(0.052,AB+AH/2,ZC); pl.rotation.y=Math.PI/2; pl.receiveShadow=true; scene.add(pl);
+  box(XC-AW/2-0.02,XC+AW/2+0.02,AB-0.02,AB+AH+0.02,0,0.045,brass);
+  const pl=new THREE.Mesh(new THREE.PlaneGeometry(AW,AH),mat('#ffffff',0.9,0,{map:art})); pl.position.set(XC,AB+AH/2,0.052); pl.receiveShadow=true; scene.add(pl);
 }
-// (no TV, no TV unit)
 
-// ---------- Lounge nook (SW corner) ----------
-const nook=new THREE.Group(); nook.position.set(0.58,0,4.32); nook.rotation.y=Math.PI*0.72; scene.add(nook);
-function nbox(w,h,d,x,y,z,m){ const o=new THREE.Mesh(new THREE.BoxGeometry(w,h,d),m); o.position.set(x,y,z); o.castShadow=true;o.receiveShadow=true; nook.add(o); return o; }
-rbox(0.8,0.38,0.78,0.08,taupeBoucle,0,0.22,0,nook);            // seat base
-rbox(0.66,0.12,0.6,0.05,taupeBoucle,0,0.46,0.06,nook);           // seat cushion
-const bk=rbox(0.8,0.48,0.2,0.09,taupeBoucle,0,0.66,-0.3,nook); bk.rotation.x=-0.12;     // back
-const al=rbox(0.14,0.28,0.66,0.06,taupeBoucle,-0.34,0.52,-0.02,nook); const ar=rbox(0.14,0.28,0.66,0.06,taupeBoucle,0.34,0.52,-0.02,nook);
-// (no rug under chair)
-cyl(1.43,0.25,4.58,0.2,0.2,0.5,travertine); cyl(1.43,0.52,4.58,0.21,0.21,0.04,travertine);
-box(1.33,1.5,0.54,0.57,4.48,4.66,mat('#bfc3c6',0.8)); cyl(1.52,0.58,4.62,0.04,0.035,0.08,mat('#fdfbf6',0.3));
-cyl(0.15,0.75,3.95,0.012,0.012,1.5,brass,8); cyl(0.15,0.01,3.95,0.12,0.14,0.02,brass);
-cyl(0.15,1.5,3.95,0.12,0.18,0.22,mat('#f4f4f2',0.9,0,{side:THREE.DoubleSide}),32);
+// ---------- Lounge chair, table and floor lamp in the NORTH-WEST corner ----------
+const nook=new THREE.Group(); nook.position.set(0.5,0,0.55); nook.rotation.y=Math.PI/4; scene.add(nook);
+rbox(0.8,0.38,0.78,0.08,taupeBoucle,0,0.22,0,nook);
+rbox(0.66,0.12,0.6,0.05,taupeBoucle,0,0.46,0.06,nook);
+const bk=rbox(0.8,0.48,0.2,0.09,taupeBoucle,0,0.66,-0.3,nook); bk.rotation.x=-0.12;
+rbox(0.14,0.28,0.66,0.06,taupeBoucle,-0.34,0.52,-0.02,nook); rbox(0.14,0.28,0.66,0.06,taupeBoucle,0.34,0.52,-0.02,nook);
+cyl(0.42,0.25,1.3,0.2,0.2,0.5,travertine); cyl(0.42,0.52,1.3,0.21,0.21,0.04,travertine);
+box(0.33,0.5,0.54,0.57,1.2,1.38,mat('#bfc3c6',0.8)); cyl(0.5,0.58,1.36,0.04,0.035,0.08,mat('#fdfbf6',0.3));
+cyl(0.14,0.75,0.14,0.012,0.012,1.5,brass,8); cyl(0.14,0.01,0.14,0.12,0.14,0.02,brass);
+cyl(0.14,1.5,0.14,0.12,0.18,0.22,mat('#f4f4f2',0.9,0,{side:THREE.DoubleSide}),32);
+const BACK='none';
 
-// ---------- Backdrop behind the bed (choose with ?back=none|curtain|grasscloth|ledge) ----------
-const BACK=P.get('back')||'none';
-if(BACK==='curtain'){ // ceiling-hung linen curtain along the east wall, z 1.15-4.85 (clear of entry door), parts at the robe walkway
-  box(3.86,3.9,CH-0.03,CH,1.15,4.85,mat('#f4f2ee',0.5),false);
-  const w=3.7, segs=36*8, g=new THREE.PlaneGeometry(w,CH-0.04,segs,1); const pp=g.attributes.position;
-  for(let i=0;i<pp.count;i++){ const u=(pp.getX(i)+w/2)/w; pp.setZ(i,Math.sin(u*36*Math.PI*2)*0.035); }
-  g.computeVertexNormals(); const c=new THREE.Mesh(g,mat('#d9cfc0',0.95,0,{side:THREE.DoubleSide})); c.position.set(3.88,(CH-0.04)/2,3.0); c.rotation.y=Math.PI/2; c.castShadow=true; c.receiveShadow=true; scene.add(c);
-}
-if(BACK==='grasscloth'){ // textured grasscloth wallpaper on the east wall + walnut frame around the robe walkway opening
-  const gc=mat('#ffffff',1,0,{map:canvasTex(512,512,(g,w,h)=>{ g.fillStyle='#cdbfa8'; g.fillRect(0,0,w,h); const r=rnd(51);
-    for(let i=0;i<900;i++){ const x=r()*w; g.strokeStyle=`rgba(${r()<0.5?235:150},${r()<0.5?225:135},${r()<0.5?205:110},${0.15+r()*0.25})`; g.lineWidth=0.6+r()*1.6; g.beginPath(); g.moveTo(x,0); g.lineTo(x+r()*3-1.5,h); g.stroke(); }
-    for(let y=0;y<h;y+=64){ g.fillStyle='rgba(120,100,80,0.12)'; g.fillRect(0,y,w,1.5); } },3,2)});
-  box(3.995,4.0,0,CH,1.0,2.4,gc,false,true); box(3.995,4.0,0,CH,3.3,RL,gc,false,true); box(3.995,4.0,2.1,CH,2.4,3.3,gc,false,true);
-  box(3.95,4.0,0,2.16,2.34,2.4,walnut); box(3.95,4.0,0,2.16,3.3,3.36,walnut); box(3.95,4.0,2.1,2.16,2.34,3.36,walnut);
-}
-if(BACK==='ledge'){ // brass wall sconces on the headboard wall + art ledge on the east wall above it
-  for(const zc of [1.635,4.065]){ box(3.17,3.2,0.95,1.05,zc-0.03,zc+0.03,brass); cyl(3.1,1.08,zc,0.06,0.08,0.14,mat('#f3ecdf',0.9,0,{emissive:'#ffe2b0',emissiveIntensity:0.05}),24); }
-  box(3.86,4.0,1.55,1.58,1.6,4.2,walnut);                       // picture ledge at 1.58m
-  const prints=[[1.75,0.55,0.7,'#d9c7ad'],[2.0,0.4,0.5,'#b89f84'],[3.6,0.4,0.5,'#c77d5a'],[3.95,0.55,0.7,'#a68c72']];
-  for(const [z,w,h,c] of prints){ box(3.93,3.95,1.58,1.58+h,z-w/2,z+w/2,brass); box(3.925,3.93,1.6,1.56+h,z-w/2+0.03,z+w/2-0.03,mat(c,0.9)); }
-}
-// ---------- Dressing spot: tall mirror standing on a floor-level drawer plinth, west wall north end (z 0.5-1.5) ----------
-// walnut backing panel 1.0m wide, from 0.3m to 2.25m
-box(0,0.03,0.3,2.25,0.5,1.5,walnut);
-// floor-level drawer plinth: 1.0m wide x 0.35m deep x 0.3m high, recessed toe-kick, travertine top, brass pull
-box(0.06,0.36,0,0.05,0.53,1.47,mat('#2e1d12',0.7));                      // recessed toe-kick
-box(0.03,0.38,0.05,0.28,0.5,1.5,walnut);                                 // drawer box
-box(0.38,0.385,0.065,0.265,0.51,1.49,walnut);                            // drawer front
-box(0.385,0.4,0.2,0.215,0.88,1.12,brass);                                // long brass pull
-box(0.03,0.39,0.28,0.3,0.5,1.5,travertine);                              // stone top
-// styling on plinth top: small brass tray, bud vase
-box(0.1,0.28,0.3,0.312,0.6,0.85,brass); cyl(0.2,0.36,1.3,0.045,0.035,0.12,mat('#efe9df',0.5)); cyl(0.2,0.5,1.3,0.003,0.003,0.16,mat('#6b7f58',0.8),6);
-// tall mirror above plinth: 0.9m wide x 1.9m high (0.32m to 2.22m), thin brass edge
-box(0.03,0.04,0.31,2.23,0.54,1.46,brass);
+// ---------- Tall mirror + floor drawer on the EAST wall (z 1.2-2.2), facing the room ----------
+box(3.97,4.0,0.3,2.25,1.2,2.2,walnut);                                     // backing panel
+box(3.64,3.94,0,0.05,1.23,2.17,mat('#2e1d12',0.7));                        // recessed toe-kick
+box(3.62,3.97,0.05,0.28,1.2,2.2,walnut);                                   // drawer box
+box(3.615,3.62,0.065,0.265,1.21,2.19,walnut);                              // drawer front
+box(3.6,3.615,0.2,0.215,1.58,1.82,brass);                                  // long pull
+box(3.61,3.97,0.28,0.3,1.2,2.2,travertine);                                // stone top
+box(3.72,3.9,0.3,0.312,1.3,1.55,brass); cyl(3.8,0.36,2.0,0.045,0.035,0.12,mat('#efe9df',0.5)); cyl(3.8,0.5,2.0,0.003,0.003,0.16,mat('#6b7f58',0.8),6);
+box(3.96,3.97,0.31,2.23,1.24,2.16,brass);                                  // thin brass edge
 const cubeRT=new THREE.WebGLCubeRenderTarget(512); const cubeCam=new THREE.CubeCamera(0.05,20,cubeRT);
 const mirrorM=mat('#c9d2d4',0.03,1.0,{envMap:cubeRT.texture});
-const mirror=box(0.04,0.05,0.32,2.22,0.55,1.45,mirrorM,false,false);
+const mirror=box(3.95,3.96,0.32,2.22,1.25,2.15,mirrorM,false,false);
 
 // ---------- Lighting: morning sun through south window ----------
 scene.add(new THREE.HemisphereLight('#fff8ee','#a08a70',0.55));
@@ -262,13 +223,12 @@ const fill2=new THREE.PointLight('#ffe9cc',1.2,8,1.8); fill2.position.set(0.8,2.
 // ---------- Recessed ceiling lighting (timber ceiling), see plans/bedroom-1-lighting.png ----------
 const TIME=P.get('time')||'morning'; const EVE=TIME==='evening';
 const trimM=mat('#2b2622',0.5,0.4), lensM=mat('#fffaf0',0.3,0,{emissive:'#ffd59a',emissiveIntensity:EVE?2.2:0.02});
-const DLS=[[1.0,1.2],[2.2,1.2],[1.0,4.35],[2.2,4.35],[3.62,0.55],[3.65,2.85],[4.65,2.85]];
-const GIMB=[[0.75,2.45,[0,1.45,2.6]],[0.75,3.25,[0,1.45,3.1]],[0.7,1.0,[0,1.2,1.0]]];
+const DLS=[[0.6,1.0],[2.0,1.1],[0.48,3.3],[3.52,3.3],[3.62,0.55],[4.65,2.85]];
+const GIMB=[[1.6,0.75,[1.6,1.45,0]],[2.4,0.75,[2.4,1.45,0]],[3.3,1.7,[4.0,1.2,1.7]]];
 for(const [x,z] of DLS){ cyl(x,CH-0.004,z,0.045,0.045,0.008,trimM,24).castShadow=false; cyl(x,CH-0.009,z,0.033,0.033,0.004,lensM,24).castShadow=false; }
 for(const [x,z] of GIMB){ cyl(x,CH-0.004,z,0.045,0.045,0.008,trimM,24).castShadow=false; cyl(x,CH-0.012,z,0.03,0.03,0.008,lensM,24).castShadow=false; }
 box(0.7,3.3,CH-0.004,CH,RL-0.24,RL-0.21,mat('#d8d4cc',0.4,0.5),false);                 // S1 curtain-wash channel, flush
 box(0.72,3.28,CH-0.008,CH-0.004,RL-0.235,RL-0.215,lensM,false);
-box(3.3,3.31,0.03,0.05,1.45,4.25,lensM,false);                                         // N1 low-level night path strip
 if(EVE){
   sun.intensity=0; win.intensity=0; fill.intensity=0.08; fill2.intensity=0.06;
   scene.traverse(o=>{ if(o.isHemisphereLight) o.intensity=0.1; if(o.isMesh && o.material && o.material.emissiveIntensity>0 && o.material!==lensM) o.material.emissiveIntensity=2.0; });
@@ -277,18 +237,18 @@ if(EVE){
   for(const [x,z] of DLS){ const L=new THREE.SpotLight(warm,4.5,6,0.62,0.7,1.6); L.position.set(x,CH-0.05,z); L.target.position.set(x,0,z); scene.add(L); scene.add(L.target); }
   for(const [x,z,t] of GIMB){ const L=new THREE.SpotLight(warm,6,5,0.38,0.6,1.5); L.position.set(x,CH-0.05,z); L.target.position.set(...t); scene.add(L); scene.add(L.target); }
   for(let x=0.9;x<3.3;x+=0.45){ const L=new THREE.PointLight(warm,0.9,1.8,1.6); L.position.set(x,2.2,RL-0.3); scene.add(L); }
-  for(const z of [1.635,4.065]){ const L=new THREE.PointLight('#ffd9a8',1.6,3,1.6); L.position.set(2.95,1.42,z); scene.add(L); }
+  for(const [x0,x1] of NSX){ const L=new THREE.PointLight('#ffd9a8',1.6,3,1.6); L.position.set((x0+x1)/2,1.42,NSZ0+0.12); scene.add(L); }
 }
-mirror.visible=false; cubeCam.position.set(0.9,1.3,1.0); scene.add(cubeCam); cubeCam.update(renderer,scene); mirror.visible=true;
+mirror.visible=false; cubeCam.position.set(3.1,1.3,1.7); scene.add(cubeCam); cubeCam.update(renderer,scene); mirror.visible=true;
 // ---------- Camera ----------
 const cam=new THREE.PerspectiveCamera(60,W/H,0.05,50);
-if(VIEW==='corner'){ cam.position.set(3.0,1.6,0.6); cam.fov=68; cam.updateProjectionMatrix(); cam.lookAt(0.9,0.85,4.1); }
+if(VIEW==='corner'){ cam.position.set(0.95,1.6,0.35); cam.fov=70; cam.updateProjectionMatrix(); cam.lookAt(2.5,0.8,4.3); }
 else if(VIEW==='tv'){ cam.position.set(3.75,1.45,2.85); cam.fov=66; cam.updateProjectionMatrix(); cam.lookAt(0,1.0,2.85); }
-else if(VIEW==='bed'){ cam.position.set(1.15,1.55,0.75); cam.fov=66; cam.updateProjectionMatrix(); cam.lookAt(3.3,0.75,3.4); }
+else if(VIEW==='bed'){ cam.position.set(3.45,1.6,1.0); cam.fov=68; cam.updateProjectionMatrix(); cam.lookAt(1.5,0.75,4.4); }
 else if(VIEW==='passage'){ cam.position.set(3.5,1.6,1.55); cam.fov=66; cam.updateProjectionMatrix(); cam.lookAt(5.4,1.15,2.95); }
 else if(VIEW==='overview'){ ceilingM.visible=false; scene.traverse(o=>{ if(o.isMesh && o.position.y>CH-0.1 && o.geometry && o.geometry.type==='ExtrudeGeometry') o.visible=false; }); cam.position.set(7.2,6.8,-1.6); cam.fov=50; cam.updateProjectionMatrix(); cam.lookAt(2.7,0,2.7); }
 else if(VIEW==='approach'){ cam.position.set(1.4,1.6,0.45); cam.fov=70; cam.updateProjectionMatrix(); cam.lookAt(3.9,1.2,1.8); }
-else if(VIEW==='dressing'){ cam.position.set(2.5,1.55,4.55); cam.fov=68; cam.updateProjectionMatrix(); cam.lookAt(0.7,1.0,0.4); }
+else if(VIEW==='dressing'){ cam.position.set(1.7,1.65,4.0); cam.fov=70; cam.updateProjectionMatrix(); cam.lookAt(2.3,1.05,0.0); }
 renderer.render(scene,cam);
 document.title='done';
 </script>
