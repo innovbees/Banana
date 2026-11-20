@@ -493,7 +493,7 @@ $SKPOLY
   9
 $TDCREATE
  40
-2461365.772280093
+2461365.7878587963
   9
 $TDUCREATE
  40
@@ -501,7 +501,7 @@ $TDUCREATE
   9
 $TDUPDATE
  40
-2461365.772280093
+2461365.7878587963
   9
 $TDUUPDATE
  40
@@ -553,7 +553,7 @@ $SPLINESEGS
   9
 $HANDSEED
   5
-17D
+1CB
   9
 $SURFTAB1
  70
@@ -933,11 +933,11 @@ $PSTYLEMODE
   9
 $FINGERPRINTGUID
   2
-{5BF4AE5E-CE67-4784-9E07-1AECEBBC8C37}
+{B94202D0-F67F-49FA-92F3-7CDDEA5537A9}
   9
 $VERSIONGUID
   2
-{54F1C749-9B68-4383-8A61-6B723CF47663}
+{91B8AD97-0F7C-41B7-B73B-8BC41AA03B8C}
   9
 $EXTNAMES
 290
@@ -1377,7 +1377,7 @@ AcDbSymbolTable
   0
 VPORT
   5
-179
+1C7
 330
 8
 100
@@ -1397,9 +1397,9 @@ AcDbViewportTableRecord
  21
 1.0
  12
-3000.0
+4600.0
  22
-2400.0
+2600.0
  13
 0.0
  23
@@ -1425,7 +1425,7 @@ AcDbViewportTableRecord
  37
 0.0
  40
-7000.0
+8000.0
  41
 1.34
  42
@@ -2257,7 +2257,7 @@ LAYER
 100
 AcDbSymbolTable
  70
-16
+18
   0
 LAYER
   5
@@ -2607,13 +2607,13 @@ AcDbSymbolTableRecord
 100
 AcDbLayerTableRecord
   2
-I-DOOR-BARN
+E-LITE-AIM
  70
 0
  62
-30
+2
   6
-Continuous
+DASHED
 370
 -3
 390
@@ -2631,6 +2631,30 @@ AcDbSymbolTableRecord
 100
 AcDbLayerTableRecord
   2
+I-DOOR-BARN
+ 70
+0
+ 62
+30
+  6
+Continuous
+370
+-3
+390
+13
+347
+21
+  0
+LAYER
+  5
+174
+330
+1
+100
+AcDbSymbolTableRecord
+100
+AcDbLayerTableRecord
+  2
 I-DOOR-BARN-OPEN
  70
 0
@@ -2638,6 +2662,30 @@ I-DOOR-BARN-OPEN
 30
   6
 DASHED
+370
+-3
+390
+13
+347
+21
+  0
+LAYER
+  5
+183
+330
+1
+100
+AcDbSymbolTableRecord
+100
+AcDbLayerTableRecord
+  2
+E-LITE-SCHED
+ 70
+0
+ 62
+2
+  6
+Continuous
 370
 -3
 390
@@ -3445,7 +3493,7 @@ ACAD
   0
 APPID
   5
-17A
+1C8
 330
 3
 100
@@ -3459,7 +3507,7 @@ HATCHBACKGROUNDCOLOR
   0
 APPID
   5
-17B
+1C9
 330
 3
 100
@@ -8943,7 +8991,7 @@ AcDbText
  10
 4750.0
  20
-2050.0
+2280.0
  30
 0.0
  40
@@ -8955,7 +9003,7 @@ ROBE WALKWAY 900 TO ENSUITE
  11
 4750.0
  21
-2050.0
+2280.0
  31
 0.0
 100
@@ -10853,19 +10901,19 @@ AcDbPolyline
  70
 1
  10
-6000.0
+10300.0
  20
 5100.0
  10
-6080.0
+10380.0
  20
 4850.0
  10
-6000.0
+10300.0
  20
 4920.0
  10
-5920.0
+10220.0
  20
 4850.0
   0
@@ -10881,7 +10929,7 @@ A-TEXT
 100
 AcDbText
  10
-6000.0
+10300.0
  20
 5220.0
  30
@@ -10893,7 +10941,7 @@ N
  72
 1
  11
-6000.0
+10300.0
  21
 5220.0
  31
@@ -10905,7 +10953,7 @@ AcDbText
   0
 LINE
   5
-174
+175
 330
 17
 100
@@ -10929,7 +10977,7 @@ AcDbLine
   0
 LWPOLYLINE
   5
-175
+176
 330
 17
 100
@@ -10961,7 +11009,7 @@ AcDbPolyline
   0
 LWPOLYLINE
   5
-176
+177
 330
 17
 100
@@ -10993,7 +11041,7 @@ AcDbPolyline
   0
 TEXT
   5
-177
+178
 330
 17
 100
@@ -11025,7 +11073,7 @@ AcDbText
   0
 TEXT
   5
-178
+179
 330
 17
 100
@@ -11048,6 +11096,2314 @@ BLACK TRACK 2100 CEILING-MOUNTED, SLIDES SOUTH
 4160.0
  21
 1250.0
+ 31
+0.0
+100
+AcDbText
+ 73
+2
+  0
+CIRCLE
+  5
+17A
+330
+17
+100
+AcDbEntity
+  8
+E-LITE
+100
+AcDbCircle
+ 10
+4650.0
+ 20
+2050.0
+ 30
+0.0
+ 40
+45.0
+  0
+TEXT
+  5
+17B
+330
+17
+100
+AcDbEntity
+  8
+E-LITE
+100
+AcDbText
+ 10
+4720.0
+ 20
+1950.0
+ 30
+0.0
+ 40
+45.0
+  1
+W1
+ 11
+4720.0
+ 21
+1950.0
+ 31
+0.0
+100
+AcDbText
+ 73
+2
+  0
+LINE
+  5
+17C
+330
+17
+100
+AcDbEntity
+  8
+E-LITE-AIM
+100
+AcDbLine
+ 10
+700.0
+ 20
+2500.0
+ 30
+0.0
+ 11
+0.0
+ 21
+2500.0
+ 31
+0.0
+  0
+LINE
+  5
+17D
+330
+17
+100
+AcDbEntity
+  8
+E-LITE-AIM
+100
+AcDbLine
+ 10
+700.0
+ 20
+1700.0
+ 30
+0.0
+ 11
+0.0
+ 21
+1700.0
+ 31
+0.0
+  0
+LINE
+  5
+17E
+330
+17
+100
+AcDbEntity
+  8
+E-LITE-AIM
+100
+AcDbLine
+ 10
+3300.0
+ 20
+3200.0
+ 30
+0.0
+ 11
+4000.0
+ 21
+3200.0
+ 31
+0.0
+  0
+TEXT
+  5
+17F
+330
+17
+100
+AcDbEntity
+  8
+E-LITE
+100
+AcDbText
+ 10
+725.0
+ 20
+870.0
+ 30
+0.0
+ 40
+35.0
+  1
+PENDANT
+ 72
+1
+ 11
+725.0
+ 21
+870.0
+ 31
+0.0
+100
+AcDbText
+ 73
+2
+  0
+TEXT
+  5
+180
+330
+17
+100
+AcDbEntity
+  8
+E-LITE
+100
+AcDbText
+ 10
+3275.0
+ 20
+870.0
+ 30
+0.0
+ 40
+35.0
+  1
+PENDANT
+ 72
+1
+ 11
+3275.0
+ 21
+870.0
+ 31
+0.0
+100
+AcDbText
+ 73
+2
+  0
+CIRCLE
+  5
+181
+330
+17
+100
+AcDbEntity
+  8
+E-LITE
+100
+AcDbCircle
+ 10
+120.0
+ 20
+4780.0
+ 30
+0.0
+ 40
+60.0
+  0
+TEXT
+  5
+182
+330
+17
+100
+AcDbEntity
+  8
+E-LITE
+100
+AcDbText
+ 10
+220.0
+ 20
+4780.0
+ 30
+0.0
+ 40
+35.0
+  1
+FLOOR LAMP (PLUG-IN)
+ 11
+220.0
+ 21
+4780.0
+ 31
+0.0
+100
+AcDbText
+ 73
+2
+  0
+LWPOLYLINE
+  5
+184
+330
+17
+100
+AcDbEntity
+  8
+E-LITE-SCHED
+100
+AcDbPolyline
+ 90
+4
+ 70
+1
+ 10
+5700.0
+ 20
+3100.0
+ 10
+9900.0
+ 20
+3100.0
+ 10
+9900.0
+ 20
+4750.0
+ 10
+5700.0
+ 20
+4750.0
+  0
+TEXT
+  5
+185
+330
+17
+100
+AcDbEntity
+  8
+E-LITE-SCHED
+100
+AcDbText
+ 10
+5700.0
+ 20
+4870.0
+ 30
+0.0
+ 40
+70.0
+  1
+LIGHTING SCHEDULE (positions mm from inner west / north walls)
+ 11
+5700.0
+ 21
+4870.0
+ 31
+0.0
+100
+AcDbText
+ 73
+2
+  0
+TEXT
+  5
+186
+330
+17
+100
+AcDbEntity
+  8
+E-LITE-SCHED
+100
+AcDbText
+ 10
+5740.0
+ 20
+4675.0
+ 30
+0.0
+ 40
+55.0
+  1
+TAG
+ 11
+5740.0
+ 21
+4675.0
+ 31
+0.0
+100
+AcDbText
+ 73
+2
+  0
+TEXT
+  5
+187
+330
+17
+100
+AcDbEntity
+  8
+E-LITE-SCHED
+100
+AcDbText
+ 10
+6070.0
+ 20
+4675.0
+ 30
+0.0
+ 40
+55.0
+  1
+FITTING
+ 11
+6070.0
+ 21
+4675.0
+ 31
+0.0
+100
+AcDbText
+ 73
+2
+  0
+TEXT
+  5
+188
+330
+17
+100
+AcDbEntity
+  8
+E-LITE-SCHED
+100
+AcDbText
+ 10
+7790.0
+ 20
+4675.0
+ 30
+0.0
+ 40
+55.0
+  1
+X FROM W
+ 11
+7790.0
+ 21
+4675.0
+ 31
+0.0
+100
+AcDbText
+ 73
+2
+  0
+TEXT
+  5
+189
+330
+17
+100
+AcDbEntity
+  8
+E-LITE-SCHED
+100
+AcDbText
+ 10
+8290.0
+ 20
+4675.0
+ 30
+0.0
+ 40
+55.0
+  1
+FROM N
+ 11
+8290.0
+ 21
+4675.0
+ 31
+0.0
+100
+AcDbText
+ 73
+2
+  0
+TEXT
+  5
+18A
+330
+17
+100
+AcDbEntity
+  8
+E-LITE-SCHED
+100
+AcDbText
+ 10
+8740.0
+ 20
+4675.0
+ 30
+0.0
+ 40
+55.0
+  1
+CIRCUIT / SWITCH
+ 11
+8740.0
+ 21
+4675.0
+ 31
+0.0
+100
+AcDbText
+ 73
+2
+  0
+LINE
+  5
+18B
+330
+17
+100
+AcDbEntity
+  8
+E-LITE-SCHED
+100
+AcDbLine
+ 10
+5700.0
+ 20
+4600.0
+ 30
+0.0
+ 11
+9900.0
+ 21
+4600.0
+ 31
+0.0
+  0
+TEXT
+  5
+18C
+330
+17
+100
+AcDbEntity
+  8
+E-LITE-SCHED
+100
+AcDbText
+ 10
+5740.0
+ 20
+4525.0
+ 30
+0.0
+ 40
+50.0
+  1
+D1
+ 11
+5740.0
+ 21
+4525.0
+ 31
+0.0
+100
+AcDbText
+ 73
+2
+  0
+TEXT
+  5
+18D
+330
+17
+100
+AcDbEntity
+  8
+E-LITE-SCHED
+100
+AcDbText
+ 10
+6070.0
+ 20
+4525.0
+ 30
+0.0
+ 40
+50.0
+  1
+Downlight 90 cut-out 8-10W
+ 11
+6070.0
+ 21
+4525.0
+ 31
+0.0
+100
+AcDbText
+ 73
+2
+  0
+TEXT
+  5
+18E
+330
+17
+100
+AcDbEntity
+  8
+E-LITE-SCHED
+100
+AcDbText
+ 10
+7790.0
+ 20
+4525.0
+ 30
+0.0
+ 40
+50.0
+  1
+600
+ 11
+7790.0
+ 21
+4525.0
+ 31
+0.0
+100
+AcDbText
+ 73
+2
+  0
+TEXT
+  5
+18F
+330
+17
+100
+AcDbEntity
+  8
+E-LITE-SCHED
+100
+AcDbText
+ 10
+8290.0
+ 20
+4525.0
+ 30
+0.0
+ 40
+50.0
+  1
+1000
+ 11
+8290.0
+ 21
+4525.0
+ 31
+0.0
+100
+AcDbText
+ 73
+2
+  0
+TEXT
+  5
+190
+330
+17
+100
+AcDbEntity
+  8
+E-LITE-SCHED
+100
+AcDbText
+ 10
+8740.0
+ 20
+4525.0
+ 30
+0.0
+ 40
+50.0
+  1
+C1 dimmer at entry
+ 11
+8740.0
+ 21
+4525.0
+ 31
+0.0
+100
+AcDbText
+ 73
+2
+  0
+LINE
+  5
+191
+330
+17
+100
+AcDbEntity
+  8
+E-LITE-SCHED
+100
+AcDbLine
+ 10
+5700.0
+ 20
+4450.0
+ 30
+0.0
+ 11
+9900.0
+ 21
+4450.0
+ 31
+0.0
+  0
+TEXT
+  5
+192
+330
+17
+100
+AcDbEntity
+  8
+E-LITE-SCHED
+100
+AcDbText
+ 10
+5740.0
+ 20
+4375.0
+ 30
+0.0
+ 40
+50.0
+  1
+D2
+ 11
+5740.0
+ 21
+4375.0
+ 31
+0.0
+100
+AcDbText
+ 73
+2
+  0
+TEXT
+  5
+193
+330
+17
+100
+AcDbEntity
+  8
+E-LITE-SCHED
+100
+AcDbText
+ 10
+6070.0
+ 20
+4375.0
+ 30
+0.0
+ 40
+50.0
+  1
+Downlight 90 cut-out 8-10W
+ 11
+6070.0
+ 21
+4375.0
+ 31
+0.0
+100
+AcDbText
+ 73
+2
+  0
+TEXT
+  5
+194
+330
+17
+100
+AcDbEntity
+  8
+E-LITE-SCHED
+100
+AcDbText
+ 10
+7790.0
+ 20
+4375.0
+ 30
+0.0
+ 40
+50.0
+  1
+2000
+ 11
+7790.0
+ 21
+4375.0
+ 31
+0.0
+100
+AcDbText
+ 73
+2
+  0
+TEXT
+  5
+195
+330
+17
+100
+AcDbEntity
+  8
+E-LITE-SCHED
+100
+AcDbText
+ 10
+8290.0
+ 20
+4375.0
+ 30
+0.0
+ 40
+50.0
+  1
+1000
+ 11
+8290.0
+ 21
+4375.0
+ 31
+0.0
+100
+AcDbText
+ 73
+2
+  0
+TEXT
+  5
+196
+330
+17
+100
+AcDbEntity
+  8
+E-LITE-SCHED
+100
+AcDbText
+ 10
+8740.0
+ 20
+4375.0
+ 30
+0.0
+ 40
+50.0
+  1
+C1 dimmer at entry
+ 11
+8740.0
+ 21
+4375.0
+ 31
+0.0
+100
+AcDbText
+ 73
+2
+  0
+LINE
+  5
+197
+330
+17
+100
+AcDbEntity
+  8
+E-LITE-SCHED
+100
+AcDbLine
+ 10
+5700.0
+ 20
+4300.0
+ 30
+0.0
+ 11
+9900.0
+ 21
+4300.0
+ 31
+0.0
+  0
+TEXT
+  5
+198
+330
+17
+100
+AcDbEntity
+  8
+E-LITE-SCHED
+100
+AcDbText
+ 10
+5740.0
+ 20
+4225.0
+ 30
+0.0
+ 40
+50.0
+  1
+D3
+ 11
+5740.0
+ 21
+4225.0
+ 31
+0.0
+100
+AcDbText
+ 73
+2
+  0
+TEXT
+  5
+199
+330
+17
+100
+AcDbEntity
+  8
+E-LITE-SCHED
+100
+AcDbText
+ 10
+6070.0
+ 20
+4225.0
+ 30
+0.0
+ 40
+50.0
+  1
+Downlight 90 cut-out 8-10W
+ 11
+6070.0
+ 21
+4225.0
+ 31
+0.0
+100
+AcDbText
+ 73
+2
+  0
+TEXT
+  5
+19A
+330
+17
+100
+AcDbEntity
+  8
+E-LITE-SCHED
+100
+AcDbText
+ 10
+7790.0
+ 20
+4225.0
+ 30
+0.0
+ 40
+50.0
+  1
+3520
+ 11
+7790.0
+ 21
+4225.0
+ 31
+0.0
+100
+AcDbText
+ 73
+2
+  0
+TEXT
+  5
+19B
+330
+17
+100
+AcDbEntity
+  8
+E-LITE-SCHED
+100
+AcDbText
+ 10
+8290.0
+ 20
+4225.0
+ 30
+0.0
+ 40
+50.0
+  1
+3300
+ 11
+8290.0
+ 21
+4225.0
+ 31
+0.0
+100
+AcDbText
+ 73
+2
+  0
+TEXT
+  5
+19C
+330
+17
+100
+AcDbEntity
+  8
+E-LITE-SCHED
+100
+AcDbText
+ 10
+8740.0
+ 20
+4225.0
+ 30
+0.0
+ 40
+50.0
+  1
+C1 dimmer at entry
+ 11
+8740.0
+ 21
+4225.0
+ 31
+0.0
+100
+AcDbText
+ 73
+2
+  0
+LINE
+  5
+19D
+330
+17
+100
+AcDbEntity
+  8
+E-LITE-SCHED
+100
+AcDbLine
+ 10
+5700.0
+ 20
+4150.0
+ 30
+0.0
+ 11
+9900.0
+ 21
+4150.0
+ 31
+0.0
+  0
+TEXT
+  5
+19E
+330
+17
+100
+AcDbEntity
+  8
+E-LITE-SCHED
+100
+AcDbText
+ 10
+5740.0
+ 20
+4075.0
+ 30
+0.0
+ 40
+50.0
+  1
+P1
+ 11
+5740.0
+ 21
+4075.0
+ 31
+0.0
+100
+AcDbText
+ 73
+2
+  0
+TEXT
+  5
+19F
+330
+17
+100
+AcDbEntity
+  8
+E-LITE-SCHED
+100
+AcDbText
+ 10
+6070.0
+ 20
+4075.0
+ 30
+0.0
+ 40
+50.0
+  1
+Downlight 90 cut-out 8-10W
+ 11
+6070.0
+ 21
+4075.0
+ 31
+0.0
+100
+AcDbText
+ 73
+2
+  0
+TEXT
+  5
+1A0
+330
+17
+100
+AcDbEntity
+  8
+E-LITE-SCHED
+100
+AcDbText
+ 10
+7790.0
+ 20
+4075.0
+ 30
+0.0
+ 40
+50.0
+  1
+3620
+ 11
+7790.0
+ 21
+4075.0
+ 31
+0.0
+100
+AcDbText
+ 73
+2
+  0
+TEXT
+  5
+1A1
+330
+17
+100
+AcDbEntity
+  8
+E-LITE-SCHED
+100
+AcDbText
+ 10
+8290.0
+ 20
+4075.0
+ 30
+0.0
+ 40
+50.0
+  1
+550
+ 11
+8290.0
+ 21
+4075.0
+ 31
+0.0
+100
+AcDbText
+ 73
+2
+  0
+TEXT
+  5
+1A2
+330
+17
+100
+AcDbEntity
+  8
+E-LITE-SCHED
+100
+AcDbText
+ 10
+8740.0
+ 20
+4075.0
+ 30
+0.0
+ 40
+50.0
+  1
+C1 dimmer at entry
+ 11
+8740.0
+ 21
+4075.0
+ 31
+0.0
+100
+AcDbText
+ 73
+2
+  0
+LINE
+  5
+1A3
+330
+17
+100
+AcDbEntity
+  8
+E-LITE-SCHED
+100
+AcDbLine
+ 10
+5700.0
+ 20
+4000.0
+ 30
+0.0
+ 11
+9900.0
+ 21
+4000.0
+ 31
+0.0
+  0
+TEXT
+  5
+1A4
+330
+17
+100
+AcDbEntity
+  8
+E-LITE-SCHED
+100
+AcDbText
+ 10
+5740.0
+ 20
+3925.0
+ 30
+0.0
+ 40
+50.0
+  1
+A1
+ 11
+5740.0
+ 21
+3925.0
+ 31
+0.0
+100
+AcDbText
+ 73
+2
+  0
+TEXT
+  5
+1A5
+330
+17
+100
+AcDbEntity
+  8
+E-LITE-SCHED
+100
+AcDbText
+ 10
+6070.0
+ 20
+3925.0
+ 30
+0.0
+ 40
+50.0
+  1
+Gimbal 8W 24-36 deg, aim art 1450 AFF
+ 11
+6070.0
+ 21
+3925.0
+ 31
+0.0
+100
+AcDbText
+ 73
+2
+  0
+TEXT
+  5
+1A6
+330
+17
+100
+AcDbEntity
+  8
+E-LITE-SCHED
+100
+AcDbText
+ 10
+7790.0
+ 20
+3925.0
+ 30
+0.0
+ 40
+50.0
+  1
+700
+ 11
+7790.0
+ 21
+3925.0
+ 31
+0.0
+100
+AcDbText
+ 73
+2
+  0
+TEXT
+  5
+1A7
+330
+17
+100
+AcDbEntity
+  8
+E-LITE-SCHED
+100
+AcDbText
+ 10
+8290.0
+ 20
+3925.0
+ 30
+0.0
+ 40
+50.0
+  1
+2400
+ 11
+8290.0
+ 21
+3925.0
+ 31
+0.0
+100
+AcDbText
+ 73
+2
+  0
+TEXT
+  5
+1A8
+330
+17
+100
+AcDbEntity
+  8
+E-LITE-SCHED
+100
+AcDbText
+ 10
+8740.0
+ 20
+3925.0
+ 30
+0.0
+ 40
+50.0
+  1
+C2 dimmer at entry
+ 11
+8740.0
+ 21
+3925.0
+ 31
+0.0
+100
+AcDbText
+ 73
+2
+  0
+LINE
+  5
+1A9
+330
+17
+100
+AcDbEntity
+  8
+E-LITE-SCHED
+100
+AcDbLine
+ 10
+5700.0
+ 20
+3850.0
+ 30
+0.0
+ 11
+9900.0
+ 21
+3850.0
+ 31
+0.0
+  0
+TEXT
+  5
+1AA
+330
+17
+100
+AcDbEntity
+  8
+E-LITE-SCHED
+100
+AcDbText
+ 10
+5740.0
+ 20
+3775.0
+ 30
+0.0
+ 40
+50.0
+  1
+A2
+ 11
+5740.0
+ 21
+3775.0
+ 31
+0.0
+100
+AcDbText
+ 73
+2
+  0
+TEXT
+  5
+1AB
+330
+17
+100
+AcDbEntity
+  8
+E-LITE-SCHED
+100
+AcDbText
+ 10
+6070.0
+ 20
+3775.0
+ 30
+0.0
+ 40
+50.0
+  1
+Gimbal 8W 24-36 deg, aim art 1450 AFF
+ 11
+6070.0
+ 21
+3775.0
+ 31
+0.0
+100
+AcDbText
+ 73
+2
+  0
+TEXT
+  5
+1AC
+330
+17
+100
+AcDbEntity
+  8
+E-LITE-SCHED
+100
+AcDbText
+ 10
+7790.0
+ 20
+3775.0
+ 30
+0.0
+ 40
+50.0
+  1
+700
+ 11
+7790.0
+ 21
+3775.0
+ 31
+0.0
+100
+AcDbText
+ 73
+2
+  0
+TEXT
+  5
+1AD
+330
+17
+100
+AcDbEntity
+  8
+E-LITE-SCHED
+100
+AcDbText
+ 10
+8290.0
+ 20
+3775.0
+ 30
+0.0
+ 40
+50.0
+  1
+3200
+ 11
+8290.0
+ 21
+3775.0
+ 31
+0.0
+100
+AcDbText
+ 73
+2
+  0
+TEXT
+  5
+1AE
+330
+17
+100
+AcDbEntity
+  8
+E-LITE-SCHED
+100
+AcDbText
+ 10
+8740.0
+ 20
+3775.0
+ 30
+0.0
+ 40
+50.0
+  1
+C2 dimmer at entry
+ 11
+8740.0
+ 21
+3775.0
+ 31
+0.0
+100
+AcDbText
+ 73
+2
+  0
+LINE
+  5
+1AF
+330
+17
+100
+AcDbEntity
+  8
+E-LITE-SCHED
+100
+AcDbLine
+ 10
+5700.0
+ 20
+3700.0
+ 30
+0.0
+ 11
+9900.0
+ 21
+3700.0
+ 31
+0.0
+  0
+TEXT
+  5
+1B0
+330
+17
+100
+AcDbEntity
+  8
+E-LITE-SCHED
+100
+AcDbText
+ 10
+5740.0
+ 20
+3625.0
+ 30
+0.0
+ 40
+50.0
+  1
+M1
+ 11
+5740.0
+ 21
+3625.0
+ 31
+0.0
+100
+AcDbText
+ 73
+2
+  0
+TEXT
+  5
+1B1
+330
+17
+100
+AcDbEntity
+  8
+E-LITE-SCHED
+100
+AcDbText
+ 10
+6070.0
+ 20
+3625.0
+ 30
+0.0
+ 40
+50.0
+  1
+Gimbal 8W, aim mirror 1200 AFF
+ 11
+6070.0
+ 21
+3625.0
+ 31
+0.0
+100
+AcDbText
+ 73
+2
+  0
+TEXT
+  5
+1B2
+330
+17
+100
+AcDbEntity
+  8
+E-LITE-SCHED
+100
+AcDbText
+ 10
+7790.0
+ 20
+3625.0
+ 30
+0.0
+ 40
+50.0
+  1
+3300
+ 11
+7790.0
+ 21
+3625.0
+ 31
+0.0
+100
+AcDbText
+ 73
+2
+  0
+TEXT
+  5
+1B3
+330
+17
+100
+AcDbEntity
+  8
+E-LITE-SCHED
+100
+AcDbText
+ 10
+8290.0
+ 20
+3625.0
+ 30
+0.0
+ 40
+50.0
+  1
+1700
+ 11
+8290.0
+ 21
+3625.0
+ 31
+0.0
+100
+AcDbText
+ 73
+2
+  0
+TEXT
+  5
+1B4
+330
+17
+100
+AcDbEntity
+  8
+E-LITE-SCHED
+100
+AcDbText
+ 10
+8740.0
+ 20
+3625.0
+ 30
+0.0
+ 40
+50.0
+  1
+C3 switch
+ 11
+8740.0
+ 21
+3625.0
+ 31
+0.0
+100
+AcDbText
+ 73
+2
+  0
+LINE
+  5
+1B5
+330
+17
+100
+AcDbEntity
+  8
+E-LITE-SCHED
+100
+AcDbLine
+ 10
+5700.0
+ 20
+3550.0
+ 30
+0.0
+ 11
+9900.0
+ 21
+3550.0
+ 31
+0.0
+  0
+TEXT
+  5
+1B6
+330
+17
+100
+AcDbEntity
+  8
+E-LITE-SCHED
+100
+AcDbText
+ 10
+5740.0
+ 20
+3475.0
+ 30
+0.0
+ 40
+50.0
+  1
+PEN
+ 11
+5740.0
+ 21
+3475.0
+ 31
+0.0
+100
+AcDbText
+ 73
+2
+  0
+TEXT
+  5
+1B7
+330
+17
+100
+AcDbEntity
+  8
+E-LITE-SCHED
+100
+AcDbText
+ 10
+6070.0
+ 20
+3475.0
+ 30
+0.0
+ 40
+50.0
+  1
+2 bedside pendants, 600-700 above NS
+ 11
+6070.0
+ 21
+3475.0
+ 31
+0.0
+100
+AcDbText
+ 73
+2
+  0
+TEXT
+  5
+1B8
+330
+17
+100
+AcDbEntity
+  8
+E-LITE-SCHED
+100
+AcDbText
+ 10
+7790.0
+ 20
+3475.0
+ 30
+0.0
+ 40
+50.0
+  1
+over NS
+ 11
+7790.0
+ 21
+3475.0
+ 31
+0.0
+100
+AcDbText
+ 73
+2
+  0
+TEXT
+  5
+1B9
+330
+17
+100
+AcDbEntity
+  8
+E-LITE-SCHED
+100
+AcDbText
+ 10
+8290.0
+ 20
+3475.0
+ 30
+0.0
+ 40
+50.0
+  1
+
+ 11
+8290.0
+ 21
+3475.0
+ 31
+0.0
+100
+AcDbText
+ 73
+2
+  0
+TEXT
+  5
+1BA
+330
+17
+100
+AcDbEntity
+  8
+E-LITE-SCHED
+100
+AcDbText
+ 10
+8740.0
+ 20
+3475.0
+ 30
+0.0
+ 40
+50.0
+  1
+C4 2-way entry + bed
+ 11
+8740.0
+ 21
+3475.0
+ 31
+0.0
+100
+AcDbText
+ 73
+2
+  0
+LINE
+  5
+1BB
+330
+17
+100
+AcDbEntity
+  8
+E-LITE-SCHED
+100
+AcDbLine
+ 10
+5700.0
+ 20
+3400.0
+ 30
+0.0
+ 11
+9900.0
+ 21
+3400.0
+ 31
+0.0
+  0
+TEXT
+  5
+1BC
+330
+17
+100
+AcDbEntity
+  8
+E-LITE-SCHED
+100
+AcDbText
+ 10
+5740.0
+ 20
+3325.0
+ 30
+0.0
+ 40
+50.0
+  1
+W1
+ 11
+5740.0
+ 21
+3325.0
+ 31
+0.0
+100
+AcDbText
+ 73
+2
+  0
+TEXT
+  5
+1BD
+330
+17
+100
+AcDbEntity
+  8
+E-LITE-SCHED
+100
+AcDbText
+ 10
+6070.0
+ 20
+3325.0
+ 30
+0.0
+ 40
+50.0
+  1
+Downlight in robe walkway
+ 11
+6070.0
+ 21
+3325.0
+ 31
+0.0
+100
+AcDbText
+ 73
+2
+  0
+TEXT
+  5
+1BE
+330
+17
+100
+AcDbEntity
+  8
+E-LITE-SCHED
+100
+AcDbText
+ 10
+7790.0
+ 20
+3325.0
+ 30
+0.0
+ 40
+50.0
+  1
+4650
+ 11
+7790.0
+ 21
+3325.0
+ 31
+0.0
+100
+AcDbText
+ 73
+2
+  0
+TEXT
+  5
+1BF
+330
+17
+100
+AcDbEntity
+  8
+E-LITE-SCHED
+100
+AcDbText
+ 10
+8290.0
+ 20
+3325.0
+ 30
+0.0
+ 40
+50.0
+  1
+2850
+ 11
+8290.0
+ 21
+3325.0
+ 31
+0.0
+100
+AcDbText
+ 73
+2
+  0
+TEXT
+  5
+1C0
+330
+17
+100
+AcDbEntity
+  8
+E-LITE-SCHED
+100
+AcDbText
+ 10
+8740.0
+ 20
+3325.0
+ 30
+0.0
+ 40
+50.0
+  1
+C5 sensor or switch
+ 11
+8740.0
+ 21
+3325.0
+ 31
+0.0
+100
+AcDbText
+ 73
+2
+  0
+LINE
+  5
+1C1
+330
+17
+100
+AcDbEntity
+  8
+E-LITE-SCHED
+100
+AcDbLine
+ 10
+5700.0
+ 20
+3250.0
+ 30
+0.0
+ 11
+9900.0
+ 21
+3250.0
+ 31
+0.0
+  0
+TEXT
+  5
+1C2
+330
+17
+100
+AcDbEntity
+  8
+E-LITE-SCHED
+100
+AcDbText
+ 10
+5740.0
+ 20
+3175.0
+ 30
+0.0
+ 40
+50.0
+  1
+ALL
+ 11
+5740.0
+ 21
+3175.0
+ 31
+0.0
+100
+AcDbText
+ 73
+2
+  0
+TEXT
+  5
+1C3
+330
+17
+100
+AcDbEntity
+  8
+E-LITE-SCHED
+100
+AcDbText
+ 10
+6070.0
+ 20
+3175.0
+ 30
+0.0
+ 40
+50.0
+  1
+2700K, CRI 90+, trailing-edge dimmable
+ 11
+6070.0
+ 21
+3175.0
+ 31
+0.0
+100
+AcDbText
+ 73
+2
+  0
+TEXT
+  5
+1C4
+330
+17
+100
+AcDbEntity
+  8
+E-LITE-SCHED
+100
+AcDbText
+ 10
+7790.0
+ 20
+3175.0
+ 30
+0.0
+ 40
+50.0
+  1
+
+ 11
+7790.0
+ 21
+3175.0
+ 31
+0.0
+100
+AcDbText
+ 73
+2
+  0
+TEXT
+  5
+1C5
+330
+17
+100
+AcDbEntity
+  8
+E-LITE-SCHED
+100
+AcDbText
+ 10
+8290.0
+ 20
+3175.0
+ 30
+0.0
+ 40
+50.0
+  1
+
+ 11
+8290.0
+ 21
+3175.0
+ 31
+0.0
+100
+AcDbText
+ 73
+2
+  0
+TEXT
+  5
+1C6
+330
+17
+100
+AcDbEntity
+  8
+E-LITE-SCHED
+100
+AcDbText
+ 10
+8740.0
+ 20
+3175.0
+ 30
+0.0
+ 40
+50.0
+  1
+Licensed electrician
+ 11
+8740.0
+ 21
+3175.0
  31
 0.0
 100
@@ -12145,7 +14501,7 @@ CREATED_BY_EZDXF
   3
 WRITTEN_BY_EZDXF
 350
-17C
+1CA
   0
 DICTIONARYVAR
   5
@@ -12157,7 +14513,7 @@ DictionaryVariables
 280
 0
   1
-1.4.5 @ 2026-11-20T18:32:05.813196+00:00
+1.4.5 @ 2026-11-20T18:54:31.625775+00:00
   0
 VISUALSTYLE
   5
@@ -18711,7 +21067,7 @@ strokes_ogs.tif
   0
 DICTIONARYVAR
   5
-17C
+1CA
 330
 2D
 100
@@ -18719,7 +21075,7 @@ DictionaryVariables
 280
 0
   1
-1.4.5 @ 2026-11-20T18:32:05.826566+00:00
+1.4.5 @ 2026-11-20T18:54:31.637688+00:00
   0
 ENDSEC
   0

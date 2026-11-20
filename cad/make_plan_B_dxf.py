@@ -24,7 +24,7 @@ text(2000, -T - 130, 'WINDOW 2300 W x 1540 H, SILL 560, HEAD 2100', 60, 'A-GLAZ'
 hinge = (RW, RL - 100); msp.add_line(hinge, (RW - 900, RL - 100), dxfattribs={'layer': 'A-DOOR'})
 msp.add_arc(center=hinge, radius=900, start_angle=180, end_angle=270, dxfattribs={'layer': 'A-DOOR'}); text(RW + 160, RL - 550, 'ENTRY 900', 60, 'A-DOOR', al=TA.MIDDLE_LEFT)
 rect(RW + T, RL - 2400, RW + 1400, RL - 1000, 'A-ROBE'); text(RW + 750, RL - 1700, 'WIR 1', 80, 'A-ROBE')
-rect(RW + T, 0, RW + 1400, RL - 3300, 'A-ROBE'); text(RW + 750, RL - 4100, 'WIR 2', 80, 'A-ROBE'); text(RW + 750, RL - 2850, 'ROBE WALKWAY 900 TO ENSUITE', 50, 'A-ROBE')
+rect(RW + T, 0, RW + 1400, RL - 3300, 'A-ROBE'); text(RW + 750, RL - 4100, 'WIR 2', 80, 'A-ROBE'); text(RW + 750, RL - 2620, 'ROBE WALKWAY 900 TO ENSUITE', 50, 'A-ROBE')
 # bed: head to south, GAP from the window wall
 BW, BL = 2060, 2430; BX0, BX1 = 2000 - BW / 2, 2000 + BW / 2; HB = GAP; FOOT = GAP + BL
 rect(BX0, HB, BX1, FOOT, 'I-FURN-BED'); rect(BX0, HB, BX1, HB + 120, 'I-FURN-BED'); rect(BX0 + 100, HB + 180, BX1 - 100, FOOT - 100, 'I-FURN-BED')
@@ -53,12 +53,38 @@ for i, s in enumerate(['BEDROOM 1 - LAYOUT B: HEAD TO WINDOW', f'Elyse king 2060
                        'Room 4000 x 4900, ceiling 2400, carpet', 'Units: millimetres   Scale 1:25 at A3 (plot)', 'Origin 0,0 = inner SW corner; +X east, +Y north',
                        'Check all dimensions on site before ordering']):
     text(tb_x + 100, -T + 1350 - i * 210, s, 85 if i == 0 else 60, al=TA.MIDDLE_LEFT)
-msp.add_lwpolyline([(RW + 2000, RL + 200), (RW + 2080, RL - 50), (RW + 2000, RL + 20), (RW + 1920, RL - 50)], close=True, dxfattribs={'layer': 'A-TEXT'}); text(RW + 2000, RL + 320, 'N', 120)
+msp.add_lwpolyline([(RW + 6300, RL + 200), (RW + 6380, RL - 50), (RW + 6300, RL + 20), (RW + 6220, RL - 50)], close=True, dxfattribs={'layer': 'A-TEXT'}); text(RW + 6300, RL + 320, 'N', 120)
 # walnut barn door, ceiling-mounted black track, slides south (open position dashed)
-doc.layers.add('I-DOOR-BARN', color=30); doc.layers.add('I-DOOR-BARN-OPEN', color=30, linetype='DASHED')
+doc.layers.add('E-LITE-AIM', color=2, linetype='DASHED'); doc.layers.add('I-DOOR-BARN', color=30); doc.layers.add('I-DOOR-BARN-OPEN', color=30, linetype='DASHED')
 msp.add_line((3885, RL - 2300), (3885, RL - 4400), dxfattribs={'layer': 'I-DOOR-BARN'})
 rect(3865, RL - 3350, 3905, RL - 2350, 'I-DOOR-BARN')
 rect(3865, RL - 4300, 3905, RL - 3300, 'I-DOOR-BARN-OPEN')
 text(RW + 160, RL - 3550, 'WALNUT BARN DOOR 1000 x 2200 x 40', 50, 'I-DOOR-BARN', al=TA.MIDDLE_LEFT)
 text(RW + 160, RL - 3650, 'BLACK TRACK 2100 CEILING-MOUNTED, SLIDES SOUTH', 40, 'I-DOOR-BARN', al=TA.MIDDLE_LEFT)
-doc.set_modelspace_vport(height=7000, center=(3000, 2400)); doc.saveas(OUT); print('saved', OUT)
+# lighting: extra fittings, gimbal aim lines, schedule (all 2700K, CRI 90+, dimmable)
+msp.add_circle((4650, RL - 2850), 45, dxfattribs={'layer': 'E-LITE'}); text(4720, RL - 2950, 'W1', 45, 'E-LITE', al=TA.MIDDLE_LEFT)
+for x, z, tx, tz in [(700, 2400, 0, 2400), (700, 3200, 0, 3200), (3300, 1700, 4000, 1700)]:
+    msp.add_line((x, RL - z), (tx, RL - tz), dxfattribs={'layer': 'E-LITE-AIM'})
+for x0 in (BX0 - 20 - 450, BX1 + 20): text(x0 + 225, HB + 470, 'PENDANT', 35, 'E-LITE')
+msp.add_circle((120, RL - 120), 60, dxfattribs={'layer': 'E-LITE'}); text(220, RL - 120, 'FLOOR LAMP (PLUG-IN)', 35, 'E-LITE', al=TA.MIDDLE_LEFT)
+sx, sy = RW + 1700, RL - 150
+rows = [('TAG', 'FITTING', 'X FROM W', 'FROM N', 'CIRCUIT / SWITCH'),
+        ('D1', 'Downlight 90 cut-out 8-10W', '600', '1000', 'C1 dimmer at entry'),
+        ('D2', 'Downlight 90 cut-out 8-10W', '2000', '1000', 'C1 dimmer at entry'),
+        ('D3', 'Downlight 90 cut-out 8-10W', '3520', '3300', 'C1 dimmer at entry'),
+        ('P1', 'Downlight 90 cut-out 8-10W', '3620', '550', 'C1 dimmer at entry'),
+        ('A1', 'Gimbal 8W 24-36 deg, aim art 1450 AFF', '700', '2400', 'C2 dimmer at entry'),
+        ('A2', 'Gimbal 8W 24-36 deg, aim art 1450 AFF', '700', '3200', 'C2 dimmer at entry'),
+        ('M1', 'Gimbal 8W, aim mirror 1200 AFF', '3300', '1700', 'C3 switch'),
+        ('PEN', '2 bedside pendants, 600-700 above NS', 'over NS', '', 'C4 2-way entry + bed'),
+        ('W1', 'Downlight in robe walkway', '4650', '2850', 'C5 sensor or switch'),
+        ('ALL', '2700K, CRI 90+, trailing-edge dimmable', '', '', 'Licensed electrician')]
+cols = [0, 330, 2050, 2550, 3000]; rh = 150
+doc.layers.add('E-LITE-SCHED', color=2)
+rect(sx, sy - rh * len(rows), sx + 4200, sy, 'E-LITE-SCHED')
+text(sx, sy + 120, 'LIGHTING SCHEDULE (positions mm from inner west / north walls)', 70, 'E-LITE-SCHED', al=TA.MIDDLE_LEFT)
+for i, row in enumerate(rows):
+    y = sy - rh * (i + 0.5)
+    if i: msp.add_line((sx, sy - rh * i), (sx + 4200, sy - rh * i), dxfattribs={'layer': 'E-LITE-SCHED'})
+    for c, v in zip(cols, row): text(sx + c + 40, y, v, 50 if i else 55, 'E-LITE-SCHED', al=TA.MIDDLE_LEFT)
+doc.set_modelspace_vport(height=8000, center=(4600, 2600)); doc.saveas(OUT); print('saved', OUT)
