@@ -29,7 +29,20 @@ function fitStdScale(doc, w, h, pw, ph) {
 
 /* ---------------- PDF writer ---------------- */
 class PdfPage {
-  constructor(wmm, hmm) { this.w = wmm * MM2PT; this.h = hmm * MM2PT; this.c = []; }
+  constructor(wmm, hmm) { this.w = wmm * MM2PT; this.h = hmm * MM2PT; this.c = []; this.imgs = []; this.imgIndex = new Map(); }
+  /* Register an image (re-encoded as JPEG through a canvas) and return its resource name. */
+  image(img, src) {
+    if (this.imgIndex.has(src)) return this.imgIndex.get(src);
+    const cv = document.createElement('canvas');
+    const k = Math.min(1, 2400 / Math.max(img.naturalWidth, img.naturalHeight));
+    cv.width = Math.max(1, Math.round(img.naturalWidth * k)); cv.height = Math.max(1, Math.round(img.naturalHeight * k));
+    const cx = cv.getContext('2d'); cx.fillStyle = '#fff'; cx.fillRect(0, 0, cv.width, cv.height); cx.drawImage(img, 0, 0, cv.width, cv.height);
+    const b64 = cv.toDataURL('image/jpeg', 0.9).split(',')[1], bin = atob(b64);
+    const name = `Im${this.imgs.length + 1}`;
+    this.imgs.push({ name, w: cv.width, h: cv.height, data: bin });
+    this.imgIndex.set(src, name);
+    return name;
+  }
   n(v) { if (!isFinite(v)) v = 0; const s = (Math.round(v * 1000) / 1000).toFixed(3); return s.replace(/\.?0+$/, '') || '0'; }
   push(s) { this.c.push(s); }
   rgb(hex) { const m = /^#?([0-9a-f]{6})$/i.exec(hex || '') || [0, '000000']; const v = parseInt(m[1], 16); return [(v >> 16) & 255, (v >> 8) & 255, v & 255].map((x) => this.n(x / 255)).join(' '); }
@@ -74,12 +87,13 @@ class PdfPage {
     const objs = [
       '<< /Type /Catalog /Pages 2 0 R >>',
       '<< /Type /Pages /Kids [3 0 R] /Count 1 >>',
-      `<< /Type /Page /Parent 2 0 R /MediaBox [0 0 ${this.n(this.w)} ${this.n(this.h)}] /Contents 4 0 R /Resources << /Font << /F1 5 0 R /F2 6 0 R /F3 7 0 R >> >> >>`,
+      `<< /Type /Page /Parent 2 0 R /MediaBox [0 0 ${this.n(this.w)} ${this.n(this.h)}] /Contents 4 0 R /Resources << /Font << /F1 5 0 R /F2 6 0 R /F3 7 0 R >>${this.imgs.length ? ` /XObject << ${this.imgs.map((im, i) => `/${im.name} ${9 + i} 0 R`).join(' ')} >>` : ''} >> >>`,
       `<< /Length ${content.length} >>\nstream\n${content}\nendstream`,
       '<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica /Encoding /WinAnsiEncoding >>',
       '<< /Type /Font /Subtype /Type1 /BaseFont /Times-Roman /Encoding /WinAnsiEncoding >>',
       '<< /Type /Font /Subtype /Type1 /BaseFont /Courier /Encoding /WinAnsiEncoding >>',
       `<< /Title (${PdfPage.str(title || 'Drawing')}) /Producer (BananaCAD) >>`,
+      ...this.imgs.map((im) => `<< /Type /XObject /Subtype /Image /Width ${im.w} /Height ${im.h} /ColorSpace /DeviceRGB /BitsPerComponent 8 /Filter /DCTDecode /Length ${im.data.length} >>\nstream\n${im.data}\nendstream`),
     ];
     let out = '%PDF-1.4\n%\xe2\xe3\xcf\xd3\n';
     const offs = [];
@@ -103,7 +117,7 @@ const Plot = {
       if (!l0.visible || l0.plot === false || e0.type === 'viewport') continue;
       for (const e of E.flatten(e0)) { const l = lay(e); if (l.visible && l.plot !== false) flat.push(e); }
     }
-    flat.sort((a, b) => (a.type === 'hatch' ? 0 : 1) - (b.type === 'hatch' ? 0 : 1));
+    flat.sort((a, b) => drawRank(a) - drawRank(b));
     for (const e of flat) {
       const col = cfg.mono ? '#000000' : printColor(Render.colorOf(doc, e));
       pdf.color(col);
@@ -119,6 +133,13 @@ const Plot = {
             if (op.lw) pdf.push(`${pdf.n(lw)} w`);
             break;
           case 'fill': pdf.path(op.pts, true); pdf.push('f'); break;
+          case 'image': {
+            const img = imageFor(op.src);
+            if (!img) break;
+            const nm = pdf.image(img, op.src), r = op.rot || 0, cs = Math.cos(r), sn = Math.sin(r);
+            pdf.push('q'); pdf.cm([op.w * cs, op.w * sn, -op.h * sn, op.h * cs, op.p.x, op.p.y]); pdf.push(`/${nm} Do Q`);
+            break;
+          }
           case 'circle': pdf.earc(op.c, { x: op.r, y: 0 }, { x: 0, y: op.r }, 0, TAU, true); pdf.push('h S'); break;
           case 'arc': pdf.earc(op.c, { x: op.r, y: 0 }, { x: 0, y: op.r }, op.a1, G.ccwSweep(op.a1, op.a2), true); pdf.push('S'); break;
           case 'ellipse': { const cs = Math.cos(op.rot), sn = Math.sin(op.rot); pdf.earc(op.c, { x: op.rx * cs, y: op.rx * sn }, { x: -op.ry * sn, y: op.ry * cs }, 0, TAU, true); pdf.push('h S'); break; }

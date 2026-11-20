@@ -49,7 +49,7 @@ function newDoc() {
 const App = {
   doc: newDoc(),
   view: { cx: 210, cy: 148, scale: 3 },
-  settings: { grid: true, snap: false, ortho: false, osnap: true, dyn: true, polar: true, otrack: true, polarInc: 45, gridSize: 10, snapSize: 5, leaderMulti: false,
+  settings: { grid: true, snap: false, ortho: false, osnap: true, dyn: true, polar: true, otrack: true, polarInc: 45, pickGroups: true, gridSize: 10, snapSize: 5, leaderMulti: false,
     osmodes: { end: true, mid: true, cen: true, quad: true, int: true, perp: true, ins: true, node: true, nea: false } },
   tracked: [],
   sel: new Set(),
@@ -72,6 +72,8 @@ const App = {
       side: $('side'), file: $('fileinput'), title: $('docname'), layerSel: $('layersel'), help: $('help'),
     };
     this.ctx2d = this.el.cv.getContext('2d');
+    this._imgTick = 0;
+    Render.onImageLoad = () => { this._imgTick++; this.requestRedraw(); };
     this.buildRibbon();
     this.bindEvents();
     this.resize();
@@ -112,6 +114,7 @@ const App = {
     if (!e.color) e.color = this.doc.ccolor;
     this.doc.entities.push(e);
     if (this.blockEdit) this.blockEdit.ids.add(e.id);
+    if (this.cmd) (this.cmd.added || (this.cmd.added = [])).push(e);
     this.index = null; this.changed();
     return e;
   },
@@ -204,6 +207,17 @@ const App = {
     this.cmd = null;
     this.closeEditor();
     this.hidden = null; this.win = null; this.tracked = [];
+    if (cmd.added) {
+      const addedIds = new Set(cmd.added.map((e) => e.id)), names = new Set(this.doc.entities.filter((e) => e.grp).map((e) => e.grp));
+      const byG = {};
+      for (const e of cmd.added) if (e.grp) (byG[e.grp] || (byG[e.grp] = [])).push(e);
+      for (const [g, list] of Object.entries(byG)) {
+        if (!this.doc.entities.some((e) => e.grp === g && !addedIds.has(e.id))) continue;
+        let i = 2, nn = `${g.replace(/ \(\d+\)$/, '')} (${i})`;
+        while (names.has(nn)) nn = `${g.replace(/ \(\d+\)$/, '')} (${++i})`;
+        names.add(nn); list.forEach((e) => (e.grp = nn));
+      }
+    }
     this.reassoc();
     if (cmd.snap && cmd.snap !== this.serialize()) {
       this.undoStack.push(cmd.snap); this.redoStack = [];
@@ -792,7 +806,7 @@ const App = {
     }
     const e = this.pick(sx, sy);
     if (e) {
-      if (shift) this.sel.delete(e.id); else this.sel.add(e.id);
+      for (const id of this.withGroup([e.id])) { if (shift) this.sel.delete(id); else this.sel.add(id); }
       this.afterSelChange();
       return;
     }
@@ -804,11 +818,37 @@ const App = {
     const r = { minx: Math.min(w.a.x, b.x), maxx: Math.max(w.a.x, b.x), miny: Math.min(w.a.y, b.y), maxy: Math.max(w.a.y, b.y) };
     const crossing = sx < w.sx;
     let n = 0;
-    for (const e of this.selectableEntities()) {
-      if (E.inRect(e, r, crossing, this.doc)) { if (shift) this.sel.delete(e.id); else this.sel.add(e.id); n++; }
-    }
+    const hits = [];
+    for (const e of this.selectableEntities()) if (E.inRect(e, r, crossing, this.doc)) hits.push(e.id);
+    for (const id of this.withGroup(hits)) { if (shift) this.sel.delete(id); else this.sel.add(id); n++; }
     if (this.cmd) this.print(`${n} found`);
     this.afterSelChange();
+  },
+  /* Expand ids to whole groups (when group selection is on). */
+  withGroup(ids) {
+    if (this.settings.pickGroups === false) return ids;
+    const gs = new Set(ids.map((id) => this.get(id)).filter((e) => e && e.grp).map((e) => e.grp));
+    if (!gs.size) return ids;
+    const out = new Set(ids);
+    for (const e of this.selectableEntities()) if (e.grp && gs.has(e.grp)) out.add(e.id);
+    return [...out];
+  },
+  pickImage() {
+    return new Promise((resolve) => {
+      const inp = document.createElement('input');
+      inp.type = 'file'; inp.accept = 'image/png,image/jpeg,image/webp,image/gif,image/bmp,image/svg+xml';
+      let done = false;
+      const fin = (v) => { if (!done) { done = true; resolve(v); } };
+      inp.addEventListener('cancel', () => fin(null));
+      inp.addEventListener('change', () => {
+        const f = inp.files[0];
+        if (!f) { fin(null); return; }
+        const rd = new FileReader();
+        rd.onload = () => { const img = new Image(); img.onload = () => fin({ name: f.name, src: rd.result, pw: img.naturalWidth || 100, ph: img.naturalHeight || 100 }); img.onerror = () => fin({ error: 'not a supported image' }); img.src = rd.result; };
+        rd.readAsDataURL(f);
+      });
+      inp.click();
+    });
   },
   afterSelChange() { this.refreshUI(); this.requestRedraw(); },
   selectAll() { this.selectableEntities().forEach((e) => this.sel.add(e.id)); this.print(`${this.sel.size} objects selected.`); this.afterSelChange(); },
@@ -827,6 +867,7 @@ const App = {
       const k = ev.key.toLowerCase();
       const map = { z: 'UNDO', y: 'REDO', s: 'SAVE', o: 'OPEN', n: 'NEW', a: 'SELECTALL', c: 'COPYCLIP', v: 'PASTECLIP', x: 'CUTCLIP', p: 'PLOT' };
       if (k === 'z' && ev.shiftKey) { ev.preventDefault(); this.redo(); return; }
+      if (k === 'a' && ev.shiftKey) { ev.preventDefault(); this.settings.pickGroups = !this.settings.pickGroups; this.print(`<Group selection ${this.settings.pickGroups ? 'on' : 'off'}>`); return; }
       if (map[k] && !(k === 'c' && window.getSelection().toString())) {
         ev.preventDefault();
         if (this.cmd && !['c', 'v', 'x', 'a'].includes(k)) this.cancel(true);
@@ -1068,6 +1109,7 @@ const App = {
     row('Layer', layerSel);
     const commonColor = new Set(ents.map((e) => e.color)).size === 1 ? ents[0].color : 'bylayer';
     row('Color', this.colorControl(commonColor, (v) => apply((e) => (e.color = v))));
+    { const gs = [...new Set(ents.map((e) => e.grp || ''))]; if (gs.some((g) => g)) { const gi = h('input'); gi.readOnly = true; gi.value = gs.length === 1 ? gs[0] : '*VARIES*'; row('Group', gi); } }
     {
       const lws = h('select');
       const cur = new Set(ents.map((e) => (e.lw == null ? 'bylayer' : String(e.lw))));
@@ -1166,6 +1208,15 @@ const App = {
         case 'revcloud':
           num('Arc length', () => e.arc, (o, v) => v > 0 && (o.arc = v));
           break;
+        case 'image': {
+          const nm = h('input'); nm.readOnly = true; nm.value = e.name || ''; row('Image', nm);
+          num('Opacity %', () => Math.round((e.opacity ?? 1) * 100), (o, v) => (o.opacity = G.clamp(v, 5, 100) / 100));
+          num('Width', () => e.w, (o, v) => { if (v > 0) { o.h *= v / o.w; o.w = v; } });
+          num('Height', () => e.h, (o, v) => { if (v > 0) { o.w *= v / o.h; o.h = v; } });
+          num('Rotation', () => G.normAng(e.rot || 0) / DEG, (o, v) => (o.rot = v * DEG));
+          num('Position X', () => e.p.x, (o, v) => (o.p.x = v)); num('Position Y', () => e.p.y, (o, v) => (o.p.y = v));
+          break;
+        }
         case 'viewport': {
           const sc = h('select');
           const curL = scaleLabel(this.doc, e.scale);
@@ -1569,6 +1620,7 @@ const App = {
         ['Blocks', ['BLOCK', 'INSERT', 'ATTDEF', 'ATTEDIT', 'ATTSYNC', 'BEDIT', 'BCLOSE', 'BLOCKSPALETTE', 'PURGE']],
         ['Inquiry & view', ['DIST', 'AREA', 'ID', 'LIST', 'ZOOM', 'PAN', 'REGEN']],
         ['Settings', ['LAYER', '-LAYER', 'COLOR', 'TEXTSIZE', 'DIMSCALE', 'DIMDEC', 'GRID', 'SNAP', 'ORTHO', 'OSNAP']],
+        ['Selection & images', ['QSELECT', 'SELECTSIMILAR', 'GROUP', 'UNGROUP', 'PICKSTYLE', 'IMAGEATTACH']],
         ['Layouts & plotting', ['LAYOUT', 'PAGESETUP', 'MVIEW', 'MSPACE', 'PSPACE', 'PLOT', 'UNITS']],
         ['File & edit', ['NEW', 'OPEN', 'SAVE', 'SAVEAS', 'EXPORT', 'PLOT', 'UNDO', 'REDO', 'COPYCLIP', 'CUTCLIP', 'PASTECLIP', 'SELECTALL', 'HELP']],
       ];
@@ -1709,19 +1761,34 @@ const App = {
     const ctx = this.ctx2d, W = this.W, H = this.H, dpr = this.dpr;
     const paper = this.space >= 0;
     const st = { ctx, dpr, W, H, view: this.view, doc: this.doc, print: paper, lwt: this.settings.lwt };
-    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
-    ctx.fillStyle = paper ? '#5b616a' : '#1f252d'; ctx.fillRect(0, 0, W, H);
-    ctx.lineCap = 'round'; ctx.lineJoin = 'round';
     E.ctxDoc = this.doc;
-    if (paper) this.drawPaper(ctx, st);
-    else if (this.settings.grid) this.drawGrid(ctx);
     const be = this.blockEdit;
-    if (be) {
-      const skip = new Set([...(this.hidden || []), ...be.ids]);
-      if (be.insId) skip.add(be.insId);
-      ctx.globalAlpha = 0.28; Render.drawDrawing(st, skip); ctx.globalAlpha = 1;
-      Render.drawDrawing(st, this.hidden, be.ids);
-    } else Render.drawDrawing(st, this.hidden);
+    // The drawing itself is rendered into a cached layer; mouse moves only redraw the overlays.
+    const v = this.view, cv = this.el.cv;
+    const key = [this.rev, E.rev, v.cx, v.cy, v.scale, cv.width, cv.height, this.space, this.settings.grid, this.settings.lwt, this.hidden ? [...this.hidden].join(',') : '', be ? be.name + ':' + be.ids.size : '', this.activeVp, this._imgTick].join('|');
+    if (!this.base) this.base = document.createElement('canvas');
+    if (this.base.width !== cv.width || this.base.height !== cv.height) { this.base.width = cv.width; this.base.height = cv.height; this._baseKey = null; }
+    if (key !== this._baseKey) {
+      const bctx = this.base.getContext('2d');
+      const bst = { ...st, ctx: bctx, bbox: (e) => this.bbox(e) };
+      bctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+      bctx.globalAlpha = 1;
+      bctx.fillStyle = paper ? '#5b616a' : '#1f252d'; bctx.fillRect(0, 0, W, H);
+      bctx.lineCap = 'round'; bctx.lineJoin = 'round';
+      if (paper) this.drawPaper(bctx, bst);
+      else if (this.settings.grid) this.drawGrid(bctx);
+      if (be) {
+        const skip = new Set([...(this.hidden || []), ...be.ids]);
+        if (be.insId) skip.add(be.insId);
+        bctx.globalAlpha = 0.28; Render.drawDrawing(bst, skip); bctx.globalAlpha = 1;
+        Render.drawDrawing(bst, this.hidden, be.ids);
+      } else Render.drawDrawing(bst, this.hidden);
+      this._baseKey = key;
+    }
+    ctx.setTransform(1, 0, 0, 1, 0, 0);
+    ctx.drawImage(this.base, 0, 0);
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    ctx.lineCap = 'round'; ctx.lineJoin = 'round';
     // highlights
     Render.worldXf(st);
     for (const id of this.sel) {
@@ -1990,7 +2057,7 @@ const RIBBON = [
   { tab: 'Insert', groups: [
     ['Block', [['INSERT', 'Insert', 'insert'], ['BLOCK', 'Create', 'blockmake'], ['BEDIT', 'Edit block', 'blockedit'], ['BCLOSE', 'Close editor', 'check'], ['BLOCKSPALETTE', 'Library', 'library'], ['PURGE', 'Purge', 'erase']]],
     ['Attributes', [['ATTDEF', 'Define', 'attdef'], ['ATTEDIT', 'Edit values', 'attedit'], ['ATTSYNC', 'Sync', 'sync']]],
-    ['Import', [['OPEN', 'Open DWG/DXF', 'open']]],
+    ['Import', [['OPEN', 'Open DWG/DXF', 'open'], ['IMAGEATTACH', 'Image', 'image']]],
   ] },
   { tab: 'Layout', groups: [
     ['Layouts', [['LAYOUT', 'Layouts', 'layout'], ['PAGESETUP', 'Page setup', 'page'], ['MVIEW', 'Viewport', 'viewport'], ['MSPACE', 'Into viewport', 'zoomwin'], ['PSPACE', 'Paper', 'page']]],
@@ -1998,6 +2065,7 @@ const RIBBON = [
   ] },
   { tab: 'View', groups: [
     ['Navigate', [['ZOOM_E', 'Extents', 'zoomext'], ['ZOOM', 'Window', 'zoomwin'], ['PAN', 'Pan', 'pan'], ['REGEN', 'Regen', 'rotate']]],
+    ['Selection', [['QSELECT', 'Quick select', 'qselect'], ['SELECTSIMILAR', 'Similar', 'similar'], ['GROUP', 'Group', 'group'], ['UNGROUP', 'Ungroup', 'ungroup']]],
     ['Palettes', [['LAYER', 'Layers', 'layers'], ['OSNAP', 'Settings', 'cmd'], ['HELP', 'Help', 'help']]],
   ] },
 ];
@@ -2059,6 +2127,11 @@ const ICONS = {
   align: '<path d="M4 18l6-6M14 6h6v6"/><path d="M4 18h16" stroke-dasharray="2 2"/>',
   area: '<path d="M4 18l3-12 10 2 3 10z"/><path d="M8 14h6" stroke-dasharray="1.5 1.5"/>',
   cmd: '<rect x="4" y="5" width="16" height="14" rx="2"/><path d="M8 10l3 2-3 2M13 15h3"/>',
+  qselect: '<path d="M4 5h16l-6 7v6l-4 2v-8z"/>',
+  similar: '<rect x="3" y="3" width="8" height="8"/><rect x="13" y="13" width="8" height="8" stroke-dasharray="2 1.5"/><path d="M14 7h6M17 4v6"/>',
+  group: '<rect x="3" y="3" width="18" height="18" rx="2" stroke-dasharray="3 2"/><rect x="6" y="6" width="6" height="6"/><circle cx="15.5" cy="15.5" r="3"/>',
+  ungroup: '<rect x="3" y="3" width="8" height="8"/><circle cx="17" cy="17" r="4"/><path d="M14 4l6 6M20 4l-6 6"/>',
+  image: '<rect x="3" y="4" width="18" height="16" rx="1"/><circle cx="9" cy="10" r="2"/><path d="M3 18l6-5 4 3 3-2 5 4"/>',
   layout: '<rect x="3" y="5" width="18" height="14"/><rect x="6" y="8" width="8" height="8"/><path d="M16 15h3"/>',
   page: '<path d="M6 3h9l4 4v14H6z"/><path d="M9 12h7M9 16h5"/>',
   viewport: '<rect x="3" y="5" width="18" height="14"/><path d="M6 15l4-4 3 3 3-2 3 3"/>',

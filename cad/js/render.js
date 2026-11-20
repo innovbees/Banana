@@ -18,6 +18,15 @@ function luminance(hex) {
 const printColor = (c) => (luminance(c) > 0.8 ? '#000000' : c);
 const LINEWEIGHTS = [0, 0.05, 0.09, 0.13, 0.15, 0.18, 0.2, 0.25, 0.3, 0.35, 0.4, 0.5, 0.53, 0.6, 0.7, 0.8, 0.9, 1, 1.06, 1.2, 1.4, 1.58, 2, 2.11];
 
+const IMAGES = new Map();
+/* Cached HTMLImageElement for a data URL; calls Render.onImageLoad when it becomes ready. */
+function imageFor(src) {
+  let img = IMAGES.get(src);
+  if (!img) { img = new Image(); img.onload = () => { if (Render.onImageLoad) Render.onImageLoad(); }; img.src = src; IMAGES.set(src, img); }
+  return img.complete && img.naturalWidth ? img : null;
+}
+const drawRank = (e) => (e.type === 'image' ? 0 : e.type === 'hatch' ? 1 : 2);
+
 const Render = {
   layerOf(doc, e) { return doc.layers.find((l) => l.name === e.layer) || doc.layers[0]; },
   colorOf(doc, e) { return !e.color || e.color === 'bylayer' ? this.layerOf(doc, e).color : e.color; },
@@ -59,6 +68,15 @@ const Render = {
           break;
         case 'text': this.drawText(st, op, color); break;
         case 'hatch': this.drawHatch(st, op, color, opt); break;
+        case 'image': {
+          const img = imageFor(op.src);
+          ctx.save();
+          ctx.translate(op.p.x, op.p.y); ctx.rotate(op.rot || 0);
+          if (img && !opt.preview && !opt.color) { ctx.globalAlpha = op.opacity ?? 1; ctx.translate(0, op.h); ctx.scale(1, -1); ctx.drawImage(img, 0, 0, op.w, op.h); }
+          else { ctx.setLineDash([4 / s, 4 / s]); ctx.strokeRect(0, 0, op.w, op.h); }
+          ctx.restore();
+          break;
+        }
       }
     }
     ctx.setLineDash([]);
@@ -120,10 +138,14 @@ const Render = {
   /* Draw a whole drawing (used by on-screen render and PNG export). */
   drawDrawing(st, skip, only, list) {
     const doc = st.doc, vis = new Set(doc.layers.filter((l) => l.visible).map((l) => l.name));
-    const ents = (list || doc.entities).filter((e) => vis.has(e.layer) && !(skip && skip.has(e.id)) && (!only || only.has(e.id)));
+    let ents = (list || doc.entities).filter((e) => vis.has(e.layer) && !(skip && skip.has(e.id)) && (!only || only.has(e.id)));
+    if (st.bbox) { // skip objects outside the visible area
+      const v = st.view, hw = st.W / 2 / v.scale, hh = st.H / 2 / v.scale;
+      const r = { minx: v.cx - hw, maxx: v.cx + hw, miny: v.cy - hh, maxy: v.cy + hh };
+      ents = ents.filter((e) => { const b = st.bbox(e); return !isFinite(b.minx) || !(b.maxx < r.minx || b.minx > r.maxx || b.maxy < r.miny || b.miny > r.maxy); });
+    }
     this.worldXf(st);
-    for (const e of ents) if (e.type === 'hatch') this.drawEntity(st, e);
-    for (const e of ents) if (e.type !== 'hatch') this.drawEntity(st, e);
+    for (let k = 0; k < 3; k++) for (const e of ents) if (drawRank(e) === k) this.drawEntity(st, e);
   },
 
   extents(doc, ents) {
@@ -150,7 +172,7 @@ const Render = {
     const vis = new Set(doc.layers.filter((l) => l.visible).map((l) => l.name));
     const ents = [];
     for (const e0 of doc.model || doc.entities) if (vis.has(e0.layer)) for (const e of E.flatten(e0)) if (vis.has(e.layer)) ents.push(e);
-    ents.sort((a, b2) => (a.type === 'hatch' ? 0 : 1) - (b2.type === 'hatch' ? 0 : 1));
+    ents.sort((a, b2) => drawRank(a) - drawRank(b2));
     for (const e of ents) {
       const c = printColor(this.colorOf(doc, e));
       const dash = this.dashOf(doc, e);
@@ -171,6 +193,9 @@ const Render = {
             if (!op.str) break;
             { const ts = E.tstyle(op.style);
             out.push(`<text transform="translate(${n(op.p.x)} ${n(op.p.y)}) rotate(${n((op.rot || 0) / DEG)}) scale(1 -1)${ts.oblique ? ` skewX(${n(-ts.oblique)})` : ''}${ts.width && ts.width !== 1 ? ` scale(${n(ts.width)} 1)` : ''}" font-family="${esc(fontStack(ts.font)).replace(/"/g, "'")}" font-size="${n(op.h / CAP_RATIO)}" text-anchor="${{ left: 'start', center: 'middle', right: 'end' }[op.align || 'left']}" fill="${c}" xml:space="preserve">${esc(op.str)}</text>`); }
+            break;
+          case 'image':
+            out.push(`<image href="${op.src}" x="0" y="0" width="${n(op.w)}" height="${n(op.h)}" preserveAspectRatio="none" opacity="${n(op.opacity ?? 1)}" transform="translate(${n(op.p.x)} ${n(op.p.y)}) rotate(${n((op.rot || 0) / DEG)}) translate(0 ${n(op.h)}) scale(1 -1)"/>`);
             break;
           case 'hatch': {
             const d = op.loops.map((l) => 'M' + l.map((p) => `${n(p.x)} ${n(p.y)}`).join(' L') + ' Z').join(' ');

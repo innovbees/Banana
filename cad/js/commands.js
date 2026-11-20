@@ -1765,3 +1765,87 @@ defCmd('UNITS', ['UN'], 'Drawing units (used for plot and viewport scales)', fun
   c.print(`Drawing units: ${v}. A 1:100 plot now means 1 ${c.doc.units} on paper = 100 ${c.doc.units} in the drawing.`);
   c.app.refreshUI();
 }, { transparent: true });
+
+/* ======================= SELECTION, GROUPS, IMAGES (group 5) ======================= */
+defCmd('QSELECT', ['QSE', 'FILTER'], 'Quick Select: select by type, layer, color, text or block name', function* (c) {
+  const app = c.app, all = app.selectableEntities();
+  const types = [...new Set(all.map((e) => e.type))];
+  const labelOf = (t) => E.label(t).replace(/\s+/g, '');
+  const t = yield P.kw('Object type', ['All', ...types.map(labelOf)], { def: 'All' });
+  if (t == null) return;
+  const tk = t.kw || t, type = tk === 'All' ? null : types.find((x) => labelOf(x) === tk);
+  const lay = yield P.str('Layer (* = any)', { def: '*', spaces: true }); if (lay == null) return;
+  const col = yield P.str('Color (* = any, ByLayer, red, 1-255, #hex)', { def: '*' }); if (col == null) return;
+  let txt = '*', blk = '*';
+  if (!type || ['text', 'mtext', 'leader', 'table', 'dim'].includes(type)) { txt = yield P.str('Text contains (* = any)', { def: '*', spaces: true }); if (txt == null) return; }
+  if (!type || type === 'insert') { blk = yield P.str('Block name (* = any)', { def: '*', spaces: true }); if (blk == null) return; }
+  const mode = yield P.kw('Apply to', ['New', 'Add', 'Remove'], { def: 'New' }); if (mode == null) return;
+  const wantCol = col === '*' ? null : parseColor(col);
+  if (col !== '*' && !wantCol) { c.print('Invalid color.'); return; }
+  const lay2 = lay.trim().toLowerCase(), txt2 = txt.trim().toLowerCase(), blk2 = blk.trim().toLowerCase();
+  const textOf = (e) => (e.type === 'table' ? e.cells.flat().join(' ') : e.text || '');
+  const match = (e) => (!type || e.type === type)
+    && (lay2 === '*' || e.layer.toLowerCase() === lay2)
+    && (!wantCol || (e.color || 'bylayer') === wantCol)
+    && (txt2 === '*' || textOf(e).toLowerCase().includes(txt2))
+    && (blk2 === '*' || (e.type === 'insert' && e.name.toLowerCase() === blk2));
+  const m = mode.kw || mode;
+  if (m === 'New') app.sel.clear();
+  let n = 0;
+  for (const e of all) if (match(e)) { if (m === 'Remove') app.sel.delete(e.id); else app.sel.add(e.id); n++; }
+  c.print(`${n} object(s) matched; ${app.sel.size} selected.`);
+  app.afterSelChange();
+}, { sel: true, keepSel: true });
+
+defCmd('SELECTSIMILAR', ['SIMILAR'], 'Select all objects like the selected ones (same type and layer; same block name)', function* (c) {
+  const app = c.app;
+  let ids = app.selectedIds();
+  if (!ids.length) { const s = yield P.ent('Select a sample object'); if (!s) return; ids = [s.e.id]; }
+  const keys = new Set(ids.map((id) => { const e = c.get(id); return `${e.type}|${e.layer}|${e.type === 'insert' ? e.name : ''}`; }));
+  let n = 0;
+  for (const e of app.selectableEntities()) if (keys.has(`${e.type}|${e.layer}|${e.type === 'insert' ? e.name : ''}`)) { app.sel.add(e.id); n++; }
+  c.print(`${n} similar object(s) selected.`);
+  app.afterSelChange();
+}, { sel: true, keepSel: true });
+
+defCmd('GROUP', ['G'], 'Group objects so they select together', function* (c) {
+  const d = c.doc;
+  const used = new Set([d.model, ...d.layouts.map((l) => l.ents)].flat().filter((e) => e.grp).map((e) => e.grp));
+  let i = 1; while (used.has(`Group${i}`)) i++;
+  const name = yield P.str('Enter group name', { def: `Group${i}`, spaces: true });
+  if (!name) return;
+  const ids = yield* getSel(c, 'Select objects for the group');
+  if (!ids.length) return;
+  ids.forEach((id) => (c.get(id).grp = name.trim()));
+  c.changed();
+  c.print(`Group "${name.trim()}" created with ${ids.length} object(s). Click any member to select the whole group (Ctrl+Shift+A toggles group selection).`);
+}, { sel: true });
+
+defCmd('UNGROUP', ['UNG'], 'Dissolve the groups of the selected objects', function* (c) {
+  const ids = yield* getSel(c, 'Select a group');
+  const gs = new Set(ids.map((id) => c.get(id).grp).filter(Boolean));
+  if (!gs.size) { c.print('No groups selected.'); return; }
+  let n = 0;
+  for (const e of c.doc.entities) if (e.grp && gs.has(e.grp)) { delete e.grp; n++; }
+  c.changed();
+  c.print(`${gs.size} group(s) dissolved (${n} objects).`);
+}, { sel: true });
+
+defCmd('PICKSTYLE', [], 'Toggle group selection (Ctrl+Shift+A)', function* (c) {
+  c.app.settings.pickGroups = !c.app.settings.pickGroups;
+  c.print(`<Group selection ${c.app.settings.pickGroups ? 'on' : 'off'}>`);
+}, { transparent: true });
+
+defCmd('IMAGEATTACH', ['IAT', 'IMAGE', 'ATTACH'], 'Place a raster image (scan, photo, plan) to trace over', function* (c) {
+  const f = yield { type: 'wait', msg: 'Choose an image file (PNG, JPG, …)', promise: c.app.pickImage() };
+  if (!f || f.error) { if (f && f.error) c.print('Could not read image: ' + f.error); return; }
+  const aspect = f.ph / f.pw;
+  let w = f.pw;
+  const p = yield P.point('Specify insertion point (lower-left corner)', { preview: (m) => [{ type: 'image', p: m, w, h: w * aspect, rot: 0, src: f.src }] });
+  if (!p) return;
+  const r = yield P.dist(`Specify width (1 pixel = 1 unit is ${f.pw})`, { base: p, def: f.pw, project: (m) => Math.abs(m.x - p.x), preview: (m) => { const ww = Math.max(Math.abs(m.x - p.x), 1e-6); return [{ type: 'image', p, w: ww, h: ww * aspect, rot: 0, src: f.src }]; } });
+  if (r == null || !(r > 0)) return;
+  w = r;
+  c.add({ type: 'image', p, w, h: w * aspect, rot: 0, src: f.src, name: f.name, opacity: 1 });
+  c.print('Image placed. Tip: SCALE with the Reference option (or ALIGN) scales it so a known length matches; lower its Opacity in Properties to trace over it.');
+});

@@ -51,12 +51,20 @@ Dimensions are **associative**: if you pick their points with object snaps, they
 - **Lineweights** are set per layer and per object. The **LWT** button in the status bar shows them on screen. In the Layers panel you can also mark a layer **not to plot**, which new layouts use for their Viewports layer.
 - `PLOT` (Ctrl+P) creates a **vector PDF**. A layout prints 1:1 on its sheet. The model prints at a chosen scale or fitted to the paper, with optional monochrome and lineweights.
 
+## Selection, groups and images
+
+- `QSELECT` (Quick Select) selects objects by type, layer, colour, text content or block name. It can start a new selection, add to the current one or remove from it. `SELECTSIMILAR` selects everything with the same type and layer as the objects already selected.
+- `GROUP` (`G`) groups objects so that clicking one selects all of them. `UNGROUP` dissolves a group, and Ctrl+Shift+A (`PICKSTYLE`) turns group selection off and on. Copies of a group become a new group of their own.
+- `IMAGEATTACH` (`IAT`) places a PNG or JPG image, such as a scanned plan or a photo, so you can trace over it. In Properties you can lower its opacity and set its size. To scale it to real size, use `SCALE` with the Reference option or `ALIGN` on a known length. Images are saved inside the `.bcad` file and are included in PDF plots.
+- **Large drawings:** the drawing is rendered once into a cached layer, so moving the mouse only redraws the cursor and highlights. Objects outside the view are skipped. In a test drawing with 60,000 objects, a mouse move costs almost nothing and a redraw takes about 0.1 s.
+
 ## All commands
 
 **Draw:** `LINE L`, `PLINE PL` (with Arc segments), `RECTANG REC`, `CIRCLE C` (2P/3P/Diameter), `ARC A` (3-point or Center), `POLYGON POL`, `ELLIPSE EL`, `SPLINE SPL`, `HATCH H` (SOLID, ANSI31, ANSI37, LINE, NET, DASHED45; pick inside any enclosed area, even one bounded by separate lines), `REVCLOUD RC`
 **Modify:** `MOVE M`, `COPY CO`, `ROTATE RO` (Copy/Reference), `SCALE SC` (Copy/Reference), `MIRROR MI`, `STRETCH S`, `OFFSET O` (Through), `TRIM TR`, `EXTEND EX`, `FILLET F` (Radius), `CHAMFER CHA`, `BREAK BR`, `BREAKATPOINT`, `JOIN J`, `LENGTHEN LEN` (DElta/Percent/Total/DYnamic), `ALIGN AL`, `PEDIT PE`, `ARRAY AR` (Rectangular/Polar), `EXPLODE X`, `ERASE E`/Delete, `MATCHPROP MA`
 **Blocks:** `BLOCK B`, `INSERT I`, `ATTDEF`, `ATTEDIT`, `ATTSYNC`, `BEDIT`, `BCLOSE`, `PURGE`, `BLOCKSPALETTE`
 **Layouts:** `LAYOUT`, `PAGESETUP`, `MVIEW MV`, `MSPACE MS`, `PSPACE PS`, `UNITS`, `PLOT`
+**Selection & images:** `QSELECT`, `SELECTSIMILAR`, `GROUP G`, `UNGROUP`, `PICKSTYLE`, `IMAGEATTACH IAT`
 **Inquiry:** `DIST DI`, `AREA AA`, `ID`, `LIST LI`
 **View:** `ZOOM Z` (Extents/Window/Previous/nX), `PAN P`, `REGEN RE`
 **Settings:** `LAYER LA` (layer manager), `-LAYER` (Make/Set/ON/OFF/Color/Lock), `COLOR`, `TEXTSIZE`, `DIMSCALE`, `DIMDEC`, `GRID`, `SNAP`, `ORTHO`, `OSNAP`
