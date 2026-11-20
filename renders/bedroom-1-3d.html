@@ -82,7 +82,7 @@ box(-T,0,0,CH,0,RL,plaster);                              // west wall
 box(0,RW,0,CH,-T,0,plaster);                              // north wall
 // east wall: door 0.1-1.0, robe opening 2.4-3.3, both 2.1 high
 box(RW,RW+T,0,CH,0,0.1,plaster); box(RW,RW+T,2.1,CH,0.1,1.0,plaster);
-box(RW,RW+T,0,CH,1.0,2.4,plaster); box(RW,RW+T,2.1,CH,2.4,3.3,plaster); box(RW,RW+T,0,CH,3.3,RL,plaster);
+box(RW,RW+T,0,CH,1.0,2.4,plaster); box(RW,RW+T,0,CH,3.3,RL,plaster);   // robe walkway opening 900 wide runs full height to the ceiling
 // south wall with centred window 0.85-3.15, sill 0.56, head 2.1
 box(0,0.85,0,CH,RL,RL+T,plaster); box(3.15,RW,0,CH,RL,RL+T,plaster);
 box(0.85,3.15,0,0.56,RL,RL+T,plaster); box(0.85,3.15,2.1,CH,RL,RL+T,plaster);
@@ -205,6 +205,28 @@ box(3.6,3.615,0.2,0.215,1.58,1.82,brass);                                  // lo
 box(3.61,3.97,0.28,0.3,1.2,2.2,travertine);                                // stone top
 box(3.72,3.9,0.3,0.312,1.3,1.55,brass); cyl(3.8,0.36,2.0,0.045,0.035,0.12,mat('#efe9df',0.5)); cyl(3.8,0.5,2.0,0.003,0.003,0.16,mat('#6b7f58',0.8),6);
 box(3.96,3.97,0.31,2.23,1.24,2.16,brass);                                  // thin brass edge
+// ---------- Sliding door options for the full-height robe walkway opening (choose with ?slide=none|flush|walnut|glass|pocket|curtain) ----------
+const SLIDE=P.get('slide')||'none';
+{ const z0=2.35, z1=3.35, y0=0.015, y1=2.335, xf=3.885, xb=3.925;          // panel 1000 x 2320, ~75-115 mm off the wall, closed position
+  const trackM=mat('#2b2622',0.4,0.6);
+  if(['flush','walnut','glass'].includes(SLIDE)){ box(3.87,3.94,CH-0.045,CH-0.004,z0-0.02,z1+1.0,trackM,false); }   // ceiling-fixed track, travel to the south
+  if(SLIDE==='flush'){ box(xf,xb,y0,y1,z0,z1,mat(PAL.wall,0.85)); box(xf-0.004,xf,0.95,1.25,z0+0.04,z0+0.07,mat('#3a3633',0.6)); }
+  if(SLIDE==='walnut'){ box(xf,xb,y0,y1,z0,z1,walnut);
+    for(let z=z0+0.02;z<z1-0.02;z+=0.04){ box(xf-0.012,xf,y0+0.04,y1-0.04,z,z+0.022,walnut); }
+    box(xf-0.03,xf-0.012,0.85,1.55,z0+0.05,z0+0.07,brass); }
+  if(SLIDE==='glass'){ const fr=mat('#2b2622',0.35,0.7);
+    const rib=mat('#ffffff',0.2,0,{transparent:true,opacity:0.6,map:canvasTex(256,64,(g,w,h)=>{ g.fillStyle='#dfe7ea'; g.fillRect(0,0,w,h); for(let x=0;x<w;x+=8){ const gr=g.createLinearGradient(x,0,x+8,0); gr.addColorStop(0,'rgba(255,255,255,0.7)'); gr.addColorStop(0.5,'rgba(150,170,180,0.35)'); gr.addColorStop(1,'rgba(255,255,255,0.7)'); g.fillStyle=gr; g.fillRect(x,0,8,h);} },6,1)});
+    box(xf+0.01,xb-0.01,y0+0.04,y1-0.04,z0+0.03,z1-0.03,rib,false,true);
+    box(xf,xb,y0,y0+0.04,z0,z1,fr); box(xf,xb,y1-0.04,y1,z0,z1,fr); box(xf,xb,y0,y1,z0,z0+0.03,fr); box(xf,xb,y0,y1,z1-0.03,z1,fr); box(xf,xb,1.0,1.03,z0,z1,fr);
+    box(xf-0.03,xf,0.9,1.5,z0+0.04,z0+0.06,fr); }
+  if(SLIDE==='pocket'){ const pz0=2.85;                                       // shown half open, sliding into a wall pocket to the south
+    box(3.995,4.035,y0,CH-0.01,pz0,pz0+0.9,mat(PAL.wall,0.85)); box(3.99,3.995,1.0,1.2,pz0+0.03,pz0+0.05,mat('#3a3633',0.6));
+    box(3.98,4.0,0,CH,3.3,3.32,mat(PAL.ceil,0.6)); box(3.98,4.0,0,CH,2.38,2.4,mat(PAL.ceil,0.6)); }
+  if(SLIDE==='curtain'){ box(3.86,3.92,CH-0.03,CH-0.004,z0-0.1,z1+0.5,mat('#f4f2ee',0.5),false);
+    const w=z1-z0+0.1, segs=26*8, g=new THREE.PlaneGeometry(w,CH-0.05,segs,1); const pp=g.attributes.position;
+    for(let i=0;i<pp.count;i++){ const u=(pp.getX(i)+w/2)/w; pp.setZ(i,Math.sin(u*26*Math.PI*2)*0.03); }
+    g.computeVertexNormals(); const c=new THREE.Mesh(g,mat('#cbbfae',0.95,0,{side:THREE.DoubleSide})); c.position.set(3.89,(CH-0.05)/2,(z0+z1)/2); c.rotation.y=Math.PI/2; c.castShadow=true; c.receiveShadow=true; scene.add(c); }
+}
 const cubeRT=new THREE.WebGLCubeRenderTarget(512); const cubeCam=new THREE.CubeCamera(0.05,20,cubeRT);
 const mirrorM=mat('#c9d2d4',0.03,1.0,{envMap:cubeRT.texture});
 const mirror=box(3.95,3.96,0.32,2.22,1.25,2.15,mirrorM,false,false);
@@ -248,6 +270,7 @@ else if(VIEW==='bed'){ cam.position.set(3.45,1.6,1.0); cam.fov=68; cam.updatePro
 else if(VIEW==='passage'){ cam.position.set(3.5,1.6,1.55); cam.fov=66; cam.updateProjectionMatrix(); cam.lookAt(5.4,1.15,2.95); }
 else if(VIEW==='overview'){ ceilingM.visible=false; scene.traverse(o=>{ if(o.isMesh && o.position.y>CH-0.1 && o.geometry && o.geometry.type==='ExtrudeGeometry') o.visible=false; }); cam.position.set(7.2,6.8,-1.6); cam.fov=50; cam.updateProjectionMatrix(); cam.lookAt(2.7,0,2.7); }
 else if(VIEW==='approach'){ cam.position.set(1.4,1.6,0.45); cam.fov=70; cam.updateProjectionMatrix(); cam.lookAt(3.9,1.2,1.8); }
+else if(VIEW==='robe'){ cam.position.set(0.75,1.55,1.25); cam.fov=66; cam.updateProjectionMatrix(); cam.lookAt(4.0,1.15,3.05); }
 else if(VIEW==='dressing'){ cam.position.set(1.7,1.65,4.0); cam.fov=70; cam.updateProjectionMatrix(); cam.lookAt(2.3,1.05,0.0); }
 renderer.render(scene,cam);
 document.title='done';
