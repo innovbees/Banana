@@ -88,6 +88,11 @@ const App = {
     this.print('BananaCAD — 2D drafting. Type a command (e.g. LINE or L) and press Enter. Press F1 for the command list.');
     if (restored) this.print(`Restored autosaved drawing "${this.doc.name}" (${this.doc.entities.length} objects).`);
     this.savedRev = restored ? -1 : this.rev;
+    // Portable launcher (BananaCAD.exe): tell it the window is still open.
+    if (/^https?:$/.test(location.protocol) && location.hostname === '127.0.0.1') {
+      const ping = () => fetch('/__ping', { cache: 'no-store' }).catch(() => {});
+      ping(); setInterval(ping, 5000);
+    }
     this.showPrompt();
     this.refreshUI();
     this.el.input.focus();

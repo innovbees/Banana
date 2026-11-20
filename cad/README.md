@@ -7,6 +7,19 @@ Open `cad/index.html` in Chrome, Edge or Firefox (double-click the file), or ser
 cd cad && python3 -m http.server 8000   # then open http://localhost:8000
 ```
 
+## Portable Windows app (no install, no browser)
+
+[`dist/BananaCAD.exe`](../dist/BananaCAD.exe) is one self-contained file of about 11 MB. Copy it anywhere, such as the Desktop or a USB stick, and double-click it. It opens BananaCAD in **its own window**, with its own taskbar icon and title, and no address bar or tabs.
+
+- **No installation:** it needs no installation, no administrator rights and no internet. The whole app is inside the exe.
+- **Window engine:** the window uses the Edge engine that comes with Windows 10 and 11, or Chrome if Edge is missing.
+- **Where things are kept:** the exe keeps its settings and autosave in `%AppData%\BananaCAD`, so the app itself stays untouched.
+- **Saving files:** Save and Save As can write straight back into your DWG files.
+- **Several windows:** running the exe a second time opens another window of the same app. BananaCAD shuts down by itself a few seconds after you close its last window.
+- **First run warning:** the exe isn't code-signed, so the first time Windows may show *"Windows protected your PC"*. Click **More info → Run anyway**.
+
+To rebuild it, install Go 1.24 or later and go-winres, then run `launcher/build.sh`. It writes `dist/BananaCAD.exe` and a Linux build.
+
 ## Working like AutoCAD
 
 - **Command line:** type a command or alias (`L`, `C`, `REC`, `TR`, `O`…) and press **Enter** or **Space**. As you type, autocomplete lists matching commands. **Enter**, **Space** or a right-click on an empty command line repeats the last command, and **Esc** cancels.

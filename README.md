@@ -7,4 +7,4 @@ Project with the [Nano Banana Pro JSON prompting skill](https://github.com/jawhn
 
 ## BananaCAD (2D drafting)
 
-[`cad/`](cad/) contains **BananaCAD**, an AutoCAD-style 2D drafting app that runs in the browser. It has a typed command line with aliases, prompts and options, object snaps, grips, layers, dimensions, and leader notes and comments. It opens, edits and saves AutoCAD DWG files (2000–2018 formats), reads and writes DXF, and plots to PDF. Open `cad/index.html` to use it, and see [`cad/README.md`](cad/README.md) for the details.
+[`cad/`](cad/) contains **BananaCAD**, an AutoCAD-style 2D drafting app that runs in the browser. It has a typed command line with aliases, prompts and options, object snaps, grips, layers, dimensions, and leader notes and comments. It opens, edits and saves AutoCAD DWG files (2000–2018 formats), reads and writes DXF, and plots to PDF. On Windows, run the portable [`dist/BananaCAD.exe`](dist/BananaCAD.exe), which needs no install and opens in its own window. Or open `cad/index.html` in a browser. See [`cad/README.md`](cad/README.md) for the details.
