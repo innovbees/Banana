@@ -80,7 +80,7 @@ r(0, 1.9, 0.04, 3.7, '#c77d5a', '#b08d57', 1.2); t(X(0.14), Y(2.8), 'ARTWORK 180
 r(3.62, 1.325, 4.0, 2.075, WAL_L, WAL, 1.5); r(3.85, 1.325, 4.0, 2.075, 'none', WAL, 1.2, dash='4 3'); r(3.832, 1.4, 3.85, 2.0, MIR, '#b08d57', 1.2)
 b.append(f'<path d="M{X(3.85)} {Y(2.0)} A{0.6*S} {0.6*S} 0 0 1 {X(3.85-0.6)} {Y(1.4)}" fill="none" stroke="{WAL}" stroke-width="0.8" stroke-dasharray="3 3"/>')
 for zc in (1.3625, 2.0375): r(3.825, zc - 0.012, 3.85, zc + 0.012, '#fff1b8', LIGHT, 1.2)
-t(X(3.74), Y(1.7), 'DRAWER + MIRROR CABINET', 9, WAL, 'middle', '700', rot=-90)
+t(X(3.74), Y(1.7), 'DRAWER + MIRROR', 9, WAL, 'middle', '700', rot=-90)
 # lounge corner: north-west
 b.append(f'<g transform="translate({X(0.5):.1f} {Y(0.55):.1f}) rotate(-40)"><rect x="{-0.36*S:.1f}" y="{-0.36*S:.1f}" width="{0.72*S:.1f}" height="{0.72*S:.1f}" rx="16" fill="#cbbfb0" stroke="#7d6e60" stroke-width="1.5"/><rect x="{-0.36*S:.1f}" y="{-0.36*S:.1f}" width="{0.72*S:.1f}" height="{0.16*S:.1f}" rx="8" fill="#a8998a"/></g>')
 t(X(0.5), Y(0.55) + 4, 'CHAIR', 10, INK, 'middle', '700')
