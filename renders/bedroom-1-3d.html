@@ -262,6 +262,10 @@ const SLIDE=P.get('slide')||'barn';
 const cubeRT=new THREE.WebGLCubeRenderTarget(512); const cubeCam=new THREE.CubeCamera(0.05,20,cubeRT);
 const mirrorM=mat('#c9d2d4',0.03,1.0,{envMap:cubeRT.texture});
 const mirror=box(3.95,3.96,0.32,2.22,1.25,2.15,mirrorM,false,false);
+// mirror lights: slim opal LED bars down both sides of the mirror, set into the walnut backing panel (2700K, on their own switch)
+const EVE0=P.get('time')==='evening', ledM=mat('#fffaf0',0.3,0,{emissive:'#ffe2b8',emissiveIntensity:EVE0?2.5:0.35});
+for(const zc of [1.2125,2.1875]){ box(3.955,3.972,0.6,2.1,zc-0.0095,zc+0.0095,ledM,false,false); }
+if(EVE0){ for(const zc of [1.22,2.18]) for(let y=0.8;y<2.1;y+=0.4){ const L=new THREE.PointLight('#ffd9a8',0.28,1.6,1.8); L.position.set(3.88,y,zc); scene.add(L); } }
 
 // ---------- Lighting: morning sun through south window ----------
 scene.add(new THREE.HemisphereLight('#fff8ee','#a08a70',0.55));
@@ -302,6 +306,7 @@ else if(VIEW==='bed'){ cam.position.set(3.45,1.6,1.0); cam.fov=68; cam.updatePro
 else if(VIEW==='passage'){ cam.position.set(3.5,1.6,1.55); cam.fov=66; cam.updateProjectionMatrix(); cam.lookAt(5.4,1.15,2.95); }
 else if(VIEW==='overview'){ ceilingM.visible=false; scene.traverse(o=>{ if(o.isMesh && o.position.y>CH-0.1 && o.geometry && o.geometry.type==='ExtrudeGeometry') o.visible=false; }); cam.position.set(7.2,6.8,-1.6); cam.fov=50; cam.updateProjectionMatrix(); cam.lookAt(2.7,0,2.7); }
 else if(VIEW==='approach'){ cam.position.set(1.4,1.6,0.45); cam.fov=70; cam.updateProjectionMatrix(); cam.lookAt(3.9,1.2,1.8); }
+else if(VIEW==='mirror'){ cam.position.set(1.5,1.6,1.3); cam.fov=62; cam.updateProjectionMatrix(); cam.lookAt(4.0,1.2,1.85); }
 else if(VIEW==='robe'){ cam.position.set(0.75,1.55,1.25); cam.fov=66; cam.updateProjectionMatrix(); cam.lookAt(4.0,1.15,3.05); }
 else if(VIEW==='dressing'){ cam.position.set(1.7,1.65,4.0); cam.fov=70; cam.updateProjectionMatrix(); cam.lookAt(2.3,1.05,0.0); }
 renderer.render(scene,cam);

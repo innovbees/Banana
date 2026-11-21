@@ -77,6 +77,8 @@ for x0, x1 in NS:
 r(0, 1.9, 0.04, 3.7, '#c77d5a', '#b08d57', 1.2); t(X(0.14), Y(2.8), 'ARTWORK 1800 × 900 (centre 1450 AFF)', 10.5, '#8a4f33', 'middle', '700', rot=-90)
 # mirror + floor drawer: east wall between door and robe walkway (faces west)
 r(3.65, 1.2, 4.0, 2.2, WAL_L, WAL, 1.5); r(3.97, 1.25, 4.0, 2.15, MIR, '#b08d57', 1.2)
+for zc in (1.2125, 2.1875): r(3.93, zc - 0.012, 3.975, zc + 0.012, '#fff1b8', LIGHT, 1.2)
+t(X(3.95), Y(2.29), 'ML: LED bars both sides', 9, '#7a5a00', 'end', '700')
 t(X(3.8), Y(1.7), 'MIRROR + DRAWER', 9.5, WAL, 'middle', '700', rot=-90)
 # lounge corner: north-west
 b.append(f'<g transform="translate({X(0.5):.1f} {Y(0.55):.1f}) rotate(-40)"><rect x="{-0.36*S:.1f}" y="{-0.36*S:.1f}" width="{0.72*S:.1f}" height="{0.72*S:.1f}" rx="16" fill="#cbbfb0" stroke="#7d6e60" stroke-width="1.5"/><rect x="{-0.36*S:.1f}" y="{-0.36*S:.1f}" width="{0.72*S:.1f}" height="{0.16*S:.1f}" rx="8" fill="#a8998a"/></g>')
@@ -118,6 +120,7 @@ notes = [('LAYOUT B - HEAD TO THE WINDOW', GREEN, '700'),
          ('Artwork on west wall, centre 2.8 m from north wall', INK, '400'),
          ('Lights on a symmetric grid: 700 off west and east walls', INK, '400'),
          ('A1-A2 light the art, B1-B2 the barn door', INK, '400'),
+         ('ML: LED bars down both sides of the mirror', INK, '400'),
          ('Head to south = Vastu-preferred', GREEN, '400')]
 b.append(f'<rect x="{nx-12}" y="{ny-22}" width="330" height="{len(notes)*20+18}" rx="8" fill="#ffffff" stroke="#bfb6aa"/>')
 for i, (n, c, w) in enumerate(notes):

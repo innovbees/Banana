@@ -67,7 +67,7 @@ for x, z, tx, tz in [(700, 2400, 0, 2400), (700, 3200, 0, 3200), (3300, 1200, 37
     msp.add_line((x, RL - z), (tx, RL - tz), dxfattribs={'layer': 'E-LITE-AIM'})
 for x0 in (BX0 - 20 - 450, BX1 + 20): text(x0 + 225, HB + 470, 'PENDANT', 35, 'E-LITE')
 msp.add_circle((120, RL - 120), 60, dxfattribs={'layer': 'E-LITE'}); text(220, RL - 120, 'FLOOR LAMP (PLUG-IN)', 35, 'E-LITE', al=TA.MIDDLE_LEFT)
-sx, sy = RW + 1700, RL - 150
+sx, sy = RW + 1700, RL + 0
 rows = [('TAG', 'FITTING', 'X FROM W', 'FROM N', 'CIRCUIT / SWITCH'),
         ('D1', 'Downlight 90 cut-out 8-10W (chair/table)', '700', '1200', 'C1 dimmer at entry'),
         ('D2', 'Downlight 90 cut-out 8-10W (centre)', '2000', '1200', 'C1 dimmer at entry'),
@@ -76,6 +76,7 @@ rows = [('TAG', 'FITTING', 'X FROM W', 'FROM N', 'CIRCUIT / SWITCH'),
         ('A2', 'Gimbal 8W 24-36 deg, aim art 1450 AFF', '700', '3200', 'C2 feature dimmer'),
         ('B1', 'Gimbal 8W 24-36 deg, wash barn door', '3300', '2400', 'C2 feature dimmer'),
         ('B2', 'Gimbal 8W 24-36 deg, wash barn door', '3300', '3200', 'C2 feature dimmer'),
+        ('ML', '2 opal LED bars 1500 long, sides of mirror', '3960', '1210/2190', 'C5 switch at mirror'),
         ('PEN', '2 bedside pendants, 600-700 above NS', '725/3275', '4150', 'C3 2-way entry + bed'),
         ('W1', 'Downlight in robe walkway', '4650', '2850', 'C4 sensor or switch'),
         ('ALL', 'Symmetric about bed axis X=2000; 2700K CRI90+ dim', '', '', 'Licensed electrician')]
@@ -87,4 +88,6 @@ for i, row in enumerate(rows):
     y = sy - rh * (i + 0.5)
     if i: msp.add_line((sx, sy - rh * i), (sx + 4200, sy - rh * i), dxfattribs={'layer': 'E-LITE-SCHED'})
     for c, v in zip(cols, row): text(sx + c + 40, y, v, 50 if i else 55, 'E-LITE-SCHED', al=TA.MIDDLE_LEFT)
+for zc in (1212, 2188): rect(3930, RL - zc - 12, 3975, RL - zc + 12, 'E-LITE')
+text(3900, RL - 2290, 'ML', 40, 'E-LITE', al=TA.MIDDLE_RIGHT)
 doc.set_modelspace_vport(height=8000, center=(4600, 2600)); doc.saveas(OUT); print('saved', OUT)
