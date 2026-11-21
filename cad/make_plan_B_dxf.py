@@ -40,7 +40,7 @@ text(3800, RL - 1700, 'MIRROR 900x1900 ON FLOOR DRAWER 1000x350', 45, 'I-JOIN-MI
 cx, cy, a = 500, RL - 550, math.radians(40)
 msp.add_lwpolyline([(cx + x * math.cos(a) - y * math.sin(a), cy + x * math.sin(a) + y * math.cos(a)) for x, y in [(-360, -360), (360, -360), (360, 360), (-360, 360)]], close=True, dxfattribs={'layer': 'I-FURN'})
 text(cx, cy, 'CHAIR', 45, 'I-FURN'); msp.add_circle((420, RL - 1300), 200, dxfattribs={'layer': 'I-FURN'}); text(420, RL - 1300, 'TABLE', 40, 'I-FURN')
-for x, z, lab in [(600, 1000, 'D1'), (2000, 1000, 'D2'), (3300, 1700, 'M1'), (3520, 3300, 'D3'), (3620, 550, 'P1'), (700, 2400, 'A1'), (700, 3200, 'A2')]:
+for x, z, lab in [(700, 1200, 'D1'), (2000, 1200, 'D2'), (3300, 1200, 'M1'), (700, 2400, 'A1'), (700, 3200, 'A2'), (3300, 2400, 'B1'), (3300, 3200, 'B2')]:
     y = RL - z; msp.add_circle((x, y), 45, dxfattribs={'layer': 'E-LITE'}); text(x + 70, y, lab, 45, 'E-LITE', al=TA.MIDDLE_LEFT)
 # dimensions
 dh(0, RW, RL + T, RL + 650); dv(0, RL, -T, -650)
@@ -63,22 +63,22 @@ text(RW + 160, RL - 3550, 'WALNUT BARN DOOR 1000 x 2200 x 40', 50, 'I-DOOR-BARN'
 text(RW + 160, RL - 3650, 'BLACK TRACK 2100 CEILING-MOUNTED, SLIDES SOUTH', 40, 'I-DOOR-BARN', al=TA.MIDDLE_LEFT)
 # lighting: extra fittings, gimbal aim lines, schedule (all 2700K, CRI 90+, dimmable)
 msp.add_circle((4650, RL - 2850), 45, dxfattribs={'layer': 'E-LITE'}); text(4720, RL - 2950, 'W1', 45, 'E-LITE', al=TA.MIDDLE_LEFT)
-for x, z, tx, tz in [(700, 2400, 0, 2400), (700, 3200, 0, 3200), (3300, 1700, 4000, 1700)]:
+for x, z, tx, tz in [(700, 2400, 0, 2400), (700, 3200, 0, 3200), (3300, 1200, 3700, 1750), (3300, 2400, 3865, 2450), (3300, 3200, 3865, 3150)]:
     msp.add_line((x, RL - z), (tx, RL - tz), dxfattribs={'layer': 'E-LITE-AIM'})
 for x0 in (BX0 - 20 - 450, BX1 + 20): text(x0 + 225, HB + 470, 'PENDANT', 35, 'E-LITE')
 msp.add_circle((120, RL - 120), 60, dxfattribs={'layer': 'E-LITE'}); text(220, RL - 120, 'FLOOR LAMP (PLUG-IN)', 35, 'E-LITE', al=TA.MIDDLE_LEFT)
 sx, sy = RW + 1700, RL - 150
 rows = [('TAG', 'FITTING', 'X FROM W', 'FROM N', 'CIRCUIT / SWITCH'),
-        ('D1', 'Downlight 90 cut-out 8-10W', '600', '1000', 'C1 dimmer at entry'),
-        ('D2', 'Downlight 90 cut-out 8-10W', '2000', '1000', 'C1 dimmer at entry'),
-        ('D3', 'Downlight 90 cut-out 8-10W', '3520', '3300', 'C1 dimmer at entry'),
-        ('P1', 'Downlight 90 cut-out 8-10W', '3620', '550', 'C1 dimmer at entry'),
-        ('A1', 'Gimbal 8W 24-36 deg, aim art 1450 AFF', '700', '2400', 'C2 dimmer at entry'),
-        ('A2', 'Gimbal 8W 24-36 deg, aim art 1450 AFF', '700', '3200', 'C2 dimmer at entry'),
-        ('M1', 'Gimbal 8W, aim mirror 1200 AFF', '3300', '1700', 'C3 switch'),
-        ('PEN', '2 bedside pendants, 600-700 above NS', 'over NS', '', 'C4 2-way entry + bed'),
-        ('W1', 'Downlight in robe walkway', '4650', '2850', 'C5 sensor or switch'),
-        ('ALL', '2700K, CRI 90+, trailing-edge dimmable', '', '', 'Licensed electrician')]
+        ('D1', 'Downlight 90 cut-out 8-10W (chair/table)', '700', '1200', 'C1 dimmer at entry'),
+        ('D2', 'Downlight 90 cut-out 8-10W (centre)', '2000', '1200', 'C1 dimmer at entry'),
+        ('M1', 'Gimbal 8W, aim mirror/person 1300 AFF', '3300', '1200', 'C1 dimmer at entry'),
+        ('A1', 'Gimbal 8W 24-36 deg, aim art 1450 AFF', '700', '2400', 'C2 feature dimmer'),
+        ('A2', 'Gimbal 8W 24-36 deg, aim art 1450 AFF', '700', '3200', 'C2 feature dimmer'),
+        ('B1', 'Gimbal 8W 24-36 deg, wash barn door', '3300', '2400', 'C2 feature dimmer'),
+        ('B2', 'Gimbal 8W 24-36 deg, wash barn door', '3300', '3200', 'C2 feature dimmer'),
+        ('PEN', '2 bedside pendants, 600-700 above NS', '725/3275', '4150', 'C3 2-way entry + bed'),
+        ('W1', 'Downlight in robe walkway', '4650', '2850', 'C4 sensor or switch'),
+        ('ALL', 'Symmetric about bed axis X=2000; 2700K CRI90+ dim', '', '', 'Licensed electrician')]
 cols = [0, 330, 2050, 2550, 3000]; rh = 150
 doc.layers.add('E-LITE-SCHED', color=2)
 rect(sx, sy - rh * len(rows), sx + 4200, sy, 'E-LITE-SCHED')

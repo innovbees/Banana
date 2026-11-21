@@ -84,7 +84,7 @@ t(X(0.5), Y(0.55) + 4, 'CHAIR', 10, INK, 'middle', '700')
 circ(0.42, 1.3, 0.2 * S, STONE, '#a89886', 1.2); t(X(0.42), Y(1.3) + 4, 'table', 9.5, QUIET, 'middle')
 circ(0.12, 0.12, 7, '#b08d57', '#7a6234', 1)
 # ceiling lights (none over the bed)
-for (x, z, lab) in [(0.6, 1.0, 'D1'), (2.0, 1.0, 'D2'), (3.3, 1.7, 'M1'), (3.52, 3.3, 'D3'), (3.62, 0.55, 'P1'), (0.7, 2.4, 'A1'), (0.7, 3.2, 'A2')]:
+for (x, z, lab) in [(0.7, 1.2, 'D1'), (2.0, 1.2, 'D2'), (3.3, 1.2, 'M1'), (0.7, 2.4, 'A1'), (0.7, 3.2, 'A2'), (3.3, 2.4, 'B1'), (3.3, 3.2, 'B2')]:
     circ(x, z, 5, '#fff6d6', LIGHT, 1.4); t(X(x) + 8, Y(z) + 4, lab, 9.5, '#7a5a00', 'start', '700')
 
 # dimensions
@@ -116,7 +116,8 @@ notes = [('LAYOUT B - HEAD TO THE WINDOW', GREEN, '700'),
          ('Mirror + drawer moved to east wall', INK, '400'),
          ('Lounge chair moved to NW corner', INK, '400'),
          ('Artwork on west wall, centre 2.8 m from north wall', INK, '400'),
-         ('A1-A2 art lights 700 off the west wall', INK, '400'),
+         ('Lights on a symmetric grid: 700 off west and east walls', INK, '400'),
+         ('A1-A2 light the art, B1-B2 the barn door', INK, '400'),
          ('Head to south = Vastu-preferred', GREEN, '400')]
 b.append(f'<rect x="{nx-12}" y="{ny-22}" width="330" height="{len(notes)*20+18}" rx="8" fill="#ffffff" stroke="#bfb6aa"/>')
 for i, (n, c, w) in enumerate(notes):
