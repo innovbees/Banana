@@ -1,7 +1,7 @@
 # Gemini (Nano Banana Pro) render inputs - Bedroom 1, layout B
 
 Layout B: Nick Scali Elyse king bed with its head to the south window (400 mm gap),
-artwork on the west wall, tall mirror + floor drawer on the east wall, lounge chair
+artwork on the west wall, free-standing floor mirror + half-round wall cupboard on the east wall, lounge chair
 in the north-west corner, a walnut barn door on a black ceiling track closing the
 robe walkway, light grey carpet, flat 2.4 m ceiling with cove cornice.
 
@@ -29,6 +29,6 @@ tells Gemini only to make it photorealistic.
 - "The artwork is on the west wall beside the bed, not above the bed."
 - "Remove the rug - the floor is wall-to-wall light grey carpet."
 - "Keep the ceiling flat with a small cove cornice and small flush downlights - no chandelier, no light over the bed."
-- "The mirror is tall (0.9 x 1.9 m) and stands on a low floor-level drawer on the east wall."
+- "On the east wall: a free-standing floor mirror (0.65 x 1.8 m) leaning on the wall, and to its right a small half-round walnut cupboard fixed to the wall, floating 0.3 m above the carpet. No drawer unit, no built-in mirror."
 - "There is no TV anywhere in the room."
 - "The robe walkway on the east wall is closed by ONE walnut barn door (1.0 x 2.2 m) hanging from a matte-black barn track fixed to the ceiling; it slides toward the window. Keep it a solid timber door, not glass."
