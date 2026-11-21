@@ -76,11 +76,11 @@ for x0, x1 in NS:
 # artwork on the west wall, between the reading corner and the west nightstand
 r(0, 1.9, 0.04, 3.7, '#c77d5a', '#b08d57', 1.2); t(X(0.14), Y(2.8), 'ARTWORK 1800 × 900 (centre 1450 AFF)', 10.5, '#8a4f33', 'middle', '700', rot=-90)
 # mirror + floor drawer: east wall between door and robe walkway (faces west)
-# free-standing mirror 650 x 1800 (leans on wall) + wall-hung half-round walnut cupboard 450 dia
-r(3.80, 1.125, 3.86, 1.775, MIR, '#b08d57', 1.5)
-b.append(f'<path d="M{X(4.0)} {Y(1.875)} A{0.225*S} {0.225*S} 0 0 0 {X(4.0)} {Y(2.325)} Z" fill="{WAL_L}" stroke="{WAL}" stroke-width="1.5"/>')
-t(X(3.74), Y(1.45), 'FLOOR MIRROR 650 x 1800', 9, WAL, 'middle', '700', rot=-90)
-t(X(3.69), Y(2.12), 'HALF-ROUND 450', 9, WAL, 'middle', '700', rot=-90)
+# floor drawer 1000 x 380 + wall-hung arched mirror cabinet 1000 x 150 above (mirror door hinged on north edge)
+r(3.62, 1.2, 4.0, 2.2, WAL_L, WAL, 1.5); r(3.85, 1.2, 4.0, 2.2, 'none', WAL, 1.2, dash='4 3'); r(3.832, 1.29, 3.85, 2.11, MIR, '#b08d57', 1.2)
+b.append(f'<path d="M{X(3.85)} {Y(2.11)} A{0.82*S} {0.82*S} 0 0 1 {X(3.85-0.82)} {Y(1.29)}" fill="none" stroke="{WAL}" stroke-width="0.8" stroke-dasharray="3 3"/>')
+for zc in (1.245, 2.155): r(3.825, zc - 0.012, 3.85, zc + 0.012, '#fff1b8', LIGHT, 1.2)
+t(X(3.74), Y(1.7), 'DRAWER + MIRROR CABINET', 9, WAL, 'middle', '700', rot=-90)
 # lounge corner: north-west
 b.append(f'<g transform="translate({X(0.5):.1f} {Y(0.55):.1f}) rotate(-40)"><rect x="{-0.36*S:.1f}" y="{-0.36*S:.1f}" width="{0.72*S:.1f}" height="{0.72*S:.1f}" rx="16" fill="#cbbfb0" stroke="#7d6e60" stroke-width="1.5"/><rect x="{-0.36*S:.1f}" y="{-0.36*S:.1f}" width="{0.72*S:.1f}" height="{0.16*S:.1f}" rx="8" fill="#a8998a"/></g>')
 t(X(0.5), Y(0.55) + 4, 'CHAIR', 10, INK, 'middle', '700')
@@ -99,7 +99,7 @@ dimv(1.2, FOOT, HB_Z1, '2430', -6)
 dimv(1.2, HB_Z1, RL, f'{round(GAP*1000)} gap', 14, ACC, 11)
 dimh(NS[1][0], NS[1][1], NS_Z0 - 0.08, '450', -5, QUIET, 10)
 dimh(0.85, 3.15, 5.08, 'window 2300 (centred, sill 560)', 14, BLUE, 10.5)
-dimv(3.55, 1.125, 1.775, '650', -6, QUIET, 10)
+dimv(3.55, 1.2, 2.2, '1000', -6, QUIET, 10)
 dimv(0.3, 1.9, 3.7, 'art 1800', 14, '#8a4f33', 10)
 
 # legend + notes
@@ -116,12 +116,12 @@ notes = [('LAYOUT B - HEAD TO THE WINDOW', GREEN, '700'),
          (f'Walkways beside bed: {round(BX0*1000)} each side', INK, '400'),
          (f'Foot of bed to north wall: {round(FOOT*1000)}', INK, '400'),
          ('Walnut headboard wall removed', INK, '400'),
-         ('East wall: floor mirror + half-round cupboard', INK, '400'),
+         ('East wall: floor drawer + arched mirror cabinet', INK, '400'),
          ('Lounge chair moved to NW corner', INK, '400'),
          ('Artwork on west wall, centre 2.8 m from north wall', INK, '400'),
          ('Lights on a symmetric grid: 700 off west and east walls', INK, '400'),
          ('A1-A2 light the art, B1-B2 the barn door', INK, '400'),
-         ('ML: LED floor mirror (plug-in)', INK, '400'),
+         ('ML: LED bars either side of the mirror', INK, '400'),
          ('Head to south = Vastu-preferred', GREEN, '400')]
 b.append(f'<rect x="{nx-12}" y="{ny-22}" width="330" height="{len(notes)*20+18}" rx="8" fill="#ffffff" stroke="#bfb6aa"/>')
 for i, (n, c, w) in enumerate(notes):

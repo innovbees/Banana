@@ -11,6 +11,7 @@ for n, c, lt in [('A-WALL', 7, 'Continuous'), ('A-GLAZ', 5, 'Continuous'), ('A-D
                  ('I-CURTAIN', 9, 'DOT'), ('E-LITE', 2, 'Continuous'), ('A-DIMS', 3, 'Continuous'), ('A-TEXT', 7, 'Continuous')]:
     doc.layers.add(n, color=c, linetype=lt)
 ds = doc.dimstyles.new('MM25'); ds.dxf.dimtxt = 70; ds.dxf.dimasz = 50; ds.dxf.dimexe = 40; ds.dxf.dimexo = 30; ds.dxf.dimdec = 0; ds.dxf.dimtad = 1; ds.dxf.dimgap = 20; ds.dxf.dimtsz = 40
+doc.layers.add('A-CLEAR', color=3, linetype='DASHED')
 RW, RL, T = 4000, 4900, 110
 def rect(x0, y0, x1, y1, layer): msp.add_lwpolyline([(x0, y0), (x1, y0), (x1, y1), (x0, y1)], close=True, dxfattribs={'layer': layer})
 def text(x, y, s, h=70, layer='A-TEXT', rot=0, al=TA.MIDDLE_CENTER): msp.add_text(s, height=h, rotation=rot, dxfattribs={'layer': layer}).set_placement((x, y), align=al)
@@ -35,10 +36,10 @@ for x0 in (BX0 - 20 - 450, BX1 + 20):
 msp.add_line((700, 80), (3300, 80), dxfattribs={'layer': 'I-CURTAIN'}); text(2000, 170, 'CURTAIN TRACK FIXED TO CEILING (OPERABLE BEHIND BED)', 40, 'I-CURTAIN')
 # artwork north wall, mirror unit east wall, lounge NW
 rect(0, RL - 3700, 40, RL - 1900, 'I-ART'); text(130, RL - 2800, 'ARTWORK 1800 x 900, CENTRE 1450 AFF', 50, 'I-ART', rot=90)
-rect(3800, RL - 1775, 3860, RL - 1125, 'I-JOIN-MIRROR')
-msp.add_arc(center=(4000, RL - 2100), radius=225, start_angle=90, end_angle=270, dxfattribs={'layer': 'I-JOIN-MIRROR'}); msp.add_line((4000, RL - 1875), (4000, RL - 2325), dxfattribs={'layer': 'I-JOIN-MIRROR'})
-text(3730, RL - 1450, 'FREE-STANDING LED MIRROR 650x1800', 40, 'I-JOIN-MIRROR', rot=90)
-text(3700, RL - 2100, 'HALF-ROUND CUPBOARD 450 DIA x 225 x 600 H, BOTTOM 300 AFF', 30, 'I-JOIN-MIRROR', rot=90)
+rect(3620, RL - 2200, 4000, RL - 1200, 'I-JOIN-MIRROR'); rect(3850, RL - 2200, 4000, RL - 1200, 'I-JOIN-MIRROR'); rect(3832, RL - 2110, 3850, RL - 1290, 'I-JOIN-MIRROR')
+msp.add_arc(center=(3850, RL - 1290), radius=820, start_angle=180, end_angle=270, dxfattribs={'layer': 'A-CLEAR'})
+for zc in (1245, 2155): rect(3825, RL - zc - 12, 3850, RL - zc + 12, 'E-LITE')
+text(3740, RL - 1700, 'FLOOR DRAWER 1000x380x300 + ARCHED MIRROR CABINET 1000x1700x150 ABOVE', 30, 'I-JOIN-MIRROR', rot=90)
 cx, cy, a = 500, RL - 550, math.radians(40)
 msp.add_lwpolyline([(cx + x * math.cos(a) - y * math.sin(a), cy + x * math.sin(a) + y * math.cos(a)) for x, y in [(-360, -360), (360, -360), (360, 360), (-360, 360)]], close=True, dxfattribs={'layer': 'I-FURN'})
 text(cx, cy, 'CHAIR', 45, 'I-FURN'); msp.add_circle((420, RL - 1300), 200, dxfattribs={'layer': 'I-FURN'}); text(420, RL - 1300, 'TABLE', 40, 'I-FURN')
@@ -49,7 +50,7 @@ dh(0, RW, RL + T, RL + 650); dv(0, RL, -T, -650)
 yd = HB + 900
 dh(0, BX0, yd, yd + 120); dh(BX0, BX1, yd + 150, yd + 270); dh(BX1, RW, yd, yd + 120)
 dv(0, HB, 1200, 1200); dv(HB, FOOT, 1200, 1200); dv(FOOT, RL, 1200, 1200)
-dh(850, 3150, -T, -520); dv(RL - 1775, RL - 1125, 3550, 3550)
+dh(850, 3150, -T, -520); dv(RL - 2200, RL - 1200, 3550, 3550)
 tb_x = RW + 1700; rect(tb_x, -T, tb_x + 3200, -T + 1500, 'A-TEXT')
 for i, s in enumerate(['BEDROOM 1 - LAYOUT B: HEAD TO WINDOW', f'Elyse king 2060 x 2430, headboard 930 H, {int(GAP)} gap to window wall',
                        'Room 4000 x 4900, ceiling 2400, carpet', 'Units: millimetres   Scale 1:25 at A3 (plot)', 'Origin 0,0 = inner SW corner; +X east, +Y north',
@@ -65,7 +66,7 @@ text(RW + 160, RL - 3550, 'WALNUT BARN DOOR 1000 x 2200 x 40', 50, 'I-DOOR-BARN'
 text(RW + 160, RL - 3650, 'BLACK TRACK 2100 CEILING-MOUNTED, SLIDES SOUTH', 40, 'I-DOOR-BARN', al=TA.MIDDLE_LEFT)
 # lighting: extra fittings, gimbal aim lines, schedule (all 2700K, CRI 90+, dimmable)
 msp.add_circle((4650, RL - 2850), 45, dxfattribs={'layer': 'E-LITE'}); text(4720, RL - 2950, 'W1', 45, 'E-LITE', al=TA.MIDDLE_LEFT)
-for x, z, tx, tz in [(700, 2400, 0, 2400), (700, 3200, 0, 3200), (3300, 1200, 3750, 1450), (3300, 2400, 3865, 2450), (3300, 3200, 3865, 3150)]:
+for x, z, tx, tz in [(700, 2400, 0, 2400), (700, 3200, 0, 3200), (3300, 1200, 3750, 1700), (3300, 2400, 3865, 2450), (3300, 3200, 3865, 3150)]:
     msp.add_line((x, RL - z), (tx, RL - tz), dxfattribs={'layer': 'E-LITE-AIM'})
 for x0 in (BX0 - 20 - 450, BX1 + 20): text(x0 + 225, HB + 470, 'PENDANT', 35, 'E-LITE')
 msp.add_circle((120, RL - 120), 60, dxfattribs={'layer': 'E-LITE'}); text(220, RL - 120, 'FLOOR LAMP (PLUG-IN)', 35, 'E-LITE', al=TA.MIDDLE_LEFT)
@@ -78,7 +79,7 @@ rows = [('TAG', 'FITTING', 'X FROM W', 'FROM N', 'CIRCUIT / SWITCH'),
         ('A2', 'Gimbal 8W 24-36 deg, aim art 1450 AFF', '700', '3200', 'C2 feature dimmer'),
         ('B1', 'Gimbal 8W 24-36 deg, wash barn door', '3300', '2400', 'C2 feature dimmer'),
         ('B2', 'Gimbal 8W 24-36 deg, wash barn door', '3300', '3200', 'C2 feature dimmer'),
-        ('ML', 'LED floor mirror (built-in side bands)', '3830', '1450', 'Power point behind mirror'),
+        ('ML', '2 opal LED bars 1350 long, either side of mirror', '3830', '1245/2155', 'C5 switch at mirror'),
         ('PEN', '2 bedside pendants, 600-700 above NS', '725/3275', '4150', 'C3 2-way entry + bed'),
         ('W1', 'Downlight in robe walkway', '4650', '2850', 'C4 sensor or switch'),
         ('ALL', 'Symmetric about bed axis X=2000; 2700K CRI90+ dim', '', '', 'Licensed electrician')]
