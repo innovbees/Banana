@@ -76,10 +76,10 @@ for x0, x1 in NS:
 # artwork on the west wall, between the reading corner and the west nightstand
 r(0, 1.9, 0.04, 3.7, '#c77d5a', '#b08d57', 1.2); t(X(0.14), Y(2.8), 'ARTWORK 1800 × 900 (centre 1450 AFF)', 10.5, '#8a4f33', 'middle', '700', rot=-90)
 # mirror + floor drawer: east wall between door and robe walkway (faces west)
-# floor drawer 1000 x 380 + arched mirror cabinet 1000 x 1950 x 150 resting on its top (mirror door hinged on north edge)
-r(3.62, 1.2, 4.0, 2.2, WAL_L, WAL, 1.5); r(3.85, 1.2, 4.0, 2.2, 'none', WAL, 1.2, dash='4 3'); r(3.832, 1.29, 3.85, 2.11, MIR, '#b08d57', 1.2)
-b.append(f'<path d="M{X(3.85)} {Y(2.11)} A{0.82*S} {0.82*S} 0 0 1 {X(3.85-0.82)} {Y(1.29)}" fill="none" stroke="{WAL}" stroke-width="0.8" stroke-dasharray="3 3"/>')
-for zc in (1.245, 2.155): r(3.825, zc - 0.012, 3.85, zc + 0.012, '#fff1b8', LIGHT, 1.2)
+# floor drawer 750 x 380 + arched mirror cabinet 1000 x 1950 x 150 resting on its top (mirror door hinged on north edge)
+r(3.62, 1.325, 4.0, 2.075, WAL_L, WAL, 1.5); r(3.85, 1.325, 4.0, 2.075, 'none', WAL, 1.2, dash='4 3'); r(3.832, 1.4, 3.85, 2.0, MIR, '#b08d57', 1.2)
+b.append(f'<path d="M{X(3.85)} {Y(2.0)} A{0.6*S} {0.6*S} 0 0 1 {X(3.85-0.6)} {Y(1.4)}" fill="none" stroke="{WAL}" stroke-width="0.8" stroke-dasharray="3 3"/>')
+for zc in (1.3625, 2.0375): r(3.825, zc - 0.012, 3.85, zc + 0.012, '#fff1b8', LIGHT, 1.2)
 t(X(3.74), Y(1.7), 'DRAWER + MIRROR CABINET', 9, WAL, 'middle', '700', rot=-90)
 # lounge corner: north-west
 b.append(f'<g transform="translate({X(0.5):.1f} {Y(0.55):.1f}) rotate(-40)"><rect x="{-0.36*S:.1f}" y="{-0.36*S:.1f}" width="{0.72*S:.1f}" height="{0.72*S:.1f}" rx="16" fill="#cbbfb0" stroke="#7d6e60" stroke-width="1.5"/><rect x="{-0.36*S:.1f}" y="{-0.36*S:.1f}" width="{0.72*S:.1f}" height="{0.16*S:.1f}" rx="8" fill="#a8998a"/></g>')
@@ -99,7 +99,7 @@ dimv(1.2, FOOT, HB_Z1, '2430', -6)
 dimv(1.2, HB_Z1, RL, f'{round(GAP*1000)} gap', 14, ACC, 11)
 dimh(NS[1][0], NS[1][1], NS_Z0 - 0.08, '450', -5, QUIET, 10)
 dimh(0.85, 3.15, 5.08, 'window 2300 (centred, sill 560)', 14, BLUE, 10.5)
-dimv(3.55, 1.2, 2.2, '1000', -6, QUIET, 10)
+dimv(3.55, 1.325, 2.075, '750', -6, QUIET, 10)
 dimv(0.3, 1.9, 3.7, 'art 1800', 14, '#8a4f33', 10)
 
 # legend + notes
