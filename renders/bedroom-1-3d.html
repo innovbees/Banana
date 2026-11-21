@@ -306,6 +306,10 @@ if(DRESS==='slide'){
   add(new THREE.ExtrudeGeometry(ring(W,H,0.03),{depth:0.03,bevelEnabled:false,curveSegments:48}),walnut,3.80,Y0,ZC,MPG);
   add(new THREE.ShapeGeometry(pill(W,H),48),walnut,3.799,Y0,ZC,MPG).rotation.y=Math.PI/2;
   mirror=add(new THREE.ShapeGeometry(pill(W-0.06,H-0.06,0,0.03),48),mirrorM,3.778,Y0,ZC,MPG); mirror.castShadow=false;
+  // LED strips (?mled=1): 10 mm opal micro-channel set into the front of the mirror rim, both straight sides
+  if(P.get('mled')==='1'){ const ev=P.get('time')==='evening', lm=mat('#fffaf0',0.3,0,{emissive:'#ffe2b8',emissiveIntensity:ev?2.5:0.2});
+    for(const dz of [-(R-0.015),R-0.015]){ const o=new THREE.Mesh(new THREE.BoxGeometry(0.004,H-2*R+0.1,0.01),lm); o.position.set(3.768,Y0+H/2,ZC+dz); MPG.add(o);
+      if(ev) for(let y=Y0+0.45;y<Y0+H-0.4;y+=0.4){ const L=new THREE.PointLight('#ffd9a8',0.25,1.5,1.8); L.position.set(3.72,y,ZC+dz+SH); scene.add(L); } } }
 }
 
 // ---------- Lighting: morning sun through south window ----------
