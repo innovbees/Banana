@@ -39,7 +39,7 @@ rect(0, RL - 3700, 40, RL - 1900, 'I-ART'); text(130, RL - 2800, 'ARTWORK 1800 x
 rect(3620, RL - 2200, 4000, RL - 1200, 'I-JOIN-MIRROR'); rect(3850, RL - 2200, 4000, RL - 1200, 'I-JOIN-MIRROR'); rect(3832, RL - 2110, 3850, RL - 1290, 'I-JOIN-MIRROR')
 msp.add_arc(center=(3850, RL - 1290), radius=820, start_angle=180, end_angle=270, dxfattribs={'layer': 'A-CLEAR'})
 for zc in (1245, 2155): rect(3825, RL - zc - 12, 3850, RL - zc + 12, 'E-LITE')
-text(3740, RL - 1700, 'FLOOR DRAWER 1000x380x300 + ARCHED MIRROR CABINET 1000x1700x150 ABOVE', 30, 'I-JOIN-MIRROR', rot=90)
+text(3740, RL - 1700, 'FLOOR DRAWER 1000x380x300 + ARCHED MIRROR CABINET 1000x1950x150 RESTING ON IT', 30, 'I-JOIN-MIRROR', rot=90)
 cx, cy, a = 500, RL - 550, math.radians(40)
 msp.add_lwpolyline([(cx + x * math.cos(a) - y * math.sin(a), cy + x * math.sin(a) + y * math.cos(a)) for x, y in [(-360, -360), (360, -360), (360, 360), (-360, 360)]], close=True, dxfattribs={'layer': 'I-FURN'})
 text(cx, cy, 'CHAIR', 45, 'I-FURN'); msp.add_circle((420, RL - 1300), 200, dxfattribs={'layer': 'I-FURN'}); text(420, RL - 1300, 'TABLE', 40, 'I-FURN')
@@ -79,7 +79,7 @@ rows = [('TAG', 'FITTING', 'X FROM W', 'FROM N', 'CIRCUIT / SWITCH'),
         ('A2', 'Gimbal 8W 24-36 deg, aim art 1450 AFF', '700', '3200', 'C2 feature dimmer'),
         ('B1', 'Gimbal 8W 24-36 deg, wash barn door', '3300', '2400', 'C2 feature dimmer'),
         ('B2', 'Gimbal 8W 24-36 deg, wash barn door', '3300', '3200', 'C2 feature dimmer'),
-        ('ML', '2 opal LED bars 1350 long, either side of mirror', '3830', '1245/2155', 'C5 switch at mirror'),
+        ('ML', '2 opal LED bars 1600 long, either side of mirror', '3830', '1245/2155', 'C5 switch at mirror'),
         ('PEN', '2 bedside pendants, 600-700 above NS', '725/3275', '4150', 'C3 2-way entry + bed'),
         ('W1', 'Downlight in robe walkway', '4650', '2850', 'C4 sensor or switch'),
         ('ALL', 'Symmetric about bed axis X=2000; 2700K CRI90+ dim', '', '', 'Licensed electrician')]

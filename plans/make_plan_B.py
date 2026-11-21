@@ -76,7 +76,7 @@ for x0, x1 in NS:
 # artwork on the west wall, between the reading corner and the west nightstand
 r(0, 1.9, 0.04, 3.7, '#c77d5a', '#b08d57', 1.2); t(X(0.14), Y(2.8), 'ARTWORK 1800 × 900 (centre 1450 AFF)', 10.5, '#8a4f33', 'middle', '700', rot=-90)
 # mirror + floor drawer: east wall between door and robe walkway (faces west)
-# floor drawer 1000 x 380 + wall-hung arched mirror cabinet 1000 x 150 above (mirror door hinged on north edge)
+# floor drawer 1000 x 380 + arched mirror cabinet 1000 x 1950 x 150 resting on its top (mirror door hinged on north edge)
 r(3.62, 1.2, 4.0, 2.2, WAL_L, WAL, 1.5); r(3.85, 1.2, 4.0, 2.2, 'none', WAL, 1.2, dash='4 3'); r(3.832, 1.29, 3.85, 2.11, MIR, '#b08d57', 1.2)
 b.append(f'<path d="M{X(3.85)} {Y(2.11)} A{0.82*S} {0.82*S} 0 0 1 {X(3.85-0.82)} {Y(1.29)}" fill="none" stroke="{WAL}" stroke-width="0.8" stroke-dasharray="3 3"/>')
 for zc in (1.245, 2.155): r(3.825, zc - 0.012, 3.85, zc + 0.012, '#fff1b8', LIGHT, 1.2)

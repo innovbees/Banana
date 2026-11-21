@@ -202,15 +202,14 @@ box(3.62,4.0,0.05,0.28,1.2,2.2,walnut);                                    // dr
 box(3.615,3.62,0.065,0.265,1.21,2.19,walnut);                              // drawer front
 box(3.6,3.615,0.2,0.215,1.58,1.82,brass);                                  // long pull
 box(3.61,4.0,0.28,0.3,1.2,2.2,travertine);                                 // stone top
-box(3.66,3.76,0.3,0.31,2.0,2.15,brass); cyl(3.71,0.36,1.33,0.04,0.032,0.1,mat('#efe9df',0.5)); cyl(3.71,0.46,1.33,0.003,0.003,0.12,mat('#6b7f58',0.8),6);
-const MOPEN=P.get('mopen')==='1', CB0=0.55, CB1=2.25, CZ=1.7, AW=0.82, AH=1.61, AB=0.595;   // cabinet 1000 W x 1700 H x 150 D, arched door 820 x 1610
+const MOPEN=P.get('mopen')==='1', CB0=0.30, CB1=2.25, CZ=1.7, AW=0.82, AH=1.88, AB=0.335;   // cabinet 1000 W x 1950 H x 150 D resting on the drawer top, arched door 820 x 1880
 function archShape(w,h,ox=0,oy=0){ const sh=new THREE.Shape(); sh.moveTo(ox-w/2,oy); sh.lineTo(ox+w/2,oy); sh.lineTo(ox+w/2,oy+h-w/2); sh.absarc(ox,oy+h-w/2,w/2,0,Math.PI,false); sh.lineTo(ox-w/2,oy); return sh; }
 const cabIn=mat('#e9dfd0',0.7);
 box(3.85,4.0,CB0,CB0+0.018,1.2,2.2,walnut); box(3.85,4.0,CB1-0.018,CB1,1.2,2.2,walnut);          // bottom / top
 box(3.85,4.0,CB0,CB1,1.2,1.218,walnut); box(3.85,4.0,CB0,CB1,2.182,2.2,walnut);                    // sides
 box(3.985,4.0,CB0,CB1,1.218,2.182,cabIn);                                                          // back
-for(const y of [0.88,1.18,1.48,1.78,2.02]) box(3.865,3.985,y,y+0.012,1.218,2.182,mat('#dfe6e6',0.15,0,{transparent:true,opacity:0.55}),false); // glass shelves
-for(const [y,z,r,h,c] of [[0.892,1.45,0.025,0.11,'#c9a27a'],[0.892,1.55,0.02,0.14,'#f1ece4'],[1.192,1.75,0.03,0.09,'#d8c3a5'],[1.192,1.9,0.022,0.13,'#7d8f7a'],[1.492,1.5,0.028,0.08,'#e8d7c0'],[1.492,1.95,0.02,0.15,'#b8875b'],[1.792,1.7,0.035,0.1,'#efe9df']]) cyl(3.93,y+h/2,z,r,r,h,mat(c,0.4),20);
+for(const y of [0.62,0.92,1.22,1.52,1.82,2.05]) box(3.865,3.985,y,y+0.012,1.218,2.182,mat('#dfe6e6',0.15,0,{transparent:true,opacity:0.55}),false); // glass shelves
+for(const [y,z,r,h,c] of [[0.632,1.5,0.03,0.12,'#d8c3a5'],[0.932,1.45,0.025,0.11,'#c9a27a'],[0.932,1.55,0.02,0.14,'#f1ece4'],[1.232,1.75,0.03,0.09,'#d8c3a5'],[1.232,1.9,0.022,0.13,'#7d8f7a'],[1.532,1.5,0.028,0.08,'#e8d7c0'],[1.532,1.95,0.02,0.15,'#b8875b'],[1.832,1.7,0.035,0.1,'#efe9df']]) cyl(3.93,y+h/2,z,r,r,h,mat(c,0.4),20);
 box(3.865,3.875,CB1-0.04,CB1-0.03,1.23,2.17,mat('#fffaf0',0.3,0,{emissive:'#ffe2b8',emissiveIntensity:MOPEN?1.5:0}),false);   // inside LED (door sensor)
 { const fr=new THREE.Shape(); fr.moveTo(-0.5,0); fr.lineTo(0.5,0); fr.lineTo(0.5,CB1-CB0); fr.lineTo(-0.5,CB1-CB0); fr.lineTo(-0.5,0); fr.holes.push(archShape(AW,AH,0,AB-CB0));   // walnut face frame with arched opening
   const m=new THREE.Mesh(new THREE.ExtrudeGeometry(fr,{depth:0.018,bevelEnabled:false,curveSegments:48}),walnut); m.rotation.y=-Math.PI/2; m.position.set(3.85,CB0,CZ); m.castShadow=true; m.receiveShadow=true; scene.add(m); }
@@ -276,8 +275,8 @@ const mirrorM=mat('#c9d2d4',0.03,1.0,{envMap:cubeRT.texture});
 const mirror=new THREE.Mesh(new THREE.ShapeGeometry(archShape(AW-0.02,AH-0.01,0,0),48),mirrorM); mirror.rotation.y=-Math.PI/2; mirror.position.set(-0.0165,0.0,AW/2); DOOR.add(mirror);
 // mirror lights (ML): slim opal LED bars in the walnut face frame either side of the arched mirror (2700K, own switch)
 const EVE0=P.get('time')==='evening', ledM=mat('#fffaf0',0.3,0,{emissive:'#ffe2b8',emissiveIntensity:EVE0?2.5:0.15});
-for(const zc of [1.245,2.155]) box(3.829,3.833,0.75,2.1,zc-0.011,zc+0.011,ledM,false,false);
-if(EVE0){ for(const zc of [1.245,2.155]) for(let y=0.8;y<2.1;y+=0.4){ const L=new THREE.PointLight('#ffd9a8',0.28,1.6,1.8); L.position.set(3.78,y,zc); scene.add(L); } }
+for(const zc of [1.245,2.155]) box(3.829,3.833,0.5,2.1,zc-0.011,zc+0.011,ledM,false,false);
+if(EVE0){ for(const zc of [1.245,2.155]) for(let y=0.6;y<2.1;y+=0.4){ const L=new THREE.PointLight('#ffd9a8',0.28,1.6,1.8); L.position.set(3.78,y,zc); scene.add(L); } }
 
 // ---------- Lighting: morning sun through south window ----------
 scene.add(new THREE.HemisphereLight('#fff8ee','#a08a70',0.55));

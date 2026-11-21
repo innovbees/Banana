@@ -29,6 +29,6 @@ tells Gemini only to make it photorealistic.
 - "The artwork is on the west wall beside the bed, not above the bed."
 - "Remove the rug - the floor is wall-to-wall light grey carpet."
 - "Keep the ceiling flat with a small cove cornice and small flush downlights - no chandelier, no light over the bed."
-- "On the east wall: a low walnut floor drawer with travertine top, and above it a walnut mirror cabinet whose door is a tall arched mirror with a thin brass edge. Keep the arch, keep it on the wall above the drawer."
+- "On the east wall: a low walnut floor drawer with travertine top, and resting on it a tall walnut mirror cabinet whose door is a long arched mirror with a thin brass edge. Keep the arch, keep it on the wall above the drawer."
 - "There is no TV anywhere in the room."
 - "The robe walkway on the east wall is closed by ONE walnut barn door (1.0 x 2.2 m) hanging from a matte-black barn track fixed to the ceiling; it slides toward the window. Keep it a solid timber door, not glass."
