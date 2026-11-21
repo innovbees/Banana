@@ -196,6 +196,7 @@ cyl(0.14,0.75,0.14,0.012,0.012,1.5,brass,8); cyl(0.14,0.01,0.14,0.12,0.14,0.02,b
 cyl(0.14,1.5,0.14,0.12,0.18,0.22,mat('#f4f4f2',0.9,0,{side:THREE.DoubleSide}),32);
 const BACK='none';
 
+const DRESS=P.get('dress')||'cabinet', _n0=scene.children.length;   // ?dress=cabinet (drawer + arched mirror cabinet) | slide (capsule sliding dressing unit)
 // ---------- EAST wall (z 1.325-2.075): 750-wide floor drawer + designer arched mirror cabinet with storage behind the mirror ----------
 const UW=0.75, CZ=1.7, U0=CZ-UW/2, U1=CZ+UW/2;
 box(3.64,3.97,0,0.05,U0+0.03,U1-0.03,mat('#2e1d12',0.7));                  // recessed toe-kick
@@ -217,6 +218,7 @@ box(3.865,3.875,CB1-0.04,CB1-0.03,U0+0.03,U1-0.03,mat('#fffaf0',0.3,0,{emissive:
 const DOOR=new THREE.Group(); DOOR.position.set(3.85,AB,CZ-AW/2); DOOR.rotation.y=MOPEN?-1.75:0; scene.add(DOOR);   // hinged on the north (left) edge
 { const b=new THREE.Mesh(new THREE.ExtrudeGeometry(archShape(AW,AH),{depth:0.016,bevelEnabled:false,curveSegments:48}),brass); b.rotation.y=-Math.PI/2; b.position.set(0,0,AW/2); b.castShadow=true; DOOR.add(b);
   const back=new THREE.Mesh(new THREE.ShapeGeometry(archShape(AW,AH),48),walnut); back.rotation.y=Math.PI/2; back.position.set(0.001,0,AW/2); DOOR.add(back); }
+if(DRESS==='slide') for(let i=_n0;i<scene.children.length;i++) scene.children[i].visible=false;
 // ---------- East wall fluted panelling (?ewall=none|part|full, ?ewcol=walnut|paint) ----------
 const EW=P.get('ewall')||'none', EWM=(P.get('ewcol')==='paint')?mat(PAL.wall,0.8):walnut, FL=0.035;
 function flutes(z0,z1,xFace){ for(let z=z0+FL/2;z<z1-FL/4;z+=FL){ const c=cyl(xFace,(CH-0.07)/2,z,0.0155,0.0155,CH-0.07,EWM,10); c.castShadow=false; } }
@@ -273,11 +275,38 @@ const SLIDE=P.get('slide')||'barn';
 }
 const cubeRT=new THREE.WebGLCubeRenderTarget(512); const cubeCam=new THREE.CubeCamera(0.05,20,cubeRT);
 const mirrorM=mat('#c9d2d4',0.03,1.0,{envMap:cubeRT.texture});
-const mirror=new THREE.Mesh(new THREE.ShapeGeometry(archShape(AW-0.02,AH-0.01,0,0),48),mirrorM); mirror.rotation.y=-Math.PI/2; mirror.position.set(-0.0165,0.0,AW/2); DOOR.add(mirror);
+let mirror=new THREE.Mesh(new THREE.ShapeGeometry(archShape(AW-0.02,AH-0.01,0,0),48),mirrorM); mirror.rotation.y=-Math.PI/2; mirror.position.set(-0.0165,0.0,AW/2); DOOR.add(mirror);
 // mirror lights (ML): slim opal LED bars in the walnut face frame either side of the arched mirror (2700K, own switch)
 const EVE0=P.get('time')==='evening', ledM=mat('#fffaf0',0.3,0,{emissive:'#ffe2b8',emissiveIntensity:EVE0?2.5:0.15});
-for(const zc of [1.3625,2.0375]) box(3.829,3.833,0.5,2.1,zc-0.011,zc+0.011,ledM,false,false);
-if(EVE0){ for(const zc of [1.3625,2.0375]) for(let y=0.6;y<2.1;y+=0.4){ const L=new THREE.PointLight('#ffd9a8',0.28,1.6,1.8); L.position.set(3.78,y,zc); scene.add(L); } }
+if(DRESS!=='slide') for(const zc of [1.3625,2.0375]) box(3.829,3.833,0.5,2.1,zc-0.011,zc+0.011,ledM,false,false);
+if(EVE0 && DRESS!=='slide'){ for(const zc of [1.3625,2.0375]) for(let y=0.6;y<2.1;y+=0.4){ const L=new THREE.PointLight('#ffd9a8',0.28,1.6,1.8); L.position.set(3.78,y,zc); scene.add(L); } }
+
+// ---------- Option: capsule SLIDING DRESSING UNIT (?dress=slide, ?mopen=1 slides the mirror north) ----------
+// cabinet 500 W x 1900 H x 200 D (pill shape, walnut rim, shelves), 100 above floor, z 1.55-2.05; mirror panel slides on 2 heavy-duty runners;
+// floating side table 280 x 200 on the SOUTH side at 850 AFF; mirror parks over the wall to the north (z 1.05-1.55)
+if(DRESS==='slide'){
+  const W=0.5, H=1.9, Y0=0.1, ZC=1.8, R=W/2, rim=0.025, SH=P.get('mopen')==='1'?-0.5:0;
+  function pill(w,h,ox=0,oy=0){ const r=w/2, sh=new THREE.Shape(); sh.moveTo(ox+r,oy+r); sh.lineTo(ox+r,oy+h-r); sh.absarc(ox,oy+h-r,r,0,Math.PI,false); sh.lineTo(ox-r,oy+r); sh.absarc(ox,oy+r,r,Math.PI,2*Math.PI,false); return sh; }
+  const ring=(w,h,t)=>{ const o=pill(w,h); o.holes.push(pill(w-2*t,h-2*t,0,t)); return o; };
+  const add=(geo,m,x,y,z,parent=scene)=>{ const o=new THREE.Mesh(geo,m); o.rotation.y=-Math.PI/2; o.position.set(x,y,z); o.castShadow=true; o.receiveShadow=true; parent.add(o); return o; };
+  const inner=mat('#cfa77f',0.7);                                                                // light timber inside for contrast
+  add(new THREE.ExtrudeGeometry(ring(W,H,rim),{depth:0.2,bevelEnabled:false,curveSegments:48}),walnut,4.0,Y0,ZC);   // cabinet rim
+  add(new THREE.ShapeGeometry(pill(W-2*rim,H-2*rim,0,rim),48),inner,3.995,Y0,ZC);                                   // back
+  for(const y of [0.55,0.85,1.15,1.45,1.7]) box(3.81,3.995,Y0+y,Y0+y+0.018,ZC-R+rim,ZC+R-rim,inner);               // shelves
+  for(const [y,z,r,h,c] of [[0.568,1.72,0.03,0.12,'#d8c3a5'],[0.868,1.85,0.025,0.11,'#c9a27a'],[0.868,1.92,0.02,0.14,'#f1ece4'],[1.168,1.7,0.03,0.09,'#7d8f7a'],[1.468,1.8,0.028,0.08,'#e8d7c0'],[1.468,1.9,0.02,0.15,'#b8875b']]) cyl(3.9,Y0+y+h/2,z,r,r,h,mat(c,0.4),20);
+  const rail=mat('#c8cbcd',0.3,0.9);
+  for(const y of [0.48,1.62]) { box(3.80,3.815,Y0+y,Y0+y+0.045,ZC-R+rim,ZC+R-rim,rail); }                          // runners (visible when open)
+  // side table on the south side
+  { const t=new THREE.Shape(); t.moveTo(0,0); t.lineTo(0.18,0); t.absarc(0.18,0.1,0.1,-Math.PI/2,Math.PI/2,false); t.lineTo(0,0.2); t.lineTo(0,0);
+    const g=new THREE.ExtrudeGeometry(t,{depth:0.035,bevelEnabled:false,curveSegments:24}); const o=new THREE.Mesh(g,walnut);
+    o.rotation.x=Math.PI/2; o.position.set(4.0,Y0+0.79,ZC+R-0.01); o.rotation.z=Math.PI/2; o.castShadow=true; o.receiveShadow=true; scene.add(o); }
+  cyl(3.9,Y0+0.79+0.06,ZC+R+0.17,0.035,0.028,0.1,mat('#efe9df',0.5)); cyl(3.9,Y0+0.79+0.17,ZC+R+0.17,0.003,0.003,0.14,mat('#6b7f58',0.8),6);
+  // sliding mirror panel
+  const MPG=new THREE.Group(); MPG.position.set(0,0,SH); scene.add(MPG);
+  add(new THREE.ExtrudeGeometry(ring(W,H,0.03),{depth:0.03,bevelEnabled:false,curveSegments:48}),walnut,3.80,Y0,ZC,MPG);
+  add(new THREE.ShapeGeometry(pill(W,H),48),walnut,3.799,Y0,ZC,MPG).rotation.y=Math.PI/2;
+  mirror=add(new THREE.ShapeGeometry(pill(W-0.06,H-0.06,0,0.03),48),mirrorM,3.778,Y0,ZC,MPG); mirror.castShadow=false;
+}
 
 // ---------- Lighting: morning sun through south window ----------
 scene.add(new THREE.HemisphereLight('#fff8ee','#a08a70',0.55));
@@ -294,7 +323,7 @@ const fill2=new THREE.PointLight('#ffe9cc',1.2,8,1.8); fill2.position.set(0.8,2.
 const TIME=P.get('time')||'morning'; const EVE=TIME==='evening';
 const trimM=mat('#2b2622',0.5,0.4), lensM=mat('#fffaf0',0.3,0,{emissive:'#ffd59a',emissiveIntensity:EVE?2.2:0.02});
 const DLS=[[0.7,1.2],[2.0,1.2],[4.65,2.85]];   // symmetric grid about the bed axis x=2.0: columns x=0.7 / 3.3, rows z=1.2 / 2.4 / 3.2
-const GIMB=[[0.7,2.4,[0,1.45,2.4]],[0.7,3.2,[0,1.45,3.2]],[3.3,1.2,[3.75,1.3,1.7]],[3.3,2.4,[3.865,1.1,2.45]],[3.3,3.2,[3.865,1.1,3.15]]];
+const GIMB=[[0.7,2.4,[0,1.45,2.4]],[0.7,3.2,[0,1.45,3.2]],[3.3,1.2,[3.75,1.3,DRESS==='slide'?1.8:1.7]],[3.3,2.4,[3.865,1.1,2.45]],[3.3,3.2,[3.865,1.1,3.15]]];
 for(const [x,z] of DLS){ cyl(x,CH-0.004,z,0.045,0.045,0.008,trimM,24).castShadow=false; cyl(x,CH-0.009,z,0.033,0.033,0.004,lensM,24).castShadow=false; }
 for(const [x,z] of GIMB){ cyl(x,CH-0.004,z,0.045,0.045,0.008,trimM,24).castShadow=false; cyl(x,CH-0.012,z,0.03,0.03,0.008,lensM,24).castShadow=false; }
 box(0.7,3.3,CH-0.004,CH,RL-0.24,RL-0.21,mat('#d8d4cc',0.4,0.5),false);                 // S1 curtain-wash channel, flush
