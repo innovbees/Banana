@@ -228,7 +228,7 @@ if(EW!=='none'){ const za=EW==='full'?1.0:2.25;
     const parts = (EW==='full' && z0<2.2) ? [[z0,1.2],[2.2,z1]] : [[z0,z1]];
     for(const [p0,p1] of parts){ if(p1-p0<0.02) continue; box(3.975,4.0,0,CH-0.065,p0,p1,EWM); flutes(p0,p1,3.975); } } }
 // ---------- Sliding door options for the full-height robe walkway opening (choose with ?slide=none|flush|walnut|glass|pocket|curtain) ----------
-const SLIDE=P.get('slide')||'barn';
+const SLIDE=P.get('slide')||'none';
 { const z0=2.35, z1=3.35, y0=0.015, y1=2.335, xf=3.885, xb=3.925;          // panel 1000 x 2320, ~75-115 mm off the wall, closed position
   const trackM=mat('#2b2622',0.4,0.6);
   if(['flush','walnut','glass'].includes(SLIDE)){ box(3.87,3.94,CH-0.045,CH-0.004,z0-0.02,z1+1.0,trackM,false); }   // ceiling-fixed track, travel to the south
@@ -326,8 +326,8 @@ const fill2=new THREE.PointLight('#ffe9cc',1.2,8,1.8); fill2.position.set(0.8,2.
 // ---------- Recessed ceiling lighting (timber ceiling), see plans/bedroom-1-lighting.png ----------
 const TIME=P.get('time')||'morning'; const EVE=TIME==='evening';
 const trimM=mat('#2b2622',0.5,0.4), lensM=mat('#fffaf0',0.3,0,{emissive:'#ffd59a',emissiveIntensity:EVE?2.2:0.02});
-const DLS=[[0.7,1.2],[2.0,1.2],[4.65,2.85]];   // symmetric grid about the bed axis x=2.0: columns x=0.7 / 3.3, rows z=1.2 / 2.4 / 3.2
-const GIMB=[[0.7,2.4,[0,1.45,2.4]],[0.7,3.2,[0,1.45,3.2]],[3.3,1.2,[3.75,1.3,DRESS==='slide'?1.8:1.7]],[3.3,2.4,[3.865,1.1,2.45]],[3.3,3.2,[3.865,1.1,3.15]]];
+const DLS=[[0.7,1.2],[2.0,1.2],[3.3,1.2],[3.3,2.4],[3.3,3.2],[4.65,2.85]];   // symmetric grid about the bed axis x=2.0: columns x=0.7 / 3.3, rows z=1.2 / 2.4 / 3.2
+const GIMB=[[0.7,2.4,[0,1.45,2.4]],[0.7,3.2,[0,1.45,3.2]]];   // only the art lights are gimbals; D1-D5 are plain downlights
 for(const [x,z] of DLS){ cyl(x,CH-0.004,z,0.045,0.045,0.008,trimM,24).castShadow=false; cyl(x,CH-0.009,z,0.033,0.033,0.004,lensM,24).castShadow=false; }
 for(const [x,z] of GIMB){ cyl(x,CH-0.004,z,0.045,0.045,0.008,trimM,24).castShadow=false; cyl(x,CH-0.012,z,0.03,0.03,0.008,lensM,24).castShadow=false; }
 box(0.7,3.3,CH-0.004,CH,RL-0.24,RL-0.21,mat('#d8d4cc',0.4,0.5),false);                 // S1 curtain-wash channel, flush

@@ -55,7 +55,7 @@ else:
 cx, cy, a = 500, RL - 550, math.radians(40)
 msp.add_lwpolyline([(cx + x * math.cos(a) - y * math.sin(a), cy + x * math.sin(a) + y * math.cos(a)) for x, y in [(-360, -360), (360, -360), (360, 360), (-360, 360)]], close=True, dxfattribs={'layer': 'I-FURN'})
 text(cx, cy, 'CHAIR', 45, 'I-FURN'); msp.add_circle((420, RL - 1300), 200, dxfattribs={'layer': 'I-FURN'}); text(420, RL - 1300, 'TABLE', 40, 'I-FURN')
-for x, z, lab in [(700, 1200, 'D1'), (2000, 1200, 'D2'), (3300, 1200, 'M1'), (700, 2400, 'A1'), (700, 3200, 'A2'), (3300, 2400, 'B1'), (3300, 3200, 'B2')]:
+for x, z, lab in [(700, 1200, 'D1'), (2000, 1200, 'D2'), (3300, 1200, 'D3'), (700, 2400, 'A1'), (700, 3200, 'A2'), (3300, 2400, 'D4'), (3300, 3200, 'D5')]:
     y = RL - z; msp.add_circle((x, y), 45, dxfattribs={'layer': 'E-LITE'}); text(x + 70, y, lab, 45, 'E-LITE', al=TA.MIDDLE_LEFT)
 # dimensions
 dh(0, RW, RL + T, RL + 650); dv(0, RL, -T, -650)
@@ -71,16 +71,12 @@ for i, s in enumerate(['BEDROOM 1 - LAYOUT B: HEAD TO WINDOW' + (' (SLIDING UNIT
                        'Check all dimensions on site before ordering']):
     text(tb_x + 100, -T + 1350 - i * 210, s, 85 if i == 0 else 60, al=TA.MIDDLE_LEFT)
 msp.add_lwpolyline([(RW + 6300, RL + 200), (RW + 6380, RL - 50), (RW + 6300, RL + 20), (RW + 6220, RL - 50)], close=True, dxfattribs={'layer': 'A-TEXT'}); text(RW + 6300, RL + 320, 'N', 120)
-# walnut barn door, ceiling-mounted black track, slides south (open position dashed)
-doc.layers.add('E-LITE-AIM', color=2, linetype='DASHED'); doc.layers.add('I-DOOR-BARN', color=30); doc.layers.add('I-DOOR-BARN-OPEN', color=30, linetype='DASHED')
-msp.add_line((3885, RL - 2300), (3885, RL - 4400), dxfattribs={'layer': 'I-DOOR-BARN'})
-rect(3865, RL - 3350, 3905, RL - 2350, 'I-DOOR-BARN')
-rect(3865, RL - 4300, 3905, RL - 3300, 'I-DOOR-BARN-OPEN')
-text(RW + 160, RL - 3550, 'WALNUT BARN DOOR 1000 x 2200 x 40', 50, 'I-DOOR-BARN', al=TA.MIDDLE_LEFT)
-text(RW + 160, RL - 3650, 'BLACK TRACK 2100 CEILING-MOUNTED, SLIDES SOUTH', 40, 'I-DOOR-BARN', al=TA.MIDDLE_LEFT)
+# robe walkway opening: left open, no door
+doc.layers.add('E-LITE-AIM', color=2, linetype='DASHED')
+text(3700, RL - 2850, 'ROBE OPENING LEFT OPEN - NO DOOR', 40, 'A-TEXT', rot=90)
 # lighting: extra fittings, gimbal aim lines, schedule (all 2700K, CRI 90+, dimmable)
 msp.add_circle((4650, RL - 2850), 45, dxfattribs={'layer': 'E-LITE'}); text(4720, RL - 2950, 'W1', 45, 'E-LITE', al=TA.MIDDLE_LEFT)
-for x, z, tx, tz in [(700, 2400, 0, 2400), (700, 3200, 0, 3200), (3300, 1200, 3750, 1800 if DRESS == 'slide' else 1700), (3300, 2400, 3865, 2450), (3300, 3200, 3865, 3150)]:
+for x, z, tx, tz in [(700, 2400, 0, 2400), (700, 3200, 0, 3200)]:
     msp.add_line((x, RL - z), (tx, RL - tz), dxfattribs={'layer': 'E-LITE-AIM'})
 for x0 in (BX0 - 20 - 450, BX1 + 20): text(x0 + 225, HB + 470, 'PENDANT', 35, 'E-LITE')
 msp.add_circle((120, RL - 120), 60, dxfattribs={'layer': 'E-LITE'}); text(220, RL - 120, 'FLOOR LAMP (PLUG-IN)', 35, 'E-LITE', al=TA.MIDDLE_LEFT)
@@ -88,11 +84,11 @@ sx, sy = RW + 1700, RL + 0
 rows = [('TAG', 'FITTING', 'X FROM W', 'FROM N', 'CIRCUIT / SWITCH'),
         ('D1', 'Downlight 90 cut-out 8-10W (chair/table)', '700', '1200', 'C1 dimmer at entry'),
         ('D2', 'Downlight 90 cut-out 8-10W (centre)', '2000', '1200', 'C1 dimmer at entry'),
-        ('M1', 'Gimbal 8W, aim mirror 1300 AFF', '3300', '1200', 'C1 dimmer at entry'),
         ('A1', 'Gimbal 8W 24-36 deg, aim art 1450 AFF', '700', '2400', 'C2 feature dimmer'),
         ('A2', 'Gimbal 8W 24-36 deg, aim art 1450 AFF', '700', '3200', 'C2 feature dimmer'),
-        ('B1', 'Gimbal 8W 24-36 deg, wash barn door', '3300', '2400', 'C2 feature dimmer'),
-        ('B2', 'Gimbal 8W 24-36 deg, wash barn door', '3300', '3200', 'C2 feature dimmer'),
+        ('D3', 'Downlight 90 cut-out 8-10W (entry / mirror)', '3300', '1200', 'C1 dimmer at entry'),
+        ('D4', 'Downlight 90 cut-out 8-10W (east side)', '3300', '2400', 'C1 dimmer at entry'),
+        ('D5', 'Downlight 90 cut-out 8-10W (east side)', '3300', '3200', 'C1 dimmer at entry'),
         (('ML', '2 LED strips in sliding mirror rim, 24V', '3768', '1565/2035', 'C5 touch dimmer on rim') if DRESS == 'slide' else ('ML', '2 opal LED bars 1600 long, either side of mirror', '3830', '1362/2038', 'C5 switch at mirror')),
         ('PEN', '2 bedside pendants, 600-700 above NS', '725/3275', '4150', 'C3 2-way entry + bed'),
         ('W1', 'Downlight in robe walkway', '4650', '2850', 'C4 sensor or switch'),

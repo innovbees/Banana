@@ -2,8 +2,7 @@
 
 Layout B: Nick Scali Elyse king bed with its head to the south window (400 mm gap),
 artwork on the west wall, floor drawer + arched mirror cabinet on the east wall, lounge chair
-in the north-west corner, a walnut barn door on a black ceiling track closing the
-robe walkway, light grey carpet, flat 2.4 m ceiling with cove cornice.
+in the north-west corner, the robe walkway opening left open (no door), light grey carpet, flat 2.4 m ceiling with cove cornice.
 
 Each view = 1 reference image + 1 prompt. The image fixes the exact layout; the prompt
 tells Gemini only to make it photorealistic.
@@ -31,4 +30,4 @@ tells Gemini only to make it photorealistic.
 - "Keep the ceiling flat with a small cove cornice and small flush downlights - no chandelier, no light over the bed."
 - "On the east wall: a low walnut floor drawer with travertine top, and resting on it a tall walnut mirror cabinet whose door is a long arched mirror with a thin brass edge. Keep the arch, keep it on the wall above the drawer."
 - "There is no TV anywhere in the room."
-- "The robe walkway on the east wall is closed by ONE walnut barn door (1.0 x 2.2 m) hanging from a matte-black barn track fixed to the ceiling; it slides toward the window. Keep it a solid timber door, not glass."
+- "The robe walkway opening on the east wall has NO door - it is an open full-height opening to the ceiling."

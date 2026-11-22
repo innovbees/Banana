@@ -493,7 +493,7 @@ $SKPOLY
   9
 $TDCREATE
  40
-2461367.5543981483
+2461367.562824074
   9
 $TDUCREATE
  40
@@ -501,7 +501,7 @@ $TDUCREATE
   9
 $TDUPDATE
  40
-2461367.5543981483
+2461367.562824074
   9
 $TDUUPDATE
  40
@@ -553,7 +553,7 @@ $SPLINESEGS
   9
 $HANDSEED
   5
-1E9
+1E0
   9
 $SURFTAB1
  70
@@ -933,11 +933,11 @@ $PSTYLEMODE
   9
 $FINGERPRINTGUID
   2
-{647F81F6-226E-4618-9F6E-A3CB7503EA46}
+{7E1B4F87-48CC-4054-8CF2-93E77B4417E0}
   9
 $VERSIONGUID
   2
-{22B82E56-3F22-46B2-929F-6C2C33A7D8B0}
+{3D3D2DA7-12BC-49A9-AA4D-E935725AAC24}
   9
 $EXTNAMES
 290
@@ -1377,7 +1377,7 @@ AcDbSymbolTable
   0
 VPORT
   5
-1E5
+1DC
 330
 8
 100
@@ -2257,7 +2257,7 @@ LAYER
 100
 AcDbSymbolTable
  70
-19
+17
   0
 LAYER
   5
@@ -2647,55 +2647,7 @@ DASHED
   0
 LAYER
   5
-189
-330
-1
-100
-AcDbSymbolTableRecord
-100
-AcDbLayerTableRecord
-  2
-I-DOOR-BARN
- 70
-0
- 62
-30
-  6
-Continuous
-370
--3
-390
-13
-347
-21
-  0
-LAYER
-  5
-18A
-330
-1
-100
-AcDbSymbolTableRecord
-100
-AcDbLayerTableRecord
-  2
-I-DOOR-BARN-OPEN
- 70
-0
- 62
-30
-  6
-DASHED
-370
--3
-390
-13
-347
-21
-  0
-LAYER
-  5
-19B
+192
 330
 1
 100
@@ -3517,7 +3469,7 @@ ACAD
   0
 APPID
   5
-1E6
+1DD
 330
 3
 100
@@ -3531,7 +3483,7 @@ HATCHBACKGROUNDCOLOR
   0
 APPID
   5
-1E7
+1DE
 330
 3
 100
@@ -10387,7 +10339,7 @@ AcDbText
  40
 45.0
   1
-M1
+D3
  11
 3370.0
  21
@@ -10543,7 +10495,7 @@ AcDbText
  40
 45.0
   1
-B1
+D4
  11
 3370.0
  21
@@ -10595,7 +10547,7 @@ AcDbText
  40
 45.0
   1
-B2
+D5
  11
 3370.0
  21
@@ -11491,151 +11443,35 @@ AcDbText
  73
 2
   0
-LINE
-  5
-18B
-330
-17
-100
-AcDbEntity
-  8
-I-DOOR-BARN
-100
-AcDbLine
- 10
-3885.0
- 20
-2600.0
- 30
-0.0
- 11
-3885.0
- 21
-500.0
- 31
-0.0
-  0
-LWPOLYLINE
-  5
-18C
-330
-17
-100
-AcDbEntity
-  8
-I-DOOR-BARN
-100
-AcDbPolyline
- 90
-4
- 70
-1
- 10
-3865.0
- 20
-1550.0
- 10
-3905.0
- 20
-1550.0
- 10
-3905.0
- 20
-2550.0
- 10
-3865.0
- 20
-2550.0
-  0
-LWPOLYLINE
-  5
-18D
-330
-17
-100
-AcDbEntity
-  8
-I-DOOR-BARN-OPEN
-100
-AcDbPolyline
- 90
-4
- 70
-1
- 10
-3865.0
- 20
-600.0
- 10
-3905.0
- 20
-600.0
- 10
-3905.0
- 20
-1600.0
- 10
-3865.0
- 20
-1600.0
-  0
 TEXT
   5
-18E
+189
 330
 17
 100
 AcDbEntity
   8
-I-DOOR-BARN
+A-TEXT
 100
 AcDbText
  10
-4160.0
+3700.0
  20
-1350.0
- 30
-0.0
- 40
-50.0
-  1
-WALNUT BARN DOOR 1000 x 2200 x 40
- 11
-4160.0
- 21
-1350.0
- 31
-0.0
-100
-AcDbText
- 73
-2
-  0
-TEXT
-  5
-18F
-330
-17
-100
-AcDbEntity
-  8
-I-DOOR-BARN
-100
-AcDbText
- 10
-4160.0
- 20
-1250.0
+2050.0
  30
 0.0
  40
 40.0
   1
-BLACK TRACK 2100 CEILING-MOUNTED, SLIDES SOUTH
+ROBE OPENING LEFT OPEN - NO DOOR
+ 50
+90.0
+ 72
+1
  11
-4160.0
+3700.0
  21
-1250.0
+2050.0
  31
 0.0
 100
@@ -11645,7 +11481,7 @@ AcDbText
   0
 CIRCLE
   5
-190
+18A
 330
 17
 100
@@ -11665,7 +11501,7 @@ AcDbCircle
   0
 TEXT
   5
-191
+18B
 330
 17
 100
@@ -11697,7 +11533,7 @@ AcDbText
   0
 LINE
   5
-192
+18C
 330
 17
 100
@@ -11721,7 +11557,7 @@ AcDbLine
   0
 LINE
   5
-193
+18D
 330
 17
 100
@@ -11740,84 +11576,12 @@ AcDbLine
 0.0
  21
 1700.0
- 31
-0.0
-  0
-LINE
-  5
-194
-330
-17
-100
-AcDbEntity
-  8
-E-LITE-AIM
-100
-AcDbLine
- 10
-3300.0
- 20
-3700.0
- 30
-0.0
- 11
-3750.0
- 21
-3100.0
- 31
-0.0
-  0
-LINE
-  5
-195
-330
-17
-100
-AcDbEntity
-  8
-E-LITE-AIM
-100
-AcDbLine
- 10
-3300.0
- 20
-2500.0
- 30
-0.0
- 11
-3865.0
- 21
-2450.0
- 31
-0.0
-  0
-LINE
-  5
-196
-330
-17
-100
-AcDbEntity
-  8
-E-LITE-AIM
-100
-AcDbLine
- 10
-3300.0
- 20
-1700.0
- 30
-0.0
- 11
-3865.0
- 21
-1750.0
  31
 0.0
   0
 TEXT
   5
-197
+18E
 330
 17
 100
@@ -11851,7 +11615,7 @@ AcDbText
   0
 TEXT
   5
-198
+18F
 330
 17
 100
@@ -11885,7 +11649,7 @@ AcDbText
   0
 CIRCLE
   5
-199
+190
 330
 17
 100
@@ -11905,7 +11669,7 @@ AcDbCircle
   0
 TEXT
   5
-19A
+191
 330
 17
 100
@@ -11937,7 +11701,7 @@ AcDbText
   0
 LWPOLYLINE
   5
-19C
+193
 330
 17
 100
@@ -11969,7 +11733,7 @@ AcDbPolyline
   0
 TEXT
   5
-19D
+194
 330
 17
 100
@@ -12001,7 +11765,7 @@ AcDbText
   0
 TEXT
   5
-19E
+195
 330
 17
 100
@@ -12033,7 +11797,7 @@ AcDbText
   0
 TEXT
   5
-19F
+196
 330
 17
 100
@@ -12065,7 +11829,7 @@ AcDbText
   0
 TEXT
   5
-1A0
+197
 330
 17
 100
@@ -12097,7 +11861,7 @@ AcDbText
   0
 TEXT
   5
-1A1
+198
 330
 17
 100
@@ -12129,7 +11893,7 @@ AcDbText
   0
 TEXT
   5
-1A2
+199
 330
 17
 100
@@ -12161,7 +11925,7 @@ AcDbText
   0
 LINE
   5
-1A3
+19A
 330
 17
 100
@@ -12185,7 +11949,7 @@ AcDbLine
   0
 TEXT
   5
-1A4
+19B
 330
 17
 100
@@ -12217,7 +11981,7 @@ AcDbText
   0
 TEXT
   5
-1A5
+19C
 330
 17
 100
@@ -12249,7 +12013,7 @@ AcDbText
   0
 TEXT
   5
-1A6
+19D
 330
 17
 100
@@ -12281,7 +12045,7 @@ AcDbText
   0
 TEXT
   5
-1A7
+19E
 330
 17
 100
@@ -12313,7 +12077,7 @@ AcDbText
   0
 TEXT
   5
-1A8
+19F
 330
 17
 100
@@ -12345,7 +12109,7 @@ AcDbText
   0
 LINE
   5
-1A9
+1A0
 330
 17
 100
@@ -12369,7 +12133,7 @@ AcDbLine
   0
 TEXT
   5
-1AA
+1A1
 330
 17
 100
@@ -12401,7 +12165,7 @@ AcDbText
   0
 TEXT
   5
-1AB
+1A2
 330
 17
 100
@@ -12433,7 +12197,7 @@ AcDbText
   0
 TEXT
   5
-1AC
+1A3
 330
 17
 100
@@ -12465,7 +12229,7 @@ AcDbText
   0
 TEXT
   5
-1AD
+1A4
 330
 17
 100
@@ -12488,6 +12252,278 @@ AcDbText
 8290.0
  21
 4525.0
+ 31
+0.0
+100
+AcDbText
+ 73
+2
+  0
+TEXT
+  5
+1A5
+330
+17
+100
+AcDbEntity
+  8
+E-LITE-SCHED
+100
+AcDbText
+ 10
+8740.0
+ 20
+4525.0
+ 30
+0.0
+ 40
+50.0
+  1
+C1 dimmer at entry
+ 11
+8740.0
+ 21
+4525.0
+ 31
+0.0
+100
+AcDbText
+ 73
+2
+  0
+LINE
+  5
+1A6
+330
+17
+100
+AcDbEntity
+  8
+E-LITE-SCHED
+100
+AcDbLine
+ 10
+5700.0
+ 20
+4450.0
+ 30
+0.0
+ 11
+9900.0
+ 21
+4450.0
+ 31
+0.0
+  0
+TEXT
+  5
+1A7
+330
+17
+100
+AcDbEntity
+  8
+E-LITE-SCHED
+100
+AcDbText
+ 10
+5740.0
+ 20
+4375.0
+ 30
+0.0
+ 40
+50.0
+  1
+A1
+ 11
+5740.0
+ 21
+4375.0
+ 31
+0.0
+100
+AcDbText
+ 73
+2
+  0
+TEXT
+  5
+1A8
+330
+17
+100
+AcDbEntity
+  8
+E-LITE-SCHED
+100
+AcDbText
+ 10
+6070.0
+ 20
+4375.0
+ 30
+0.0
+ 40
+50.0
+  1
+Gimbal 8W 24-36 deg, aim art 1450 AFF
+ 11
+6070.0
+ 21
+4375.0
+ 31
+0.0
+100
+AcDbText
+ 73
+2
+  0
+TEXT
+  5
+1A9
+330
+17
+100
+AcDbEntity
+  8
+E-LITE-SCHED
+100
+AcDbText
+ 10
+7790.0
+ 20
+4375.0
+ 30
+0.0
+ 40
+50.0
+  1
+700
+ 11
+7790.0
+ 21
+4375.0
+ 31
+0.0
+100
+AcDbText
+ 73
+2
+  0
+TEXT
+  5
+1AA
+330
+17
+100
+AcDbEntity
+  8
+E-LITE-SCHED
+100
+AcDbText
+ 10
+8290.0
+ 20
+4375.0
+ 30
+0.0
+ 40
+50.0
+  1
+2400
+ 11
+8290.0
+ 21
+4375.0
+ 31
+0.0
+100
+AcDbText
+ 73
+2
+  0
+TEXT
+  5
+1AB
+330
+17
+100
+AcDbEntity
+  8
+E-LITE-SCHED
+100
+AcDbText
+ 10
+8740.0
+ 20
+4375.0
+ 30
+0.0
+ 40
+50.0
+  1
+C2 feature dimmer
+ 11
+8740.0
+ 21
+4375.0
+ 31
+0.0
+100
+AcDbText
+ 73
+2
+  0
+LINE
+  5
+1AC
+330
+17
+100
+AcDbEntity
+  8
+E-LITE-SCHED
+100
+AcDbLine
+ 10
+5700.0
+ 20
+4300.0
+ 30
+0.0
+ 11
+9900.0
+ 21
+4300.0
+ 31
+0.0
+  0
+TEXT
+  5
+1AD
+330
+17
+100
+AcDbEntity
+  8
+E-LITE-SCHED
+100
+AcDbText
+ 10
+5740.0
+ 20
+4225.0
+ 30
+0.0
+ 40
+50.0
+  1
+A2
+ 11
+5740.0
+ 21
+4225.0
  31
 0.0
 100
@@ -12507,19 +12543,19 @@ E-LITE-SCHED
 100
 AcDbText
  10
-8740.0
+6070.0
  20
-4525.0
+4225.0
  30
 0.0
  40
 50.0
   1
-C1 dimmer at entry
+Gimbal 8W 24-36 deg, aim art 1450 AFF
  11
-8740.0
+6070.0
  21
-4525.0
+4225.0
  31
 0.0
 100
@@ -12527,7 +12563,7 @@ AcDbText
  73
 2
   0
-LINE
+TEXT
   5
 1AF
 330
@@ -12537,19 +12573,27 @@ AcDbEntity
   8
 E-LITE-SCHED
 100
-AcDbLine
+AcDbText
  10
-5700.0
+7790.0
  20
-4450.0
+4225.0
  30
 0.0
+ 40
+50.0
+  1
+700
  11
-9900.0
+7790.0
  21
-4450.0
+4225.0
  31
 0.0
+100
+AcDbText
+ 73
+2
   0
 TEXT
   5
@@ -12563,19 +12607,19 @@ E-LITE-SCHED
 100
 AcDbText
  10
-5740.0
+8290.0
  20
-4375.0
+4225.0
  30
 0.0
  40
 50.0
   1
-M1
+3200
  11
-5740.0
+8290.0
  21
-4375.0
+4225.0
  31
 0.0
 100
@@ -12595,19 +12639,19 @@ E-LITE-SCHED
 100
 AcDbText
  10
-6070.0
+8740.0
  20
-4375.0
+4225.0
  30
 0.0
  40
 50.0
   1
-Gimbal 8W, aim mirror 1300 AFF
+C2 feature dimmer
  11
-6070.0
+8740.0
  21
-4375.0
+4225.0
  31
 0.0
 100
@@ -12615,7 +12659,7 @@ AcDbText
  73
 2
   0
-TEXT
+LINE
   5
 1B2
 330
@@ -12625,27 +12669,19 @@ AcDbEntity
   8
 E-LITE-SCHED
 100
-AcDbText
+AcDbLine
  10
-7790.0
+5700.0
  20
-4375.0
+4150.0
  30
 0.0
- 40
-50.0
-  1
-3300
  11
-7790.0
+9900.0
  21
-4375.0
+4150.0
  31
 0.0
-100
-AcDbText
- 73
-2
   0
 TEXT
   5
@@ -12659,19 +12695,19 @@ E-LITE-SCHED
 100
 AcDbText
  10
-8290.0
+5740.0
  20
-4375.0
+4075.0
  30
 0.0
  40
 50.0
   1
-1200
+D3
  11
-8290.0
+5740.0
  21
-4375.0
+4075.0
  31
 0.0
 100
@@ -12691,19 +12727,19 @@ E-LITE-SCHED
 100
 AcDbText
  10
-8740.0
+6070.0
  20
-4375.0
+4075.0
  30
 0.0
  40
 50.0
   1
-C1 dimmer at entry
+Downlight 90 cut-out 8-10W (entry / mirror)
  11
-8740.0
+6070.0
  21
-4375.0
+4075.0
  31
 0.0
 100
@@ -12711,7 +12747,7 @@ AcDbText
  73
 2
   0
-LINE
+TEXT
   5
 1B5
 330
@@ -12721,19 +12757,27 @@ AcDbEntity
   8
 E-LITE-SCHED
 100
-AcDbLine
+AcDbText
  10
-5700.0
+7790.0
  20
-4300.0
+4075.0
  30
 0.0
+ 40
+50.0
+  1
+3300
  11
-9900.0
+7790.0
  21
-4300.0
+4075.0
  31
 0.0
+100
+AcDbText
+ 73
+2
   0
 TEXT
   5
@@ -12747,19 +12791,19 @@ E-LITE-SCHED
 100
 AcDbText
  10
-5740.0
+8290.0
  20
-4225.0
+4075.0
  30
 0.0
  40
 50.0
   1
-A1
+1200
  11
-5740.0
+8290.0
  21
-4225.0
+4075.0
  31
 0.0
 100
@@ -12779,19 +12823,19 @@ E-LITE-SCHED
 100
 AcDbText
  10
-6070.0
+8740.0
  20
-4225.0
+4075.0
  30
 0.0
  40
 50.0
   1
-Gimbal 8W 24-36 deg, aim art 1450 AFF
+C1 dimmer at entry
  11
-6070.0
+8740.0
  21
-4225.0
+4075.0
  31
 0.0
 100
@@ -12799,7 +12843,7 @@ AcDbText
  73
 2
   0
-TEXT
+LINE
   5
 1B8
 330
@@ -12809,27 +12853,19 @@ AcDbEntity
   8
 E-LITE-SCHED
 100
-AcDbText
+AcDbLine
  10
-7790.0
+5700.0
  20
-4225.0
+4000.0
  30
 0.0
- 40
-50.0
-  1
-700
  11
-7790.0
+9900.0
  21
-4225.0
+4000.0
  31
 0.0
-100
-AcDbText
- 73
-2
   0
 TEXT
   5
@@ -12843,19 +12879,19 @@ E-LITE-SCHED
 100
 AcDbText
  10
-8290.0
+5740.0
  20
-4225.0
+3925.0
  30
 0.0
  40
 50.0
   1
-2400
+D4
  11
-8290.0
+5740.0
  21
-4225.0
+3925.0
  31
 0.0
 100
@@ -12875,19 +12911,19 @@ E-LITE-SCHED
 100
 AcDbText
  10
-8740.0
+6070.0
  20
-4225.0
+3925.0
  30
 0.0
  40
 50.0
   1
-C2 feature dimmer
+Downlight 90 cut-out 8-10W (east side)
  11
-8740.0
+6070.0
  21
-4225.0
+3925.0
  31
 0.0
 100
@@ -12895,281 +12931,9 @@ AcDbText
  73
 2
   0
-LINE
+TEXT
   5
 1BB
-330
-17
-100
-AcDbEntity
-  8
-E-LITE-SCHED
-100
-AcDbLine
- 10
-5700.0
- 20
-4150.0
- 30
-0.0
- 11
-9900.0
- 21
-4150.0
- 31
-0.0
-  0
-TEXT
-  5
-1BC
-330
-17
-100
-AcDbEntity
-  8
-E-LITE-SCHED
-100
-AcDbText
- 10
-5740.0
- 20
-4075.0
- 30
-0.0
- 40
-50.0
-  1
-A2
- 11
-5740.0
- 21
-4075.0
- 31
-0.0
-100
-AcDbText
- 73
-2
-  0
-TEXT
-  5
-1BD
-330
-17
-100
-AcDbEntity
-  8
-E-LITE-SCHED
-100
-AcDbText
- 10
-6070.0
- 20
-4075.0
- 30
-0.0
- 40
-50.0
-  1
-Gimbal 8W 24-36 deg, aim art 1450 AFF
- 11
-6070.0
- 21
-4075.0
- 31
-0.0
-100
-AcDbText
- 73
-2
-  0
-TEXT
-  5
-1BE
-330
-17
-100
-AcDbEntity
-  8
-E-LITE-SCHED
-100
-AcDbText
- 10
-7790.0
- 20
-4075.0
- 30
-0.0
- 40
-50.0
-  1
-700
- 11
-7790.0
- 21
-4075.0
- 31
-0.0
-100
-AcDbText
- 73
-2
-  0
-TEXT
-  5
-1BF
-330
-17
-100
-AcDbEntity
-  8
-E-LITE-SCHED
-100
-AcDbText
- 10
-8290.0
- 20
-4075.0
- 30
-0.0
- 40
-50.0
-  1
-3200
- 11
-8290.0
- 21
-4075.0
- 31
-0.0
-100
-AcDbText
- 73
-2
-  0
-TEXT
-  5
-1C0
-330
-17
-100
-AcDbEntity
-  8
-E-LITE-SCHED
-100
-AcDbText
- 10
-8740.0
- 20
-4075.0
- 30
-0.0
- 40
-50.0
-  1
-C2 feature dimmer
- 11
-8740.0
- 21
-4075.0
- 31
-0.0
-100
-AcDbText
- 73
-2
-  0
-LINE
-  5
-1C1
-330
-17
-100
-AcDbEntity
-  8
-E-LITE-SCHED
-100
-AcDbLine
- 10
-5700.0
- 20
-4000.0
- 30
-0.0
- 11
-9900.0
- 21
-4000.0
- 31
-0.0
-  0
-TEXT
-  5
-1C2
-330
-17
-100
-AcDbEntity
-  8
-E-LITE-SCHED
-100
-AcDbText
- 10
-5740.0
- 20
-3925.0
- 30
-0.0
- 40
-50.0
-  1
-B1
- 11
-5740.0
- 21
-3925.0
- 31
-0.0
-100
-AcDbText
- 73
-2
-  0
-TEXT
-  5
-1C3
-330
-17
-100
-AcDbEntity
-  8
-E-LITE-SCHED
-100
-AcDbText
- 10
-6070.0
- 20
-3925.0
- 30
-0.0
- 40
-50.0
-  1
-Gimbal 8W 24-36 deg, wash barn door
- 11
-6070.0
- 21
-3925.0
- 31
-0.0
-100
-AcDbText
- 73
-2
-  0
-TEXT
-  5
-1C4
 330
 17
 100
@@ -13201,7 +12965,7 @@ AcDbText
   0
 TEXT
   5
-1C5
+1BC
 330
 17
 100
@@ -13233,7 +12997,7 @@ AcDbText
   0
 TEXT
   5
-1C6
+1BD
 330
 17
 100
@@ -13251,7 +13015,7 @@ AcDbText
  40
 50.0
   1
-C2 feature dimmer
+C1 dimmer at entry
  11
 8740.0
  21
@@ -13265,7 +13029,7 @@ AcDbText
   0
 LINE
   5
-1C7
+1BE
 330
 17
 100
@@ -13289,7 +13053,7 @@ AcDbLine
   0
 TEXT
   5
-1C8
+1BF
 330
 17
 100
@@ -13307,7 +13071,7 @@ AcDbText
  40
 50.0
   1
-B2
+D5
  11
 5740.0
  21
@@ -13321,7 +13085,7 @@ AcDbText
   0
 TEXT
   5
-1C9
+1C0
 330
 17
 100
@@ -13339,7 +13103,7 @@ AcDbText
  40
 50.0
   1
-Gimbal 8W 24-36 deg, wash barn door
+Downlight 90 cut-out 8-10W (east side)
  11
 6070.0
  21
@@ -13353,7 +13117,7 @@ AcDbText
   0
 TEXT
   5
-1CA
+1C1
 330
 17
 100
@@ -13385,7 +13149,7 @@ AcDbText
   0
 TEXT
   5
-1CB
+1C2
 330
 17
 100
@@ -13417,7 +13181,7 @@ AcDbText
   0
 TEXT
   5
-1CC
+1C3
 330
 17
 100
@@ -13435,7 +13199,7 @@ AcDbText
  40
 50.0
   1
-C2 feature dimmer
+C1 dimmer at entry
  11
 8740.0
  21
@@ -13449,7 +13213,7 @@ AcDbText
   0
 LINE
   5
-1CD
+1C4
 330
 17
 100
@@ -13473,7 +13237,7 @@ AcDbLine
   0
 TEXT
   5
-1CE
+1C5
 330
 17
 100
@@ -13505,7 +13269,7 @@ AcDbText
   0
 TEXT
   5
-1CF
+1C6
 330
 17
 100
@@ -13537,7 +13301,7 @@ AcDbText
   0
 TEXT
   5
-1D0
+1C7
 330
 17
 100
@@ -13569,7 +13333,7 @@ AcDbText
   0
 TEXT
   5
-1D1
+1C8
 330
 17
 100
@@ -13601,7 +13365,7 @@ AcDbText
   0
 TEXT
   5
-1D2
+1C9
 330
 17
 100
@@ -13633,7 +13397,7 @@ AcDbText
   0
 LINE
   5
-1D3
+1CA
 330
 17
 100
@@ -13657,7 +13421,7 @@ AcDbLine
   0
 TEXT
   5
-1D4
+1CB
 330
 17
 100
@@ -13689,7 +13453,7 @@ AcDbText
   0
 TEXT
   5
-1D5
+1CC
 330
 17
 100
@@ -13721,7 +13485,7 @@ AcDbText
   0
 TEXT
   5
-1D6
+1CD
 330
 17
 100
@@ -13753,7 +13517,7 @@ AcDbText
   0
 TEXT
   5
-1D7
+1CE
 330
 17
 100
@@ -13785,7 +13549,7 @@ AcDbText
   0
 TEXT
   5
-1D8
+1CF
 330
 17
 100
@@ -13817,7 +13581,7 @@ AcDbText
   0
 LINE
   5
-1D9
+1D0
 330
 17
 100
@@ -13841,7 +13605,7 @@ AcDbLine
   0
 TEXT
   5
-1DA
+1D1
 330
 17
 100
@@ -13873,7 +13637,7 @@ AcDbText
   0
 TEXT
   5
-1DB
+1D2
 330
 17
 100
@@ -13905,7 +13669,7 @@ AcDbText
   0
 TEXT
   5
-1DC
+1D3
 330
 17
 100
@@ -13937,7 +13701,7 @@ AcDbText
   0
 TEXT
   5
-1DD
+1D4
 330
 17
 100
@@ -13969,7 +13733,7 @@ AcDbText
   0
 TEXT
   5
-1DE
+1D5
 330
 17
 100
@@ -14001,7 +13765,7 @@ AcDbText
   0
 LINE
   5
-1DF
+1D6
 330
 17
 100
@@ -14025,7 +13789,7 @@ AcDbLine
   0
 TEXT
   5
-1E0
+1D7
 330
 17
 100
@@ -14057,7 +13821,7 @@ AcDbText
   0
 TEXT
   5
-1E1
+1D8
 330
 17
 100
@@ -14089,7 +13853,7 @@ AcDbText
   0
 TEXT
   5
-1E2
+1D9
 330
 17
 100
@@ -14121,7 +13885,7 @@ AcDbText
   0
 TEXT
   5
-1E3
+1DA
 330
 17
 100
@@ -14153,7 +13917,7 @@ AcDbText
   0
 TEXT
   5
-1E4
+1DB
 330
 17
 100
@@ -15273,7 +15037,7 @@ CREATED_BY_EZDXF
   3
 WRITTEN_BY_EZDXF
 350
-1E8
+1DF
   0
 DICTIONARYVAR
   5
@@ -15285,7 +15049,7 @@ DictionaryVariables
 280
 0
   1
-1.4.5 @ 2026-11-22T13:18:20.248890+00:00
+1.4.5 @ 2026-11-22T13:30:28.242769+00:00
   0
 VISUALSTYLE
   5
@@ -21839,7 +21603,7 @@ strokes_ogs.tif
   0
 DICTIONARYVAR
   5
-1E8
+1DF
 330
 2D
 100
@@ -21847,7 +21611,7 @@ DictionaryVariables
 280
 0
   1
-1.4.5 @ 2026-11-22T13:18:20.266261+00:00
+1.4.5 @ 2026-11-22T13:30:28.255053+00:00
   0
 ENDSEC
   0
