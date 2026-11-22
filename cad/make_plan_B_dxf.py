@@ -4,6 +4,7 @@ import sys, math
 import ezdxf
 from ezdxf.enums import TextEntityAlignment as TA
 OUT = sys.argv[1]; GAP = float(sys.argv[2]) if len(sys.argv) > 2 else 400
+DRESS = sys.argv[3] if len(sys.argv) > 3 else 'cabinet'   # cabinet = drawer + arched mirror cabinet | slide = pill sliding dressing unit
 doc = ezdxf.new('R2018', setup=True); doc.units = ezdxf.units.MM; doc.header['$INSUNITS'] = 4; doc.header['$MEASUREMENT'] = 1
 msp = doc.modelspace()
 for n, c, lt in [('A-WALL', 7, 'Continuous'), ('A-GLAZ', 5, 'Continuous'), ('A-DOOR', 1, 'Continuous'), ('A-ROBE', 8, 'Continuous'),
@@ -36,10 +37,21 @@ for x0 in (BX0 - 20 - 450, BX1 + 20):
 msp.add_line((700, 80), (3300, 80), dxfattribs={'layer': 'I-CURTAIN'}); text(2000, 170, 'CURTAIN TRACK FIXED TO CEILING (OPERABLE BEHIND BED)', 40, 'I-CURTAIN')
 # artwork north wall, mirror unit east wall, lounge NW
 rect(0, RL - 3700, 40, RL - 1900, 'I-ART'); text(130, RL - 2800, 'ARTWORK 1800 x 900, CENTRE 1450 AFF', 50, 'I-ART', rot=90)
-rect(3620, RL - 2075, 4000, RL - 1325, 'I-JOIN-MIRROR'); rect(3850, RL - 2075, 4000, RL - 1325, 'I-JOIN-MIRROR'); rect(3832, RL - 2000, 3850, RL - 1400, 'I-JOIN-MIRROR')
-msp.add_arc(center=(3850, RL - 1400), radius=600, start_angle=180, end_angle=270, dxfattribs={'layer': 'A-CLEAR'})
-for zc in (1362, 2038): rect(3825, RL - zc - 12, 3850, RL - zc + 12, 'E-LITE')
-text(3740, RL - 1700, 'FLOOR DRAWER 750x380x300 + ARCHED MIRROR CABINET 750x1950x150 RESTING ON IT', 30, 'I-JOIN-MIRROR', rot=90)
+if DRESS == 'slide':
+    # pill-shaped sliding dressing unit 500 W x 1900 H x 200 D, mirror panel 30 slides north 500; side table 280 x 200 on the south side
+    def pill_plan(z0, z1, x0, x1, layer): rect(x0, RL - z1, x1, RL - z0, layer)
+    pill_plan(1550, 2050, 3800, 4000, 'I-JOIN-MIRROR'); pill_plan(1575, 2025, 3825, 4000, 'I-JOIN-MIRROR')
+    pill_plan(1550, 2050, 3770, 3800, 'I-JOIN-MIRROR')
+    pill_plan(1050, 1550, 3770, 3800, 'A-CLEAR')
+    msp.add_lwpolyline([(4000, RL - 2050, 0), (3800, RL - 2050, 0), (3800, RL - 2230, 1), (4000, RL - 2230, 0)], format='xyb', close=True, dxfattribs={'layer': 'I-JOIN-MIRROR'})
+    for zc in (1565, 2035): rect(3764, RL - zc - 5, 3770, RL - zc + 5, 'E-LITE')
+    text(3700, RL - 1800, 'SLIDING DRESSING UNIT 500x1900x200 (PILL), MIRROR SLIDES NORTH 500', 30, 'I-JOIN-MIRROR', rot=90)
+    text(3600, RL - 2140, 'SIDE TABLE 280x200 @ 925', 25, 'I-JOIN-MIRROR', rot=90)
+else:
+    rect(3620, RL - 2075, 4000, RL - 1325, 'I-JOIN-MIRROR'); rect(3850, RL - 2075, 4000, RL - 1325, 'I-JOIN-MIRROR'); rect(3832, RL - 2000, 3850, RL - 1400, 'I-JOIN-MIRROR')
+    msp.add_arc(center=(3850, RL - 1400), radius=600, start_angle=180, end_angle=270, dxfattribs={'layer': 'A-CLEAR'})
+    for zc in (1362, 2038): rect(3825, RL - zc - 12, 3850, RL - zc + 12, 'E-LITE')
+    text(3740, RL - 1700, 'FLOOR DRAWER 750x380x300 + ARCHED MIRROR CABINET 750x1950x150 RESTING ON IT', 30, 'I-JOIN-MIRROR', rot=90)
 cx, cy, a = 500, RL - 550, math.radians(40)
 msp.add_lwpolyline([(cx + x * math.cos(a) - y * math.sin(a), cy + x * math.sin(a) + y * math.cos(a)) for x, y in [(-360, -360), (360, -360), (360, 360), (-360, 360)]], close=True, dxfattribs={'layer': 'I-FURN'})
 text(cx, cy, 'CHAIR', 45, 'I-FURN'); msp.add_circle((420, RL - 1300), 200, dxfattribs={'layer': 'I-FURN'}); text(420, RL - 1300, 'TABLE', 40, 'I-FURN')
@@ -50,9 +62,11 @@ dh(0, RW, RL + T, RL + 650); dv(0, RL, -T, -650)
 yd = HB + 900
 dh(0, BX0, yd, yd + 120); dh(BX0, BX1, yd + 150, yd + 270); dh(BX1, RW, yd, yd + 120)
 dv(0, HB, 1200, 1200); dv(HB, FOOT, 1200, 1200); dv(FOOT, RL, 1200, 1200)
-dh(850, 3150, -T, -520); dv(RL - 2075, RL - 1325, 3550, 3550)
+dh(850, 3150, -T, -520)
+if DRESS == 'slide': dv(RL - 2050, RL - 1550, 3550, 3550); dv(RL - 1550, RL - 1050, 3550, 3550)
+else: dv(RL - 2075, RL - 1325, 3550, 3550)
 tb_x = RW + 1700; rect(tb_x, -T, tb_x + 3200, -T + 1500, 'A-TEXT')
-for i, s in enumerate(['BEDROOM 1 - LAYOUT B: HEAD TO WINDOW', f'Elyse king 2060 x 2430, headboard 930 H, {int(GAP)} gap to window wall',
+for i, s in enumerate(['BEDROOM 1 - LAYOUT B: HEAD TO WINDOW' + (' (SLIDING UNIT)' if DRESS == 'slide' else ''), f'Elyse king 2060 x 2430, headboard 930 H, {int(GAP)} gap to window wall',
                        'Room 4000 x 4900, ceiling 2400, carpet', 'Units: millimetres   Scale 1:25 at A3 (plot)', 'Origin 0,0 = inner SW corner; +X east, +Y north',
                        'Check all dimensions on site before ordering']):
     text(tb_x + 100, -T + 1350 - i * 210, s, 85 if i == 0 else 60, al=TA.MIDDLE_LEFT)
@@ -66,7 +80,7 @@ text(RW + 160, RL - 3550, 'WALNUT BARN DOOR 1000 x 2200 x 40', 50, 'I-DOOR-BARN'
 text(RW + 160, RL - 3650, 'BLACK TRACK 2100 CEILING-MOUNTED, SLIDES SOUTH', 40, 'I-DOOR-BARN', al=TA.MIDDLE_LEFT)
 # lighting: extra fittings, gimbal aim lines, schedule (all 2700K, CRI 90+, dimmable)
 msp.add_circle((4650, RL - 2850), 45, dxfattribs={'layer': 'E-LITE'}); text(4720, RL - 2950, 'W1', 45, 'E-LITE', al=TA.MIDDLE_LEFT)
-for x, z, tx, tz in [(700, 2400, 0, 2400), (700, 3200, 0, 3200), (3300, 1200, 3750, 1700), (3300, 2400, 3865, 2450), (3300, 3200, 3865, 3150)]:
+for x, z, tx, tz in [(700, 2400, 0, 2400), (700, 3200, 0, 3200), (3300, 1200, 3750, 1800 if DRESS == 'slide' else 1700), (3300, 2400, 3865, 2450), (3300, 3200, 3865, 3150)]:
     msp.add_line((x, RL - z), (tx, RL - tz), dxfattribs={'layer': 'E-LITE-AIM'})
 for x0 in (BX0 - 20 - 450, BX1 + 20): text(x0 + 225, HB + 470, 'PENDANT', 35, 'E-LITE')
 msp.add_circle((120, RL - 120), 60, dxfattribs={'layer': 'E-LITE'}); text(220, RL - 120, 'FLOOR LAMP (PLUG-IN)', 35, 'E-LITE', al=TA.MIDDLE_LEFT)
@@ -79,7 +93,7 @@ rows = [('TAG', 'FITTING', 'X FROM W', 'FROM N', 'CIRCUIT / SWITCH'),
         ('A2', 'Gimbal 8W 24-36 deg, aim art 1450 AFF', '700', '3200', 'C2 feature dimmer'),
         ('B1', 'Gimbal 8W 24-36 deg, wash barn door', '3300', '2400', 'C2 feature dimmer'),
         ('B2', 'Gimbal 8W 24-36 deg, wash barn door', '3300', '3200', 'C2 feature dimmer'),
-        ('ML', '2 opal LED bars 1600 long, either side of mirror', '3830', '1362/2038', 'C5 switch at mirror'),
+        (('ML', '2 LED strips in sliding mirror rim, 24V', '3768', '1565/2035', 'C5 touch dimmer on rim') if DRESS == 'slide' else ('ML', '2 opal LED bars 1600 long, either side of mirror', '3830', '1362/2038', 'C5 switch at mirror')),
         ('PEN', '2 bedside pendants, 600-700 above NS', '725/3275', '4150', 'C3 2-way entry + bed'),
         ('W1', 'Downlight in robe walkway', '4650', '2850', 'C4 sensor or switch'),
         ('ALL', 'Symmetric about bed axis X=2000; 2700K CRI90+ dim', '', '', 'Licensed electrician')]
